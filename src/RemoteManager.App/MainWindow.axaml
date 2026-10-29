@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        x:Class="RemoteManager.App.MainWindow"
+        Title="Remote-Manager (Phase 0 spike)"
+        Width="1280" Height="820" MinWidth="640" MinHeight="420">
+  <DockPanel>
+    <!-- The tab strip only shows headers. Session views live in SessionHost and are
+         switched with IsVisible, so a tab switch never removes an RDP control from the tree. -->
+    <ui:FATabView x:Name="Tabs"
+                  DockPanel.Dock="Top"
+                  IsAddTabButtonVisible="True"
+                  CanReorderTabs="True"
+                  CanDragTabs="False"
+                  TabWidthMode="Equal" />
+    <Grid x:Name="SessionHost" />
+  </DockPanel>
+</Window>
