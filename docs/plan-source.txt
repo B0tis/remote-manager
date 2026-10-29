@@ -1,0 +1,751 @@
+<cursor_untrusted_data_1337 source="ReadCanvas">
+
+Canvas "Remote-Manager: Entwicklungsplan" (https://cursor.com/canvas/store-f7962efb-2e53-4d0c-af2f-cea6dbe73667/e52b740c-a9cd-460a-b9c1-7c6e9cb46dc5):
+
+import {
+  Page, Section, Text, Callout, Table, Grid, BulletList, NumberedList, Properties, ProsCons,
+  Diagram, Segmented, Rows, LinkCards, TableOfContents, Steps, useState, useGrokTheme,
+} from "grok/canvas";
+
+type View = "kacheln" | "liste" | "launcher";
+type Phase = "p0" | "p1" | "p2" | "p3" | "p4";
+type Tool = "rdp" | "tv" | "ad" | "rd";
+
+const MERMAID = `flowchart LR
+  subgraph UI[Avalonia Shell - FluentAvalonia]
+    Tiles[TileView] --- List[ListView]
+    Detail[DetailPanel] --- Launcher[QuickLauncher]
+    Tabs[SessionTabs]
+  end
+  UI --> VM[ViewModels CommunityToolkit.Mvvm]
+  VM --> Core
+  subgraph Core[Core .NET 10 Library]
+    Store[ConnectionStore SQLite]
+    Cred[CredentialService]
+    Imp[ImportService]
+    Sess[SessionManager]
+    Thumb[ThumbnailService]
+    Stat[StatusService Ping/Port/API]
+    Sync[DeviceSyncService]
+  end
+  Tabs --> RdpV[RdpClientView MsRdpEx NativeControlHost]
+  Sess --> RdpE[RdpEmbeddedProvider]
+  RdpE --> RdpV
+  Sess --> RdpX[RdpExternalProvider mstsc]
+  Sess --> Ssh[SshProvider SSH.NET + xterm.js]
+  Sess --> Vnc[VncProvider]
+  Sess --> Ext[RemoteToolProvider TeamViewer AnyDesk RustDesk]
+  Thumb --> RdpV
+  Sync --> TvApi[TeamViewer Web API]
+  Sync --> AdApi[AnyDesk REST API / CSV]
+  Cred --> WinCred[Windows Credential Manager / DPAPI]
+  Cred --> Pm[KeePass / 1Password]
+  Imp --> Src[1Remote / RDCMan .rdg / mRemoteNG / .rdp]`;
+
+const PHASES: Record<Phase, { name: string; ziel: string; deliver: string[]; accept: string[] }> = {
+  p0: {
+    name: "Phase 0: Spike Avalonia + RDP",
+    ziel: "Beweisen, dass eingebettetes RDP in Avalonia sauber läuft, bevor Du Features baust.",
+    deliver: [
+      "Avalonia-12-App auf .NET 10 mit FluentAvalonia-Shell und einem `TabView`",
+      "Weg A: `Devolutions.MsRdpEx.Avalonia.RdpClientView` in einem Tab",
+      "Weg B nur falls A hakt: eigener `NativeControlHost` mit WinForms-`AxHost`",
+      "Zwei parallele Sessions; Tab-Wechsel über `IsVisible`, nicht durch Entfernen aus dem Baum",
+      "Overlay-Test: Menü, Flyout und Dialog über einer laufenden Session",
+      "DPI-Test: Fenster zwischen Monitoren mit unterschiedlicher Skalierung schieben",
+      "Vorschaubild der laufenden Session als PNG speichern",
+      "Login mit hinterlegten Credentials, NLA an",
+    ],
+    accept: [
+      "Session steht im Tab und landet ohne Passwort-Dialog auf dem Desktop (sofern der Server das erlaubt)",
+      "Tab-Wechsel trennt die Session nicht",
+      "Win-Taste und Alt+Tab gehen an die Session, wenn sie Fokus hat (`KeyboardHookMode`)",
+      "Monitorwechsel mit anderer Skalierung: Verhalten dokumentiert, kein unbenutzbares Bild",
+      "Flyout/Dialog über der Session sichtbar oder Workaround dokumentiert",
+      "PNG der Session liegt auf der Platte und ist nicht schwarz",
+      "Entscheidung schriftlich: MsRdpEx, eigener Host oder FreeRDP",
+    ],
+  },
+  p1: {
+    name: "Phase 1: MVP",
+    ziel: "Täglich nutzbarer Ersatz für 1Remote/RDCMan bei RDP, mit der neuen Übersicht.",
+    deliver: [
+      "Datenmodell + SQLite-Store mit Migrationen",
+      "Kachelansicht: Vorschau oder Icon, Typ-Badge, Status, Beschreibung, Tags, Favorit",
+      "Listenansicht mit sortierbaren Spalten, Mehrfachauswahl",
+      "Verschachtelte, einklappbare Gruppen; Drag & Drop",
+      "Detail-Panel rechts mit Bearbeiten, Startparametern, Notizen, Verlauf",
+      "Quick-Launcher mit globalem Hotkey und Fuzzy-Suche",
+      "RDP eingebettet und extern, Startparameter für RDP (Login, NLA, Gateway, Anzeige, Umleitungen)",
+      "Vorschaubild beim Trennen; Status per Ping/Port-Check im Hintergrund",
+      "Credentials im Windows Credential Manager, Vererbung über Gruppen",
+      "Import: 1Remote, RDCMan `.rdg`, mRemoteNG, `.rdp`; Export/Backup als JSON",
+    ],
+    accept: [
+      "Deine echten 1Remote-Daten importieren ohne Verlust von Name, Host, Port, User, Tags",
+      "Nach dem Trennen zeigt die Kachel das letzte Bild der Session",
+      "Status-Check friert die UI nicht ein; blockiertes Ping zeigt „unbekannt“, nicht „offline“",
+      "Eingeklappte Gruppen und Reihenfolge bleiben nach Neustart erhalten",
+      "„Direkt anmelden“ landet ohne Dialog auf dem Windows-Desktop (wo der Server es zulässt)",
+      "Kein Passwort im Klartext in der SQLite-Datei (mit `sqlite3` geprüft)",
+      "Hotkey → tippen → Enter verbindet, ohne Maus",
+      "Du nutzt die App eine Woche lang statt 1Remote",
+    ],
+  },
+  p2: {
+    name: "Phase 2: TeamViewer, AnyDesk, RustDesk",
+    ziel: "Remote-Tool-Rechner in der App anlegen, ordnen und von dort starten.",
+    deliver: [
+      "Eigene Verbindungstypen TeamViewer, AnyDesk, RustDesk: ID, Alias, Passwort, Notizen, Gruppe, Tags",
+      "Erweiterte Startparameter pro Tool plus freies Argumente-Feld mit maskierter Vorschau",
+      "TeamViewer: Import/Abgleich der Geräteliste über die Web API, Token im Credential Manager",
+      "AnyDesk: CSV-Import aus my.anydesk I; optional REST API für lizenzierte Clients",
+      "Helfer „Windows-Passwort kopieren“ mit automatischem Leeren der Zwischenablage",
+      "Tool-Pfade automatisch finden, sonst Einstellung",
+    ],
+    accept: [
+      "Geräte aus Deinem TeamViewer-Konto erscheinen als Kacheln mit Alias und Online-Status",
+      "Erneuter Abgleich ändert Alias/Status, lässt lokale Notizen und Tags in Ruhe",
+      "AnyDesk-Passwort taucht nicht in der Prozessliste auf (`Get-CimInstance Win32_Process`)",
+      "Bei TeamViewer `-p` erscheint eine sichtbare Warnung",
+      "Dateiübertragung startet direkt bei TeamViewer und AnyDesk",
+      "Fehlt ein Tool, kommt eine klare Meldung mit Link zur Pfad-Einstellung",
+    ],
+  },
+  p3: {
+    name: "Phase 3: SSH, SFTP, VNC",
+    ziel: "Linux-Hosts und VNC-Ziele im selben Tool.",
+    deliver: [
+      "SSH-Terminal: `SSH.NET` + `xterm.js` in `Avalonia.Controls.WebView`",
+      "Auth: Passwort, Key-Datei, OpenSSH-Agent / Pageant; Host-Key-Prüfung",
+      "SFTP-Dateibrowser (Upload, Download, Drag & Drop)",
+      "VNC eingebettet (Bibliothek im Spike wählen), externer Viewer als Fallback",
+      "Jump-Host / SSH-Tunnel, auch für RDP",
+      "KeePass (`.kdbx`) und 1Password (`op`-CLI) als Credential-Quelle",
+    ],
+    accept: [
+      "`htop` und `vim` rendern korrekt, Resize passt die Terminalgröße an",
+      "Unbekannter oder geänderter Host-Key verlangt Bestätigung",
+      "VNC-Session zu einem Testhost im Tab",
+      "RDP über SSH-Tunnel zu einem Host hinter Jump-Host",
+      "Credential aus KeePass/1Password wird bei Verbindung geholt, nicht gespeichert",
+    ],
+  },
+  p4: {
+    name: "Phase 4: Sync und Feinschliff",
+    ziel: "Gleiche Verbindungen auf mehreren Windows-PCs, sauber auslieferbar.",
+    deliver: [
+      "Sync-Variante nach Deiner Entscheidung (Datei im Cloud-Ordner oder eigener Server)",
+      "Ende-zu-Ende-Verschlüsselung der Sync-Daten, Secrets bleiben lokal oder im Passwort-Manager",
+      "Konfliktanzeige statt stillem Überschreiben",
+      "Optional: periodische Live-Vorschau verbundener RDP-Sessions",
+      "Auto-Update und signierte Builds",
+    ],
+    accept: [
+      "Änderung auf PC A erscheint auf PC B",
+      "Gleichzeitige Änderung erzeugt sichtbaren Konflikt",
+      "Im Sync-Ordner liegt kein Klartext-Secret",
+      "Update installiert sich ohne Datenverlust",
+    ],
+  },
+};
+
+const TOOLS: Record<Tool, { label: string; rows: [string, string][] }> = {
+  rdp: {
+    label: "RDP",
+    rows: [
+      ["Login", "`UserName`, `Domain`, `AdvancedSettings.ClearTextPassword` direkt ins Control; Passwort nur im Speicher"],
+      ["Sicherheit", "`EnableCredSspSupport` (NLA/CredSSP), `AuthenticationLevel` 0/1/2; optional Restricted Admin / Remote Credential Guard (MsRdpEx-Optionen)"],
+      ["Direkt anmelden", "Geht, wenn Credentials gesetzt sind und der Server nicht per Richtlinie „Immer nach Kennwort fragen“ erzwingt"],
+      ["Gateway", "`TransportSettings.GatewayHostname`, `GatewayUsageMethod`, `GatewayCredsSource`; eigene Gateway-Credentials"],
+      ["Anzeige", "Auflösung (`DesktopWidth`/`DesktopHeight` vor `Connect`), `SmartSizing`, dynamische Auflösung, Multimonitor (`UseMultimon`)"],
+      ["Umleitungen", "Zwischenablage, Laufwerke, Drucker, Audio, Smartcards"],
+      ["Tastatur", "`KeyboardHookMode`: Windows-Tasten an Session, lokal oder nur im Vollbild"],
+      ["RemoteApp", "`RemoteProgram.RemoteProgramMode` + `ServerStartProgram`; extern über `.rdp`-Felder"],
+      ["Extern (`mstsc`)", "`mstsc` nimmt kein Passwort auf der Kommandozeile: vorher `TERMSRV/<host>` im Credential Manager setzen"],
+    ],
+  },
+  tv: {
+    label: "TeamViewer",
+    rows: [
+      ["Verbinden", "`TeamViewer.exe -i ID`"],
+      ["Passwort", "`-p PW` oder `-b BASE64`; ohne Passwort Easy Access oder Abfrage. Base64 ist keine Verschlüsselung, steht in der Prozessliste"],
+      ["Modus", "`-m fileTransfer` oder `-m vpn` (VPN nur Windows → Windows/Linux)"],
+      ["Qualität / Rechte", "`-q 1..5`, `-a 0|1|2|3|9`"],
+      ["Gespeicherte Verbindung", "`--control datei.tvc`"],
+      ["Windows-Anmeldung", { text: "nicht möglich: kein dokumentierter Parameter", tone: "danger" } as unknown as string],
+    ],
+  },
+  ad: {
+    label: "AnyDesk",
+    rows: [
+      ["Verbinden", "`AnyDesk.exe ID` oder Alias"],
+      ["Passwort", "`echo PW | AnyDesk.exe ID --with-password` (über stdin, nicht in der Prozessliste)"],
+      ["Modus", "`--file-transfer`, `--full-screen`, `--plain` (Fenster ohne Rahmen und Menü)"],
+      ["Windows-Anmeldung", { text: "nicht möglich: kein dokumentierter Parameter", tone: "danger" } as unknown as string],
+    ],
+  },
+  rd: {
+    label: "RustDesk",
+    rows: [
+      ["Verbinden", "`rustdesk.exe --connect ID`"],
+      ["Passwort", "`--password PW` (steht in der Prozessliste)"],
+      ["Modus", "`--port-forward ID:lokal:remote`; Dateiübertragung über `rustdesk://file-transfer/ID`"],
+      ["Windows-Anmeldung", { text: "nicht möglich: kein dokumentierter Parameter", tone: "danger" } as unknown as string],
+    ],
+  },
+};
+
+function MermaidSource() {
+  const t = useGrokTheme();
+  return (
+    <pre style={{ fontFamily: t.font.mono, fontSize: t.font.code.fontSize, lineHeight: t.font.code.lineHeight, color: t.text.secondary, background: t.bg.subtle, border: `1px solid ${t.border.subtle}`, borderRadius: t.radius.md, padding: 16, overflowX: "auto", margin: 0 }}>
+      {MERMAID}
+    </pre>
+  );
+}
+
+type Tile = { name: string; host: string; proto: string; desc: string; tags: string[]; status: "on" | "off" | "unk"; preview: string | null; icon: string; fav: boolean; col: number };
+
+function TileWireframe() {
+  const t = useGrokTheme();
+  const c = t.dataviz.categorical;
+  const statusCol = { on: t.text.success, off: t.text.danger, unk: t.text.tertiary };
+  const statusTxt = { on: "online", off: "offline", unk: "unbekannt" };
+  const tiles: Tile[] = [
+    { name: "dc01", host: "10.0.0.10", proto: "RDP", desc: "Domain Controller", tags: ["#prod", "#ad"], status: "on", preview: "letzte Session", icon: "", fav: true, col: 0 },
+    { name: "fileserver", host: "10.0.0.20", proto: "RDP", desc: "Freigaben, Backup-Ziel", tags: ["#prod"], status: "off", preview: "letzte Session", icon: "", fav: false, col: 0 },
+    { name: "Buchhaltung-PC", host: "TV 123 456 789", proto: "TeamViewer", desc: "Frau M., nur nach Absprache", tags: ["#kunde-a"], status: "on", preview: null, icon: "TV", fav: false, col: 1 },
+    { name: "Kasse 2", host: "AD 987 654 321", proto: "AnyDesk", desc: "Laden, Unattended Access", tags: ["#kasse"], status: "unk", preview: null, icon: "AD", fav: true, col: 2 },
+  ];
+  const W = 285;
+  return (
+    <svg width="100%" viewBox="0 0 1280 520" role="img" aria-label="Skizze der Kachelansicht mit Vorschau, Badges, Status und Gruppen">
+      <rect x={40} y={16} width={520} height={36} rx={8} fill="none" stroke={t.border.default} />
+      <text x={56} y={39} fill={t.text.tertiary} fontSize={14}>Suchen: Name, Host, Tag, Notiz …</text>
+      <text x={580} y={39} fill={t.text.secondary} fontSize={14}>Typ ▾   Tag ▾   Status ▾   Gruppe ▾</text>
+      <rect x={990} y={16} width={130} height={36} rx={8} fill={t.bg.subtle} stroke={t.border.default} />
+      <text x={1055} y={39} fill={t.text.primary} fontSize={14} textAnchor="middle">Kacheln | Liste</text>
+      <rect x={1135} y={16} width={105} height={36} rx={8} fill="none" stroke={t.border.strong} />
+      <text x={1187} y={39} fill={t.text.primary} fontSize={14} textAnchor="middle">+ Neu</text>
+
+      <text x={40} y={88} fill={t.text.primary} fontSize={16} fontWeight={600}>▾ Kunde A · 4</text>
+      <text x={1240} y={88} fill={t.text.tertiary} fontSize={13} textAnchor="end">Gruppe einklappbar · Rechtsklick: alle verbinden · Drag & Drop</text>
+      {tiles.map((tl, i) => {
+        const x = 40 + i * (W + 20);
+        const y = 104;
+        return (
+          <g key={tl.name}>
+            <rect x={x} y={y} width={W} height={290} rx={12} fill="none" stroke={t.border.default} />
+            <rect x={x + 12} y={y + 12} width={W - 24} height={140} rx={8} fill={t.bg.subtle} stroke={t.border.subtle} />
+            {tl.preview ? (
+              <g>
+                <rect x={x + 30} y={y + 34} width={110} height={70} rx={4} fill="none" stroke={t.border.default} />
+                <rect x={x + 150} y={y + 50} width={105} height={80} rx={4} fill="none" stroke={t.border.default} />
+                <line x1={x + 12} y1={y + 136} x2={x + W - 12} y2={y + 136} stroke={t.border.default} />
+                <text x={x + 22} y={y + 148} fill={t.text.tertiary} fontSize={11}>Vorschau: {tl.preview}</text>
+              </g>
+            ) : (
+              <g>
+                <circle cx={x + W / 2} cy={y + 80} r={34} fill={c[tl.col]} opacity={0.25} />
+                <text x={x + W / 2} y={y + 87} fill={t.text.primary} fontSize={20} fontWeight={600} textAnchor="middle">{tl.icon}</text>
+                <text x={x + 22} y={y + 144} fill={t.text.tertiary} fontSize={11}>Icon statt Vorschau</text>
+              </g>
+            )}
+            <circle cx={x + 30} cy={y + 30} r={6} fill={statusCol[tl.status]} />
+            <text x={x + 42} y={y + 34} fill={t.text.secondary} fontSize={11}>{statusTxt[tl.status]}</text>
+            <rect x={x + W - 22 - tl.proto.length * 8} y={y + 20} width={tl.proto.length * 8 + 12} height={22} rx={6} fill={t.bg.base} stroke={c[tl.col]} />
+            <text x={x + W - 16 - (tl.proto.length * 8) / 2 - 2} y={y + 35} fill={t.text.primary} fontSize={12} textAnchor="middle">{tl.proto}</text>
+            <text x={x + 16} y={y + 180} fill={t.text.primary} fontSize={16} fontWeight={600}>{tl.name}</text>
+            {tl.fav && <text x={x + W - 16} y={y + 180} fill={t.text.secondary} fontSize={16} textAnchor="end">★</text>}
+            <text x={x + 16} y={y + 200} fill={t.text.secondary} fontSize={13}>{tl.host}</text>
+            <text x={x + 16} y={y + 222} fill={t.text.tertiary} fontSize={12}>{tl.desc}</text>
+            {tl.tags.map((tag, j) => (
+              <g key={tag}>
+                <rect x={x + 16 + j * 74} y={y + 236} width={68} height={22} rx={11} fill="none" stroke={t.border.default} />
+                <text x={x + 50 + j * 74} y={y + 251} fill={t.text.secondary} fontSize={11} textAnchor="middle">{tag}</text>
+              </g>
+            ))}
+            <text x={x + 16} y={y + 278} fill={t.text.tertiary} fontSize={11}>Kunde A · zuletzt verbunden</text>
+          </g>
+        );
+      })}
+      <line x1={40} y1={424} x2={1240} y2={424} stroke={t.border.subtle} />
+      <text x={40} y={452} fill={t.text.primary} fontSize={16} fontWeight={600}>▸ Homelab · 7</text>
+      <text x={190} y={452} fill={t.text.tertiary} fontSize={13}>eingeklappt · 5 online, 2 offline</text>
+      <line x1={40} y1={472} x2={1240} y2={472} stroke={t.border.subtle} />
+      <text x={40} y={500} fill={t.text.primary} fontSize={16} fontWeight={600}>▸ Favoriten · 2</text>
+    </svg>
+  );
+}
+
+function DetailWireframe() {
+  const t = useGrokTheme();
+  const rows: [string, string][] = [
+    ["Host / ID", "10.0.0.10 : 3389"],
+    ["Benutzer", "CORP\\admin (geerbt von Kunde A)"],
+    ["Gruppe", "Kunde A"],
+    ["Startparameter", "Direkt anmelden · NLA · 2 Monitore"],
+    ["Status", "online · Port 3389 offen"],
+  ];
+  return (
+    <svg width="100%" viewBox="0 0 600 560" role="img" aria-label="Skizze des Detail-Panels einer Verbindung">
+      <rect x={10} y={10} width={580} height={540} rx={12} fill="none" stroke={t.border.default} />
+      <rect x={30} y={30} width={540} height={150} rx={8} fill={t.bg.subtle} stroke={t.border.subtle} />
+      <text x={300} y={110} fill={t.text.tertiary} fontSize={13} textAnchor="middle">Großes Vorschaubild oder Icon</text>
+      <text x={30} y={214} fill={t.text.primary} fontSize={20} fontWeight={600}>dc01</text>
+      <text x={570} y={214} fill={t.text.secondary} fontSize={18} textAnchor="end">★</text>
+      <text x={30} y={238} fill={t.text.secondary} fontSize={13}>RDP · Domain Controller · #prod #ad</text>
+      <rect x={30} y={254} width={130} height={34} rx={8} fill={t.fill.primary} />
+      <text x={95} y={276} fill={t.text.onPrimary} fontSize={13} textAnchor="middle">Verbinden</text>
+      <rect x={170} y={254} width={130} height={34} rx={8} fill="none" stroke={t.border.default} />
+      <text x={235} y={276} fill={t.text.primary} fontSize={13} textAnchor="middle">Verbinden als …</text>
+      <rect x={310} y={254} width={100} height={34} rx={8} fill="none" stroke={t.border.default} />
+      <text x={360} y={276} fill={t.text.primary} fontSize={13} textAnchor="middle">Extern</text>
+      <rect x={420} y={254} width={150} height={34} rx={8} fill="none" stroke={t.border.default} />
+      <text x={495} y={276} fill={t.text.primary} fontSize={13} textAnchor="middle">Bearbeiten</text>
+      {rows.map(([k, v], i) => (
+        <g key={k}>
+          <text x={30} y={326 + i * 30} fill={t.text.tertiary} fontSize={13}>{k}</text>
+          <text x={190} y={326 + i * 30} fill={t.text.primary} fontSize={13}>{v}</text>
+        </g>
+      ))}
+      <line x1={30} y1={474} x2={570} y2={474} stroke={t.border.subtle} />
+      <text x={30} y={498} fill={t.text.tertiary} fontSize={13}>Notizen (Markdown) · Verlauf · Anhänge</text>
+      <text x={30} y={524} fill={t.text.secondary} fontSize={13}>Wartungsfenster Sa 20 Uhr, vorher Kunde anrufen.</text>
+    </svg>
+  );
+}
+
+export default function App() {
+  const [view, setView] = useState<View>("kacheln");
+  const [phase, setPhase] = useState<Phase>("p0");
+  const [tool, setTool] = useState<Tool>("rdp");
+  const p = PHASES[phase];
+
+  return (
+    <Page
+      title="Remote-Manager: Entwicklungsplan"
+      summary="Plan für einen eigenen Verbindungsmanager, nur Windows-Desktop: Avalonia UI, eingebettetes RDP, eine moderne Kachel-Übersicht mit Vorschau und Status, TeamViewer/AnyDesk-Rechner in der App und erweiterte Startparameter. Arbeitstitel offen."
+      width="wide"
+    >
+      <TableOfContents items={[
+        { label: "Kurzfassung" }, { label: "Ziel und Nicht-Ziele" }, { label: "Ausgangslage" },
+        { label: "Funktionsvergleich" }, { label: "Stack" }, { label: "RDP in Avalonia einbetten" },
+        { label: "Architektur" }, { label: "Datenmodell" }, { label: "UI-Konzept" },
+        { label: "Kartenaufbau und Detail-Panel", depth: 1 }, { label: "Vorschaubilder und Status", depth: 1 }, { label: "UI-Bibliothek", depth: 1 },
+        { label: "TeamViewer- und AnyDesk-Rechner verwalten" }, { label: "Erweiterte Startparameter" },
+        { label: "Protokoll-Matrix" }, { label: "Sicherheit" }, { label: "Roadmap" }, { label: "Risiken" },
+        { label: "Offene Fragen an Dich" }, { label: "Quellen" },
+      ]} />
+
+      <Section heading="Kurzfassung">
+        <Callout lead="Empfehlung">
+          C# auf .NET 10 (LTS) mit Avalonia UI 12 und FluentAvalonia. Eingebettetes RDP über das Microsoft-RDP-ActiveX, gehostet mit `RdpClientView` aus Devolutions' MIT-Paket `Devolutions.MsRdpEx`. TeamViewer, AnyDesk und RustDesk verwaltest Du in der App und startest sie von dort, die Session läuft aber im Fenster des jeweiligen Tools. FreeRDP bleibt der Plan B, falls das ActiveX-Hosting im Spike nicht trägt.
+        </Callout>
+        <Text>Kleiner Hinweis zu „C# WPF App“: Avalonia sieht aus wie WPF (XAML, Bindings, MVVM), ist aber ein eigenes Framework mit eigenem Rendering. WPF-Wissen hilft, WPF-Controls und WPF-Code laufen dort aber nicht direkt, und Microsofts Doku zu ActiveX in WPF (`WindowsFormsHost`) gilt nicht. Genau deshalb steht das RDP-Hosting als Spike ganz vorne.</Text>
+        <Text>1Remote ist nicht tot (Version 1.3.1 am 16.10.2026), RDCMan bekommt weiter Updates. Tot ist die Store-App „Remotedesktop“ (Support-Ende 27.05.2025). Abheben soll sich Dein Projekt über die Übersicht (Vorschau, Status, Gruppen), Remote-Tool-Verwaltung und Startparameter.</Text>
+      </Section>
+
+      <Grid columns={2}>
+        <Section heading="Ziel und Nicht-Ziele">
+          <BulletList marker="pro" items={[
+            "Ein Ort für alle Verbindungen auf Deinem Windows-PC, Start per Hotkey + Enter",
+            "Übersicht moderner als 1Remote: Kacheln mit Vorschau oder Icon, Beschreibung, Tags, Typ, Status",
+            "Einklappbare, verschachtelte Gruppen; zusätzlich Listenansicht",
+            "RDP eingebettet in Tabs und extern über `mstsc`, mit direkter Windows-Anmeldung",
+            "TeamViewer-, AnyDesk-, RustDesk-Rechner anlegen, gruppieren, taggen, starten",
+            "Erweiterte Startparameter pro Verbindung; Passwörter nie im Klartext in der Datenbank",
+          ]} />
+        </Section>
+        <Section heading="Bewusst nicht">
+          <BulletList marker="con" items={[
+            "Kein macOS/Linux: nur Windows-Desktop",
+            "Kein eigenes RDP-, VNC- oder TeamViewer-Protokoll",
+            "Kein TeamViewer/AnyDesk/RustDesk im eigenen Fenster (bieten die Tools nicht an)",
+            "Keine Team-Features mit Rechteverwaltung wie Devolutions RDM",
+            "Kein Server-Monitoring über den Online-Check hinaus",
+            "Kein Azure Virtual Desktop / Windows 365 (dafür gibt es Windows App)",
+          ]} />
+        </Section>
+      </Grid>
+
+      <Section heading="Ausgangslage">
+        <Rows rows={[
+          { title: "1Remote (ex PRemoteM)", detail: "Aktiv, GPL-3.0, Release 1.3.1 am 16.10.2026. Launcher (Alt+M), Karten- und Listenansicht, Tags statt Ordner, nur einfache String-Verschlüsselung der Credentials.", status: { label: "aktiv", tone: "success" } },
+          { title: "mRemoteNG", detail: "GPL-2.0. Letztes Stable-Release v1.76.20 vom 12.04.2019, seitdem nur Preview/Nightly (zuletzt 02.10.2026).", status: { label: "nur Nightlies", tone: "warning" } },
+          { title: "RDCMan (Sysinternals)", detail: "Freeware, nur RDP. Gruppen, Live-Thumbnails (verkleinertes echtes ActiveX), DPAPI/Zertifikat-Verschlüsselung. Doku-Seite vom 15.10.2026.", status: { label: "gepflegt", tone: "success" } },
+          { title: "Royal TS", detail: "Kommerziell. Lite gratis mit max. 10 Verbindungen; Single User 49 €. Viele Protokolle inkl. TeamViewer.", status: { label: "kommerziell" } },
+          { title: "Microsoft Remotedesktop (Store-App)", detail: "Support-Ende 27.05.2025. Nachfolger Windows App kann unter Windows laut Microsoft noch keine RDS-Verbindungen; für Remote-PCs bleibt `mstsc`.", status: { label: "eingestellt", tone: "danger" } },
+        ]} />
+      </Section>
+
+      <Section heading="Funktionsvergleich" caption="„nicht geprüft“ heißt: nicht in einer Quelle verifiziert, nicht automatisch „fehlt“.">
+        <Table
+          columns={["Funktion", "1Remote", "mRemoteNG", "RDCMan", "Royal TS", "Dein Projekt"]}
+          emphasis={5}
+          rows={[
+            ["Lizenz", "GPL-3.0", "GPL-2.0", "Freeware", "kommerziell, Lite gratis", "offen"],
+            ["RDP eingebettet", "ja, plus `mstsc`-Modus", "ja", "ja (ActiveX)", "ja (MS RDP + FreeRDP)", "ja, plus `mstsc`"],
+            ["TeamViewer / AnyDesk", "nur als generische App", "AnyDesk", "nein", "TeamViewer", "eigene Typen + Import (Phase 2)"],
+            ["Übersicht", "Karten oder Liste", "Baum", "Live-Thumbnails pro Gruppe", "Dashboards", "Kacheln mit Vorschau, Status, Tags + Liste"],
+            ["Gruppen", "nein, nur Tags", "Ordnerbaum", "verschachtelt + Smart Groups", "Ordner mit Vererbung", "verschachtelt + Tags"],
+            ["Online-Status", "nicht geprüft", "nicht geprüft", "nicht geprüft", "nicht geprüft", "Ping/Port, TeamViewer-API"],
+            ["Quick-Launcher", "ja (Alt+M)", "nicht geprüft", "Suchdialog (Strg+F)", "nicht geprüft", "ja, globaler Hotkey"],
+            ["Credentials", "einfache String-Verschlüsselung", "nicht geprüft", "DPAPI oder X.509", "verschlüsselt, KeePass/LastPass", "Credential Manager, KeePass, 1Password"],
+            ["SSH / SFTP / VNC", "ja", "SSH, VNC", "nein", "ja", "Phase 3"],
+            ["Plattform", "Windows", "Windows", "Windows 11+", "Win, macOS, iOS, Android", "nur Windows"],
+          ]}
+        />
+      </Section>
+
+      <Section heading="Stack">
+        <Properties items={[
+          { label: "Sprache / Runtime", value: "C# auf .NET 10 (LTS bis 14.11.2028). .NET 9 endet am 10.11.2026, also nicht darauf starten." },
+          { label: "UI", value: "Avalonia UI 12 (MIT, aktuell 12.1.4 vom 09.10.2026) mit MVVM (`CommunityToolkit.Mvvm`)" },
+          { label: "UI-Bibliothek", value: "FluentAvalonia (Windows-11-Look, `TabView`, `NavigationView`); Details unten" },
+          { label: "RDP eingebettet", value: "`Devolutions.MsRdpEx` (MIT) mit `<MsRdpExAvalonia>true</MsRdpExAvalonia>` → `RdpClientView`" },
+          { label: "RDP extern", value: "`mstsc.exe` mit generierter `.rdp`-Datei, Credentials vorher als `TERMSRV/<host>` im Credential Manager" },
+          { label: "SSH / SFTP", value: "`SSH.NET` (MIT), Terminal = `xterm.js` in `Avalonia.Controls.WebView` (MIT)" },
+          { label: "Daten", value: "SQLite (`Microsoft.Data.Sqlite`), Startparameter und Settings als JSON-Spalten" },
+          { label: "Plan B für RDP", value: "FreeRDP (Apache-2.0) als eigener Provider, falls ActiveX-Hosting scheitert" },
+        ]} />
+        <ProsCons
+          prosHeading="Warum Avalonia passt"
+          consHeading="Was Du in Kauf nimmst"
+          pros={[
+            "Deine Wahl, XAML/MVVM wie WPF, deutlich modernere Theme-Bibliotheken",
+            "Für RDP gibt es mit `RdpClientView` einen fertigen, gepflegten Host (MsRdpEx, Push 27.10.2026)",
+            "Volle RDP-Funktionen von Windows (CredSSP, Multimonitor, Gateway, RemoteApp)",
+            "Alle Kernbausteine MIT-lizenziert: Lizenzfrage für Dein Projekt bleibt offen",
+          ]}
+          cons={[
+            "ActiveX in Avalonia ist weniger erprobt als in WPF/WinForms; öffentliche Beispiele sind wenige",
+            "Native Views liegen immer oben (Airspace): nichts von Avalonia darüber zeichnen",
+            "`RdpClientView` braucht Avalonia 12 und .NET 10, bindet Dich an deren Update-Takt",
+            "C#/XAML statt React/TS, für Dich neue Hauptsprache",
+          ]}
+        />
+      </Section>
+
+      <Section heading="RDP in Avalonia einbetten">
+        <Steps steps={[
+          { title: "Weg A (Empfehlung): MsRdpEx `RdpClientView`", detail: "Ein `NativeControlHost`, der ein echtes Win32-Kindfenster im Avalonia-Fenster erzeugt und das RDP-ActiveX dort mit eigener OLE-Client-Site aktiviert, ohne WinForms `AxHost`. Eingaben gehen nativ an das Control. API: `Connect(RdpConnectionSettings)` oder nach `ClientReady` per `GetClient<T>()` direkt die `MSTSCLib`-Interfaces setzen." },
+          { title: "Weg B: eigener `NativeControlHost` + WinForms-Control", detail: "`CreateNativeControlCore` gibt das HWND eines WinForms-`UserControl` mit `AxMsRdpClient9NotSafeForScripting` zurück. Stefan Koell (Royal TS) berichtete 2023 in Avalonia-Discussion #9436, dass das mit Avalonia 11 läuft, ohne offensichtliche Airspace- oder Fokus-Probleme, „aber der Teufel steckt im Detail“." },
+          { title: "Weg C (Fallback): FreeRDP", detail: "FreeRDP rendert in einen eigenen Framebuffer oder ein eigenes Fenster. Mehr Aufwand, dafür kein ActiveX. Nur wenn A und B im Spike scheitern." },
+        ]} />
+        <Table
+          columns={["Stolperstein", "Was passiert", "Umgang"]}
+          rows={[
+            ["Airspace", "Native Views liegen immer über Avalonia-Inhalt; keine Transparenz, keine Transforms, eingeschränktes Clipping", "Keine In-Window-Overlays über der Session. Dialoge: Session kurz durch ihr Vorschaubild ersetzen oder eigenes Fenster. Flyouts/Menüs im Spike prüfen"],
+            ["Fokus / Tastatur", "Wer bekommt Win-Taste, Alt+Tab, Shortcuts der App?", "`KeyboardHookMode` pro Verbindung; App-Shortcuts nur, wenn die Session keinen Fokus hat; Fokuswechsel beim Tab-Wechsel explizit setzen"],
+            ["DPI", "Monitore mit unterschiedlicher Skalierung, Per-Monitor-DPI", "`app.manifest` mit Per-Monitor-V2 und unterstützten OS-Versionen; Skalierung an die Session weitergeben, Verhalten im Spike messen"],
+            ["Tabs", "Wird das Control aus dem Baum genommen, kann das native Fenster neu erzeugt werden und die Session reißt ab", "Alle Session-Views in einem Panel halten und nur `IsVisible` umschalten; im Spike verifizieren"],
+            ["Tab abdocken", "Umhängen des HWND in ein anderes Fenster", "Später; 1Remote fixt Tab-Detach selbst noch in 1.3.1"],
+            ["Composition", "Laut Avalonia-Maintainern `UseWindowsUIComposition` als Einflussfaktor prüfen", "Im Spike mit an und aus testen"],
+          ]}
+        />
+      </Section>
+
+      <Section heading="Architektur">
+        <Diagram
+          direction="horizontal"
+          nodes={[
+            { id: "ui", label: "Avalonia Shell", detail: "Kacheln, Liste, Detail, Launcher, Tabs" },
+            { id: "vm", label: "ViewModels", detail: "MVVM" },
+            { id: "store", label: "ConnectionStore", detail: "SQLite" },
+            { id: "cred", label: "CredentialService" },
+            { id: "stat", label: "StatusService", detail: "Ping, Port, API" },
+            { id: "thumb", label: "ThumbnailService" },
+            { id: "sync", label: "DeviceSyncService", detail: "TeamViewer, AnyDesk" },
+            { id: "sess", label: "SessionManager" },
+            { id: "rdpe", label: "RdpEmbeddedProvider", detail: "MsRdpEx RdpClientView" },
+            { id: "rdpx", label: "RdpExternalProvider", detail: "mstsc" },
+            { id: "ssh", label: "Ssh/SftpProvider", detail: "SSH.NET + xterm.js" },
+            { id: "ext", label: "RemoteToolProvider", detail: "TeamViewer, AnyDesk, RustDesk" },
+            { id: "win", label: "Credential Manager / DPAPI" },
+            { id: "api", label: "TeamViewer Web API / AnyDesk API, CSV" },
+          ]}
+          edges={[
+            { from: "ui", to: "vm" },
+            { from: "vm", to: "store" }, { from: "vm", to: "cred" }, { from: "vm", to: "stat" }, { from: "vm", to: "sync" }, { from: "vm", to: "sess" },
+            { from: "sess", to: "rdpe" }, { from: "sess", to: "rdpx" }, { from: "sess", to: "ssh" }, { from: "sess", to: "ext" },
+            { from: "thumb", to: "rdpe", dashed: true }, { from: "vm", to: "thumb" },
+            { from: "cred", to: "win" }, { from: "sync", to: "api" }, { from: "stat", to: "api", dashed: true },
+          ]}
+        />
+        <Text>Jedes Protokoll ist ein `IProtocolProvider` mit `CanEmbed`, `CreateSessionView()`, `LaunchExternal(StartOptions)` und `CaptureThumbnail()`. Die UI kennt nur diese Schnittstelle, FreeRDP käme als zweiter RDP-Provider dazu.</Text>
+        <Section heading="Mermaid-Quelltext" collapsible defaultOpen={false}>
+          <MermaidSource />
+        </Section>
+      </Section>
+
+      <Section heading="Datenmodell">
+        <Table
+          columns={["Entität", "Felder", "Hinweis"]}
+          rows={[
+            ["`Connection`", "`id`, `name`, `description`, `host`, `port`, `protocol`, `groupId`, `tagIds`, `color`, `icon`, `isFavorite`, `sortOrder`, `credentialId`, `startOptions` (JSON), `extraArgs`, `statusCheck`, `thumbnailPath`, `thumbnailAt`, `notes` (Markdown), `lastConnectedAt`, `createdAt`, `updatedAt`", "`credentialId` leer = von Gruppe erben"],
+            ["`Group`", "`id`, `parentId`, `name`, `color`, `icon`, `isCollapsed`, `sortOrder`, `defaultCredentialId`, `defaultStartOptions` (JSON)", "Verschachtelt; Gruppen und Verbindungen dürfen gemischt sein"],
+            ["`Tag`", "`id`, `name`, `color`", "n:m über `ConnectionTag`; Filter in Kacheln, Liste, Launcher"],
+            ["`Credential`", "`id`, `name`, `kind` (`Password`, `SshKey`, `External`), `username`, `domain`, `secretRef`", "Secret liegt nie hier, nur der Verweis"],
+            ["`RemoteToolDevice`", "`connectionId`, `tool` (`TeamViewer`, `AnyDesk`, `RustDesk`), `remoteId`, `alias`, `passwordRef`, `windowsCredentialId`, `source` (`Manual`, `TeamViewerApi`, `AnyDeskCsv`, `AnyDeskApi`), `externalId`, `lastSyncedAt`", "Abgleich überschreibt nur `alias`/Status, nie lokale Notizen oder Tags"],
+            ["`StartOptions`", "Pro Typ: `RdpStartOptions`, `TeamViewerStartOptions`, `AnyDeskStartOptions`, `RustDeskStartOptions`, `SshStartOptions`", "Strukturierte Felder; `extraArgs` hängt dahinter"],
+            ["`DeviceSource`", "`id`, `kind`, `tokenRef`, `groupMapping`, `lastSyncAt`", "Token nur im Credential Manager"],
+            ["`ConnectionStatus`", "`connectionId`, `state` (`Online`, `Offline`, `Unknown`), `source`, `checkedAt`", "Nur Cache, nicht synchronisieren"],
+            ["`ConnectionHistory`", "`connectionId`, `startedAt`, `endedAt`, `result`", "Für „Zuletzt“ und Launcher-Ranking"],
+          ]}
+        />
+        <Text>Werte werden aufgelöst als Verbindung → Elterngruppen → globale Defaults. `ResolveStartOptions(connection)` ist die einzige Stelle, die das macht.</Text>
+      </Section>
+
+      <Section heading="UI-Konzept">
+        <Segmented<View>
+          options={[{ value: "kacheln", label: "Kacheln" }, { value: "liste", label: "Liste" }, { value: "launcher", label: "Quick-Launcher" }]}
+          value={view}
+          onChange={setView}
+        />
+        {view === "kacheln" && <TileWireframe />}
+        {view === "kacheln" && (
+          <BulletList items={[
+            "Gruppen mit Kopfzeile, Anzahl, Online-Zusammenfassung und Einklapp-Pfeil; Zustand wird gespeichert",
+            "Kachelgröße in drei Stufen; bei klein nur Icon/Vorschau, Name, Status",
+            "Doppelklick verbindet, Einfachklick öffnet das Detail-Panel rechts",
+            "Rechtsklick: Verbinden als, extern, Dateiübertragung, bearbeiten, duplizieren, ID kopieren",
+            "Drag & Drop zwischen Gruppen, Gruppe auf Gruppe = verschachteln",
+          ]} />
+        )}
+        {view === "liste" && (
+          <BulletList items={[
+            "Links Sidebar: Favoriten, Zuletzt, Gruppenbaum, Tags, gespeicherte Filter",
+            "Tabelle: Status, Name, Typ, Host/ID, Gruppe, Tags, Beschreibung, zuletzt verbunden",
+            "Gruppen als einklappbare Zwischenzeilen, Spalten sortierbar",
+            "Mehrfachauswahl für Sammel-Bearbeitung und „alle verbinden“",
+            "Gleiche Filter und Daten wie die Kacheln, Umschalten per `Strg+1` / `Strg+2`",
+          ]} />
+        )}
+        {view === "launcher" && (
+          <BulletList items={[
+            "Globaler Hotkey (frei belegbar; 1Remote nutzt Alt+M) öffnet ein kleines Suchfenster",
+            "Fuzzy-Suche über Name, Host, ID, Tags, Gruppe, Beschreibung; Ranking nach Treffer und Nutzung",
+            "Treffer mit Typ-Badge und Status-Punkt",
+            "`Enter` verbindet, `Shift+Enter` = verbinden als, `Strg+Enter` = extern",
+            "Eingabe, die wie Host, IP oder TeamViewer-ID aussieht, bietet Ad-hoc-Verbindung an",
+          ]} />
+        )}
+
+        <Section heading="Kartenaufbau und Detail-Panel">
+          <Grid columns={2}>
+            <Table
+              columns={["Element", "Inhalt"]}
+              rows={[
+                ["Vorschau", "Letztes Session-Bild (RDP) oder Icon; Fallback: Typ-Icon in Gruppenfarbe"],
+                ["Status-Punkt", "online / offline / unbekannt, mit Zeit des letzten Checks im Tooltip"],
+                ["Typ-Badge", "RDP, SSH, VNC, TeamViewer, AnyDesk, RustDesk, App"],
+                ["Titel + Stern", "Name, Favorit"],
+                ["Untertitel", "Host:Port oder Remote-ID"],
+                ["Beschreibung", "Eine Zeile, Rest im Detail-Panel"],
+                ["Tags", "Bis zu drei Chips, dann „+n“"],
+                ["Fußzeile", "Gruppe (in Such- und Favoritenansicht), zuletzt verbunden"],
+              ]}
+            />
+            <DetailWireframe />
+          </Grid>
+          <Text>Das Detail-Panel ist eine Spalte rechts neben Kacheln oder Liste, kein Overlay. So kollidiert es nicht mit dem Airspace-Problem, wenn eine Session daneben sichtbar ist.</Text>
+        </Section>
+
+        <Section heading="Vorschaubilder und Status">
+          <Table
+            columns={["Fall", "Vorschau", "Wie"]}
+            rows={[
+              ["RDP verbunden", "Bild der laufenden Session", "Fenster „Output Painter Child Window“ unter dem RDP-Control suchen und per `BitBlt`/`StretchBlt` kopieren, wie `RdpView.cs` in MsRdpEx; Intervall einstellbar, Standard aus"],
+              ["RDP beim Trennen", "Letztes Bild bleibt auf der Kachel", "Capture im `OnDisconnected`-Pfad bzw. kurz vor `Disconnect()`; PNG im App-Datenordner, Pfad in `thumbnailPath`"],
+              ["RDP, Alternative", "Snapshot-API", "`IRemoteDesktopClientActions::GetSnapshot` (MsTscAx.dll) ist dokumentiert, aber für den App-Container-Client; im Spike prüfen"],
+              ["TeamViewer / AnyDesk / RustDesk", "Icon", "Session läuft im fremden Fenster; kein dokumentierter Weg für Vorschaubilder"],
+              ["Nie verbunden", "Icon", "Typ-Icon oder eigenes Bild"],
+            ]}
+          />
+          <Text>`PrintWindow` gilt bei RDP-Inhalten als unzuverlässig. RDCMan zeigt Live-Thumbnails, indem es das echte ActiveX verkleinert; das ist in Avalonia wegen Airspace und vieler gleichzeitiger HWNDs kein guter Weg.</Text>
+          <Table
+            columns={["Status-Quelle", "Gilt für", "Hinweis"]}
+            rows={[
+              ["TCP-Port-Check", "RDP 3389, SSH 22, VNC 5900 oder eigener Port", "Zuverlässiger als Ping, weil viele Hosts ICMP blocken"],
+              ["Ping (ICMP)", "alle Hosts mit IP/Name", "Kein Echo = „unbekannt“, nicht „offline“"],
+              ["TeamViewer Web API", "TeamViewer-Geräte im Konto", "`online_state` aus `GET /api/v1/devices`"],
+              ["AnyDesk REST API", "nur Clients Deiner Lizenz", "Online-Status pro Client; sonst „unbekannt“"],
+            ]}
+          />
+        </Section>
+
+        <Section heading="UI-Bibliothek">
+          <Table
+            columns={["Bibliothek", "Aktuell", "Avalonia 12", "Lizenz", "Stil / Eignung"]}
+            rows={[
+              [{ text: "FluentAvalonia", tone: "success" }, "3.1.0 (22.08.2026)", "ja", "MIT", "Windows-11-Fluent, `TabView`, `NavigationView`, `ContentDialog`; passt zu Windows-only. Empfehlung"],
+              ["Semi.Avalonia (+ Ursa)", "12.1.0.1 (31.07.2026)", "ja", "MIT", "Klarer, moderner Admin-Look; Ursa ergänzt viele Controls. Starker Zweitplatz"],
+              ["SukiUI", "7.0.1 (19.05.2026)", "ja", "MIT", "Sehr modern, Glas-Effekte; Dialoge und Toasts als In-Window-Overlays, kollidiert mit Airspace über Sessions"],
+              ["Material.Avalonia", "3.21.0 (25.09.2026)", "ja", "MIT", "Material Design, wirkt unter Windows fremder"],
+            ]}
+          />
+          <Text>Eigene Kachel- und Karten-Templates baust Du ohnehin selbst; die Bibliothek liefert Shell, Tabs, Dialoge, Inputs und das Theme.</Text>
+        </Section>
+      </Section>
+
+      <Section heading="TeamViewer- und AnyDesk-Rechner verwalten">
+        <Text>In der App sind das normale Verbindungen mit eigenem Typ: Remote-ID, Alias, Passwort (als Verweis in den Credential Manager), Notizen, Gruppe, Tags, Beschreibung, Startparameter. Anlegen geht immer von Hand; Import und Abgleich hängen vom Tool und Deiner Lizenz ab.</Text>
+        <Table
+          columns={["Quelle", "Was geht", "Was nicht", "Voraussetzung"]}
+          rows={[
+            ["TeamViewer Web API", "`GET /api/v1/devices` liefert `remotecontrol_id`, `alias`, `description`, `groupid`, `online_state`; `GET /api/v1/groups` die Gruppen. Für verwaltete Geräte (TeamViewer Remote) die Managed-Groups-Endpunkte", "Keine Passwörter, keine Sessions im eigenen Fenster", "Script-Token mit „Computers & Contacts“ lesen (`ContactList.Read`), für Managed Groups „Device Groups“ lesen. Laut TeamViewer für Business, Premium, Corporate, Tensor"],
+            ["AnyDesk REST API (my.anydesk I)", "Clients Deiner Lizenz mit ID, Alias, Online-Status; Alias ändern; Sessions sehen; Adressbücher nur mit Name und ID", "Einträge aus Adressbüchern exportieren geht nicht", "Lizenz Standard/Advanced/Ultimate, API-Passwort vom Support. my.anydesk I wird abgelöst, API für my.anydesk II ist in Entwicklung"],
+            ["AnyDesk CSV", "Export der Clients-Liste in my.anydesk I, Import in die App", "Kein Abgleich, nur Einmal-Import", "Zugang zu my.anydesk I"],
+            ["AnyDesk ohne Lizenz", "Manuell anlegen", "Kein Import, kein Online-Status", "keine"],
+            ["RustDesk", "Manuell anlegen", "Import nicht geprüft", "keine"],
+          ]}
+        />
+        <Text>Abgleich: TeamViewer-Gruppen werden auf App-Gruppen gemappt (einmal festlegen, dann automatisch). Neue Geräte landen in einer Gruppe „Neu aus TeamViewer“. Gelöschte Geräte werden markiert, nicht gelöscht.</Text>
+      </Section>
+
+      <Section heading="Erweiterte Startparameter">
+        <Steps steps={[
+          { title: "Strukturierte Optionen", detail: "Pro Verbindungstyp ein Formular mit den Optionen, die das Tool wirklich kann (siehe unten). Erben von der Gruppe wie Credentials." },
+          { title: "Freies Argumente-Feld", detail: "Für alles, was das Formular nicht kennt. Platzhalter `{id}`, `{host}`, `{user}`; Start immer über `ProcessStartInfo.ArgumentList`, nie über eine Shell." },
+          { title: "Vorschau der Kommandozeile", detail: "Zeigt den finalen Aufruf mit maskierten Secrets, damit Du siehst, was gestartet wird." },
+          { title: "Secrets", detail: "Nie im Argument-Feld speichern. Reihenfolge: ins Control (RDP) → stdin (AnyDesk) → Credential Manager (`mstsc`) → Kommandozeile nur mit Warnung (TeamViewer, RustDesk)." },
+        ]} />
+        <Segmented<Tool>
+          options={[{ value: "rdp", label: "RDP" }, { value: "tv", label: "TeamViewer" }, { value: "ad", label: "AnyDesk" }, { value: "rd", label: "RustDesk" }]}
+          value={tool}
+          onChange={setTool}
+        />
+        <Table columns={["Option", TOOLS[tool].label]} rows={TOOLS[tool].rows} />
+        <Callout tone="warning" lead="Windows-Anmeldung bei TeamViewer, AnyDesk, RustDesk">
+          Keines der drei Tools hat einen dokumentierten Parameter, der Dich auf dem entfernten PC automatisch bei Windows anmeldet. Das Passwort öffnet nur die Remote-Session; steht der PC am Anmeldebildschirm, tippst Du selbst. Die App kann helfen: Knopf „Windows-Passwort kopieren“, der die Zwischenablage nach kurzer Zeit leert. Direkte Windows-Anmeldung geht nur bei RDP.
+        </Callout>
+      </Section>
+
+      <Section heading="Protokoll-Matrix" caption="Eingebettet = Session läuft im eigenen Tab. Extern = App startet das Tool mit den richtigen Parametern.">
+        <Table
+          columns={["Protokoll", "Eingebettet", "Extern", "Umsetzung", "Phase"]}
+          rows={[
+            ["RDP", { text: "ja", tone: "success" }, "ja", "MsRdpEx `RdpClientView`; extern `mstsc` mit `.rdp`-Datei", "1"],
+            ["RDP RemoteApp", "nicht geprüft", "ja", "`RemoteProgram` im Control bzw. `.rdp` mit RemoteApp-Feldern", "1"],
+            ["TeamViewer", { text: "nein", tone: "danger" }, "ja", "`TeamViewer.exe -i ID [-p PW] [-m fileTransfer|vpn]`", "2"],
+            ["AnyDesk", { text: "nein", tone: "danger" }, "ja", "`echo PW | AnyDesk.exe ID --with-password [--file-transfer]`", "2"],
+            ["RustDesk", { text: "nein", tone: "danger" }, "ja", "`rustdesk.exe --connect ID [--password PW]`; AGPL-3.0, daher nur extern", "2"],
+            ["Beliebige App", "nein", "ja", "Pfad + Argument-Template, wie 1Remote „App“", "2"],
+            ["SSH", { text: "ja", tone: "success" }, "ja", "`SSH.NET` + `xterm.js`; extern Windows Terminal oder PuTTY", "3"],
+            ["SFTP", { text: "ja", tone: "success" }, "ja", "`SftpClient` mit eigener Dateiansicht; extern WinSCP", "3"],
+            ["VNC", { text: "ja", tone: "success" }, "ja", "Bibliothek im Spike; extern TightVNC/UltraVNC/RealVNC Viewer", "3"],
+          ]}
+        />
+      </Section>
+
+      <Section heading="Sicherheit">
+        <BulletList items={[
+          "Secrets nur im Windows Credential Manager (`CredWrite`) oder per DPAPI (`ProtectedData`, CurrentUser); SQLite enthält nur Verweise",
+          "API-Tokens (TeamViewer, AnyDesk) genauso behandeln; TeamViewer-Token nur mit Lese-Rechten anlegen",
+          "Optional App-Sperre mit Windows Hello beim Anzeigen/Kopieren von Passwörtern",
+          "RDP eingebettet: Passwort nur im Speicher an `ClearTextPassword`, CredSSP/NLA an",
+          "Vorschaubilder können sensible Inhalte zeigen: pro Verbindung abschaltbar, Ordner nur für Deinen Benutzer",
+          "TeamViewer `-p`/`-b` und RustDesk `--password` stehen in der Prozessliste: Warnung zeigen, Easy Access bevorzugen",
+          "URI-Handler nur mit validierten IDs (nur Ziffern); TeamViewer hatte 2020 eine Argument-Injection über URIs (CVE-2020-13699)",
+          "Freie Argumente ohne Shell starten (`ArgumentList`), keine Secrets im Feld zulassen",
+          "Export verschlüsselt mit eigenem Passwort; Logs ohne Secrets; Releases signieren",
+        ]} />
+      </Section>
+
+      <Section heading="Roadmap" caption="Keine Zeitangaben: die hängen davon ab, wie viel Zeit Du reinsteckst.">
+        <Table
+          columns={["Phase", "Ziel", "Ergebnis"]}
+          rows={[
+            ["0 Spike", "RDP in Avalonia beweisen", "Prototyp + Entscheidung MsRdpEx / eigener Host / FreeRDP"],
+            ["1 MVP", "1Remote/RDCMan im Alltag ersetzen", "Kacheln mit Vorschau und Status, Liste, Gruppen, Detail-Panel, Launcher, RDP mit Startparametern, Import"],
+            ["2 Remote-Tools", "TeamViewer/AnyDesk/RustDesk in der App", "Eigene Typen, Startparameter, TeamViewer-API-Abgleich, AnyDesk-Import"],
+            ["3 Protokolle", "Linux und VNC abdecken", "SSH, SFTP, VNC, Tunnel, Passwort-Manager"],
+            ["4 Sync / Feinschliff", "Mehrere Windows-PCs", "Verschlüsselter Sync, Updates, optional Live-Vorschau"],
+          ]}
+        />
+        <Segmented<Phase>
+          options={[
+            { value: "p0", label: "Phase 0" }, { value: "p1", label: "Phase 1" }, { value: "p2", label: "Phase 2" },
+            { value: "p3", label: "Phase 3" }, { value: "p4", label: "Phase 4" },
+          ]}
+          value={phase}
+          onChange={setPhase}
+        />
+        <Text>{p.name}: {p.ziel}</Text>
+        <Grid columns={2}>
+          <Section heading="Lieferumfang">
+            <BulletList items={p.deliver} />
+          </Section>
+          <Section heading="Abnahmekriterien">
+            <BulletList items={p.accept} />
+          </Section>
+        </Grid>
+      </Section>
+
+      <Section heading="Risiken">
+        <Table
+          columns={["Risiko", "Folge", "Gegenmaßnahme"]}
+          rows={[
+            ["ActiveX in Avalonia: Fokus, DPI, Tabs, Airspace", "Bugs genau im Kern", "Phase 0 zuerst; MsRdpEx nutzen statt selbst bauen; Discussion #9436 lesen"],
+            ["Abhängigkeit von MsRdpEx", "Avalonia-Teil ist neu, Pflege durch Devolutions", "MIT-Lizenz erlaubt Fork; Weg B als Reserve"],
+            ["Airspace", "Keine Overlays über Sessions", "UI so planen: Detail-Panel als Spalte, Dialoge in eigenen Fenstern"],
+            ["TeamViewer-API nur mit Business-Lizenz und aufwärts", "Kein Import mit Free-Konto", "Manuell anlegen bleibt voll nutzbar"],
+            ["AnyDesk my.anydesk I wird abgelöst", "API-Import kann wegfallen", "CSV-Import als Minimum, API optional"],
+            ["Passwörter in Prozess-Argumenten", "Andere Prozesse können sie lesen", "stdin wo möglich, sonst Warnung und Easy Access"],
+            ["Import verschlüsselter Passwörter", "RDCMan-DPAPI nur mit gleichem Windows-Konto lesbar", "Import ohne Passwort zulassen, Hinweis „Passwort neu setzen“"],
+            ["Scope wächst Richtung Royal TS / RDM", "MVP wird nie fertig", "Nicht-Ziele einhalten, Phase 1 strikt"],
+          ]}
+        />
+      </Section>
+
+      <Section heading="Offene Fragen an Dich">
+        <NumberedList items={[
+          "Name bzw. Arbeitstitel des Projekts?",
+          "Open Source oder privat? Falls Open Source: MIT/Apache oder GPL? Die Kernbausteine (Avalonia, FluentAvalonia, MsRdpEx, SSH.NET) sind MIT; GPL nur nötig, wenn Du Code aus 1Remote oder mRemoteNG übernimmst.",
+          "Sync zwischen Geräten: Datei in OneDrive/Syncthing, eigener Server (z. B. Supabase/Coolify) oder gar nicht?",
+          "Welcher Passwort-Manager: nur Windows Credential Manager, KeePass oder 1Password?",
+          "Welche TeamViewer- und AnyDesk-Lizenz hast Du? Davon hängt ab, ob Import per API geht oder nur manuell/CSV.",
+        ]} />
+      </Section>
+
+      <Section heading="Quellen">
+        <LinkCards links={[
+          { title: "MsRdpEx: Avalonia `RdpClientView`", site: "github.com", href: "https://github.com/Devolutions/MsRdpEx" },
+          { title: "MsRdpEx `RdpView.cs`: Session-Bild kopieren", site: "github.com", href: "https://github.com/Devolutions/MsRdpEx/blob/master/PowerShell/RdpView.cs" },
+          { title: "Avalonia Discussion #9436: ActiveX hosten", site: "github.com", href: "https://github.com/AvaloniaUI/Avalonia/discussions/9436" },
+          { title: "Avalonia `NativeControlHost`", site: "docs.avaloniaui.net", href: "https://docs.avaloniaui.net/api/avalonia/controls/nativecontrolhost" },
+          { title: "Avalonia UI", site: "github.com", href: "https://github.com/AvaloniaUI/Avalonia" },
+          { title: "FluentAvalonia", site: "github.com", href: "https://github.com/amwx/FluentAvalonia" },
+          { title: "Semi.Avalonia", site: "github.com", href: "https://github.com/irihitech/Semi.Avalonia" },
+          { title: "SukiUI", site: "github.com", href: "https://github.com/kikipoulet/SukiUI" },
+          { title: "Material.Avalonia", site: "github.com", href: "https://github.com/AvaloniaCommunity/Material.Avalonia" },
+          { title: "RDP: `EnableCredSspSupport`", site: "learn.microsoft.com", href: "https://learn.microsoft.com/en-us/windows/win32/termserv/imsrdpclientadvancedsettings6-enablecredsspsupport" },
+          { title: "RDP: Transport-/Gateway-Settings", site: "learn.microsoft.com", href: "https://learn.microsoft.com/en-us/windows/win32/termserv/imsrdpclienttransportsettings" },
+          { title: "RDP: `GetSnapshot`", site: "learn.microsoft.com", href: "https://learn.microsoft.com/en-us/windows/win32/api/rdpappcontainerclient/nf-rdpappcontainerclient-iremotedesktopclientactions-getsnapshot" },
+          { title: "RDCMan (Sysinternals)", site: "learn.microsoft.com", href: "https://learn.microsoft.com/en-us/sysinternals/downloads/rdcman" },
+          { title: "TeamViewer Kommandozeilen-Parameter", site: "teamviewer.com", href: "https://www.teamviewer.com/en-us/global/support/knowledge-base/teamviewer-remote/for-developers/command-line-parameters/" },
+          { title: "TeamViewer API und Script-Token", site: "teamviewer.com", href: "https://www.teamviewer.com/en/global/support/knowledge-base/teamviewer-remote/for-developers/use-the-teamviewer-api/" },
+          { title: "TeamViewer API-Doku", site: "webapi.teamviewer.com", href: "https://webapi.teamviewer.com/api/v1/docs/index" },
+          { title: "TeamViewer `/devices` (Beispiel, Scope)", site: "stackoverflow.com", href: "https://stackoverflow.com/questions/25267097/ping-teamviewer-ids" },
+          { title: "TeamViewer Managed Groups API", site: "community.teamviewer.com", href: "https://community.teamviewer.com/English/discussion/136866/export-computer-list" },
+          { title: "CVE-2020-13699 (TeamViewer URI)", site: "bleepingcomputer.com", href: "https://www.bleepingcomputer.com/news/security/teamviewer-fixes-bug-that-lets-attackers-access-your-pc/" },
+          { title: "AnyDesk CLI für Windows", site: "support.anydesk.com", href: "https://support.anydesk.com/docs/command-line-interface-for-windows" },
+          { title: "AnyDesk REST API (Python-Modul)", site: "github.com", href: "https://github.com/anydesk/rest-api" },
+          { title: "RustDesk Client-Doku", site: "rustdesk.com", href: "https://rustdesk.com/docs/en/client/" },
+          { title: "1Remote auf GitHub", site: "github.com", href: "https://github.com/1Remote/1Remote" },
+          { title: "mRemoteNG auf GitHub", site: "github.com", href: "https://github.com/mRemoteNG/mRemoteNG" },
+          { title: "Royal TS für Windows", site: "royalapps.com", href: "https://royalapps.com/ts/win/" },
+          { title: "Remote Desktop app: Support-Ende", site: "learn.microsoft.com", href: "https://learn.microsoft.com/en-us/previous-versions/remote-desktop-client/whats-new-windows" },
+          { title: "SSH.NET", site: "github.com", href: "https://github.com/sshnet/SSH.NET" },
+          { title: "FreeRDP", site: "github.com", href: "https://github.com/FreeRDP/FreeRDP" },
+          { title: ".NET Support-Policy", site: "dotnet.microsoft.com", href: "https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core" },
+        ]} />
+      </Section>
+    </Page>
+  );
+}
+
+
+</cursor_untrusted_data_1337>
