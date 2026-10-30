@@ -98,7 +98,8 @@ internal static partial class SelfTest
 
         editor!.CommandLineCredentialBox.IsChecked = false;
         await Settle(200);
-        bool warningGone = !editor.IsPasswordWarningShown && !editor.PreviewCommand.Contains("-p", StringComparison.Ordinal);
+        // Only the arguments: the exe path in the preview may itself contain "-p".
+        bool warningGone = !editor.IsPasswordWarningShown && editor.PreviewArguments is ["-i", ..] args && !args.Contains("-p");
         editor.Arguments.Text = "--quiet -p geheim";
         bool rejected = editor.Validate()?.Contains("-p", StringComparison.Ordinal) == true;
         Check("Without -p the warning goes away; a password switch in the free arguments is rejected", warningGone && rejected);

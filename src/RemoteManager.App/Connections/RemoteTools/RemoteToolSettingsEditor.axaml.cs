@@ -66,6 +66,9 @@ public partial class RemoteToolSettingsEditor : UserControl, ISettingsEditor
 
     /// <summary>The previewed command line (self-test).</summary>
     public string PreviewCommand => PreviewText.Text ?? "";
+
+    /// <summary>The previewed arguments without the executable path (self-test; the path may contain anything).</summary>
+    public IReadOnlyList<string> PreviewArguments { get; private set; } = [];
     public bool IsPasswordWarningShown => PasswordWarning.IsOpen;
     public CheckBox CommandLineCredentialBox => PasswordOnLineBox;
     public TextBox Arguments => ArgumentsBox;
@@ -109,6 +112,7 @@ public partial class RemoteToolSettingsEditor : UserControl, ISettingsEditor
         PasswordWarning.IsOpen = settings.CredentialOnCommandLine;
         // The preview assumes a stored password, so the reader sees where it would go (masked).
         RemoteToolCommand command = RemoteToolCommandLine.Build(type, toolPath, Strings.RemoteTool_PreviewId, settings, hasPassword: true);
+        PreviewArguments = command.Arguments;
         PreviewText.Text = command.SecretViaStdin
             ? string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Preview_Stdin, command.Preview, RemoteToolCommand.Mask)
             : command.Preview;
