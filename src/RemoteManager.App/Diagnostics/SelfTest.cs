@@ -34,7 +34,7 @@ namespace RemoteManager.App.Diagnostics;
 /// window logs on by itself; never logged). Credential checks use "RemoteManager:selftest-*" only.
 /// Database checks run on a temporary folder; the real database is only read.
 /// </summary>
-internal static class SelfTest
+internal static partial class SelfTest
 {
     private static readonly List<string> Lines = [];
     private static int failures;
@@ -96,6 +96,7 @@ internal static class SelfTest
         Check("Edit dialog opens and Cancel leaves the connection unchanged", !await editing && edited.Name == nameBefore);
 
         await RunCredentialChecksAsync(window);
+        await RunVncAndVaultChecksAsync(window); // SelfTest.VncAndVaults.cs
 
         // --- Two session windows, each with its own RDP client -------------------------------------
         // Temporary connections; they are not added to the store.

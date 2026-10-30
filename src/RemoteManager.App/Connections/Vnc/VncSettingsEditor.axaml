@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Connections.Vnc.VncSettingsEditor">
+  <StackPanel Spacing="8">
+    <TextBlock Text="{x:Static res:Strings.Vnc_Settings_Title}" FontWeight="SemiBold" Margin="0,6,0,0" />
+    <ComboBox x:Name="QualityBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+      <ComboBoxItem Content="{x:Static res:Strings.Vnc_Quality_Auto}" />
+      <ComboBoxItem Content="{x:Static res:Strings.Vnc_Quality_Low}" />
+      <ComboBoxItem Content="{x:Static res:Strings.Vnc_Quality_Medium}" />
+      <ComboBoxItem Content="{x:Static res:Strings.Vnc_Quality_High}" />
+    </ComboBox>
+    <CheckBox x:Name="ScaleBox" Content="{x:Static res:Strings.Vnc_Settings_Scale}" />
+    <CheckBox x:Name="ViewOnlyBox" Content="{x:Static res:Strings.Vnc_Settings_ViewOnly}" />
+    <CheckBox x:Name="ExternalBox" Content="{x:Static res:Strings.Vnc_Settings_External}" />
+  </StackPanel>
+</UserControl>

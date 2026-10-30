@@ -70,6 +70,18 @@ public sealed class CredentialService
     }
 
     /// <summary>
+    /// Points the connection at a secret in a read-only source (KeePass, 1Password); a password the app had
+    /// stored for it in the default source is deleted, so no stale copy stays behind.
+    /// </summary>
+    public async ValueTask UseReferenceAsync(Connection connection, CredentialRef reference, CancellationToken cancellationToken = default)
+    {
+        if (SourceFor(reference) is not { IsWritable: false })
+            throw new ArgumentException($"{reference.Source} is not a read-only credential source.", nameof(reference));
+        await DefaultSource.DeleteAsync(connection.Id, cancellationToken).ConfigureAwait(false);
+        connection.Credential = reference;
+    }
+
+    /// <summary>
     /// Deletes the connection's own password from the default source (the app wrote it there) and clears
     /// the reference. A reference into a read-only source (password manager) is only dropped.
     /// </summary>

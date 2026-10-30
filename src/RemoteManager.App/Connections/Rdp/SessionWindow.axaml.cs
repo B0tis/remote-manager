@@ -172,9 +172,10 @@ public partial class SessionWindow : Window, ISessionWindow
                 password = await AppHost.Current.Credentials.ReadAsync(Connection.Credentials.Secret) ?? "";
                 usedStoredPassword = password.Length > 0;
             }
-            catch (Win32Exception ex)
+            catch (Exception ex) when (Credentials.CredentialErrors.IsCredentialFailure(ex))
             {
-                ShowCardMessage(string.Format(CultureInfo.CurrentCulture, Strings.Password_ReadFailed, ex.Message));
+                // Also KeePass / 1Password (locked, canceled, entry missing).
+                ShowCardMessage(Credentials.CredentialErrors.Describe(ex));
                 ShowCard();
                 return;
             }

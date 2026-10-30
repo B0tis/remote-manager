@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using RemoteManager.App.Connections;
+using RemoteManager.App.Credentials;
 using RemoteManager.Core;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Extensibility;
@@ -26,6 +27,9 @@ public sealed class AppHost : IDisposable
         Library = library;
         StoreReport = report;
         Credentials = new CredentialService(sources, library);
+        // KeePass asks for its master password at connect time through the app's dialog.
+        foreach (KeePassCredentialSource keePass in sources.OfType<KeePassCredentialSource>())
+            keePass.Prompt ??= new MasterPasswordPrompt(keePass);
         Handlers = ConnectionHandlerRegistry.Discover(typeof(AppHost).Assembly);
         Importers = PluginCatalog.Create<IImporter>(extensionAssemblies);
         Exporters = PluginCatalog.Create<IExporter>(extensionAssemblies);
@@ -59,7 +63,12 @@ public sealed class AppHost : IDisposable
         return current;
     }
 
-    public void Dispose() => Status.Dispose();
+    public void Dispose()
+    {
+        Status.Dispose();
+        foreach (KeePassCredentialSource keePass in Credentials.Sources.OfType<KeePassCredentialSource>())
+            keePass.LockAll();
+    }
 
     private IStatusProbe? ProbeFor(Connection connection) =>
         Handlers.Supports(connection.Type) ? Handlers[connection.Type].StatusProbe : null;

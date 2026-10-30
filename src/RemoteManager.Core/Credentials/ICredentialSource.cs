@@ -1,8 +1,8 @@
 namespace RemoteManager.Core.Credentials;
 
 /// <summary>
-/// Somewhere secrets live outside the database: the Windows Credential Manager now, KeePass or
-/// 1Password later. Implementations are found by <see cref="Extensibility.PluginCatalog"/> (public,
+/// Somewhere secrets live outside the database: the Windows Credential Manager (writable), KeePass
+/// (<see cref="KeePassCredentialSource"/>) and 1Password (<see cref="OnePasswordCredentialSource"/>, both read-only). Implementations are found by <see cref="Extensibility.PluginCatalog"/> (public,
 /// non-abstract, parameterless constructor), so a new source is a new file in this folder.
 /// Async because some sources (password manager CLIs) take a while; never block the UI on them.
 /// </summary>
@@ -17,7 +17,10 @@ public interface ICredentialSource
     /// <summary>Whether this source is usable on this machine right now.</summary>
     bool IsAvailable { get; }
 
-    /// <summary>The secret, or null when there is none for <paramref name="key"/>.</summary>
+    /// <summary>
+    /// The secret, or null when there is none for <paramref name="key"/>. Password managers throw
+    /// <see cref="CredentialSourceException"/> when they cannot deliver (locked, canceled, entry missing).
+    /// </summary>
     ValueTask<string?> ReadAsync(string key, CancellationToken cancellationToken = default);
 
     ValueTask<bool> ExistsAsync(string key, CancellationToken cancellationToken = default);

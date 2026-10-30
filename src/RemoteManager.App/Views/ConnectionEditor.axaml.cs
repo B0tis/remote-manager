@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections;
+using RemoteManager.App.Credentials;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Model;
@@ -44,6 +45,11 @@ public partial class ConnectionEditor : UserControl
             SavePasswordBox.IsChecked = false;
         };
         UserBox.TextChanged += (_, _) => UpdateInheritedHint();
+        SourcePanel.KindChanged += (_, _) =>
+        {
+            OwnPasswordPanel.IsVisible = !SourcePanel.IsExternal;
+            UpdateInheritedHint();
+        };
     }
 
     /// <summary>The dialog and its form while open (used by the self-test).</summary>
@@ -53,6 +59,7 @@ public partial class ConnectionEditor : UserControl
     public TextBox Password => PasswordBox;
     public CheckBox SavePassword => SavePasswordBox;
     public Button RemovePassword => RemovePasswordButton;
+    public PasswordSourcePanel Source => SourcePanel;
     public bool IsStoredPasswordShown => StoredRow.IsVisible && SavePasswordBox.IsChecked == true;
 
     /// <summary>Shows the dialog. Returns true when the user saved; <paramref name="connection"/> is then updated (not yet persisted).</summary>
@@ -94,7 +101,12 @@ public partial class ConnectionEditor : UserControl
         try
         {
             string password = PasswordBox.Text ?? "";
-            if (SavePasswordBox.IsChecked != true)
+            if (SourcePanel.BuildReference() is { } reference)
+            {
+                // KeePass / 1Password: only the reference is stored; the secret is fetched at connect time.
+                await app.Credentials.UseReferenceAsync(c, reference);
+            }
+            else if (SavePasswordBox.IsChecked != true)
             {
                 if (c.Credential is not null || hasStoredPassword)
                     await app.Credentials.RemoveOwnSecretAsync(c);
@@ -132,7 +144,9 @@ public partial class ConnectionEditor : UserControl
         UserBox.Text = c.UserName;
         DomainBox.Text = c.Domain;
         FavoriteBox.IsChecked = c.IsFavorite;
-        hasStoredPassword = c.Credential is not null;
+        // Only a password the app stored itself counts here; a KeePass/1Password reference is the source panel's.
+        hasStoredPassword = c.Credential is not null && c.Credential.Source == app.Credentials.DefaultSource.Id;
+        SourcePanel.Load(c.Credential);
         SavePasswordBox.IsChecked = hasStoredPassword;
         UpdateTypeFields();
         UpdatePasswordState();
@@ -144,6 +158,7 @@ public partial class ConnectionEditor : UserControl
             string.IsNullOrWhiteSpace(NameBox.Text) ? Strings.Editor_Error_Name :
             string.IsNullOrWhiteSpace(HostBox.Text) ? (Handler.HasPort ? Strings.Editor_Error_Host : Strings.Editor_Error_RemoteId) :
             Handler.HasPort && PortBox.Text is { Length: > 0 } port && !(int.TryParse(port, out int p) && p is > 0 and < 65536) ? Strings.Editor_Error_Port :
+            SourcePanel.IsExternal ? SourcePanel.Validate() ?? settingsEditor?.Validate() :
             SavePasswordBox.IsChecked == true && !hasStoredPassword && string.IsNullOrEmpty(PasswordBox.Text) ? Strings.Editor_Error_Password :
             settingsEditor?.Validate();
 
@@ -192,7 +207,7 @@ public partial class ConnectionEditor : UserControl
         EffectiveCredential inherited = original is null
             ? EffectiveCredential.None
             : app.Credentials.Resolve(new Connection { GroupId = app.Library.FindGroup(original.GroupId)?.Id });
-        bool own = UserBox.Text?.Length > 0 || hasStoredPassword;
+        bool own = UserBox.Text?.Length > 0 || hasStoredPassword || SourcePanel.IsExternal;
         InheritedHint.IsVisible = !own && inherited.IsInherited;
         if (InheritedHint.IsVisible)
         {

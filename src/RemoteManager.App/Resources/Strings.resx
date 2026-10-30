@@ -117,6 +117,9 @@
   <data name="Editor_PasswordHint_Rdp" xml:space="preserve">
     <value>Gespeichert im Windows Credential Manager. Mit Passwort meldet sich die Sitzung direkt an (NLA); ohne wird es beim Verbinden abgefragt.</value>
   </data>
+  <data name="Editor_PasswordHint_Vnc" xml:space="preserve">
+    <value>VNC-Passwort. Es wird erst geholt, wenn der Server danach fragt.</value>
+  </data>
   <data name="Editor_PortPlaceholder" xml:space="preserve">
     <value>Port ({0})</value>
   </data>
@@ -206,6 +209,18 @@
   </data>
   <data name="Password_WillBeRemoved" xml:space="preserve">
     <value>Gespeichertes Passwort wird beim Speichern entfernt</value>
+  </data>
+  <data name="Picker_Empty" xml:space="preserve">
+    <value>Keine Einträge gefunden.</value>
+  </data>
+  <data name="Picker_Filter" xml:space="preserve">
+    <value>Titel, Gruppe oder Benutzer suchen</value>
+  </data>
+  <data name="Picker_Select" xml:space="preserve">
+    <value>Übernehmen</value>
+  </data>
+  <data name="Picker_Title" xml:space="preserve">
+    <value>KeePass-Eintrag auswählen</value>
   </data>
   <data name="Planned_Phase3" xml:space="preserve">
     <value>Dieser Verbindungstyp lässt sich schon anlegen und ordnen; Verbinden kommt in Phase 3.</value>
@@ -334,10 +349,199 @@
   <data name="Subtitle_One" xml:space="preserve">
     <value>{0} Verbindung · {1} online</value>
   </data>
+  <data name="Unlock_Button" xml:space="preserve">
+    <value>Entsperren</value>
+  </data>
+  <data name="Unlock_Hint" xml:space="preserve">
+    <value>Das Master-Passwort wird nicht gespeichert. Danach bleibt die Datenbank {0} Minuten entsperrt, nur im Arbeitsspeicher.</value>
+  </data>
+  <data name="Unlock_KeyFile" xml:space="preserve">
+    <value>Mit Schlüsseldatei {0}</value>
+  </data>
+  <data name="Unlock_Password" xml:space="preserve">
+    <value>Master-Passwort</value>
+  </data>
+  <data name="Unlock_Title" xml:space="preserve">
+    <value>KeePass entsperren</value>
+  </data>
+  <data name="Unlock_Wrong" xml:space="preserve">
+    <value>Master-Passwort oder Schlüsseldatei ist falsch. Versuch es noch einmal.</value>
+  </data>
+  <data name="Vault_Browse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="Vault_Check" xml:space="preserve">
+    <value>Prüfen</value>
+  </data>
+  <data name="Vault_Check_Ok" xml:space="preserve">
+    <value>Gefunden. Das Passwort wurde gelesen und gleich wieder verworfen.</value>
+  </data>
+  <data name="Vault_Checking" xml:space="preserve">
+    <value>Wird geprüft …</value>
+  </data>
+  <data name="Vault_Err_Canceled" xml:space="preserve">
+    <value>Entsperren abgebrochen.</value>
+  </data>
+  <data name="Vault_Err_EntryAmbiguous" xml:space="preserve">
+    <value>Mehrere Einträge passen zu „{0}“. Gib den Pfad (Gruppe/Titel) oder die UUID an.</value>
+  </data>
+  <data name="Vault_Err_EntryNotFound" xml:space="preserve">
+    <value>Eintrag nicht gefunden: {0}</value>
+  </data>
+  <data name="Vault_Err_FileNotFound" xml:space="preserve">
+    <value>Datei nicht gefunden: {0}</value>
+  </data>
+  <data name="Vault_Err_InvalidReference" xml:space="preserve">
+    <value>Ungültiger Verweis auf den Passwort-Manager ({0}).</value>
+  </data>
+  <data name="Vault_Err_NotSignedIn" xml:space="preserve">
+    <value>Die 1Password-CLI ist nicht angemeldet. Schalte in der 1Password-App unter Einstellungen &gt; Entwickler die CLI-Integration ein oder melde dich mit „op signin“ an.</value>
+  </data>
+  <data name="Vault_Err_ToolFailed" xml:space="preserve">
+    <value>1Password: {0}</value>
+  </data>
+  <data name="Vault_Err_ToolMissing" xml:space="preserve">
+    <value>Die 1Password-CLI (op) wurde nicht gefunden. Installieren mit: winget install AgileBits.1Password.CLI</value>
+  </data>
+  <data name="Vault_Err_UnknownSource" xml:space="preserve">
+    <value>Die Passwortquelle „{0}“ ist nicht verfügbar.</value>
+  </data>
+  <data name="Vault_Err_UnsupportedFormat" xml:space="preserve">
+    <value>Die Datei ist keine unterstützte KeePass-Datenbank ({0}).</value>
+  </data>
+  <data name="Vault_Err_WrongMasterKey" xml:space="preserve">
+    <value>Master-Passwort oder Schlüsseldatei ist falsch.</value>
+  </data>
+  <data name="Vault_Error_DatabaseRequired" xml:space="preserve">
+    <value>Wähle die KeePass-Datenbank aus.</value>
+  </data>
+  <data name="Vault_Error_EntryRequired" xml:space="preserve">
+    <value>Gib den KeePass-Eintrag an oder wähle ihn aus.</value>
+  </data>
+  <data name="Vault_Error_OpReference" xml:space="preserve">
+    <value>Gib eine 1Password-Referenz der Form op://Tresor/Eintrag/Feld an.</value>
+  </data>
+  <data name="Vault_FileFilter_KeePass" xml:space="preserve">
+    <value>KeePass-Datenbank</value>
+  </data>
+  <data name="Vault_FileFilter_KeyFile" xml:space="preserve">
+    <value>Schlüsseldatei</value>
+  </data>
+  <data name="Vault_KeePass_Database" xml:space="preserve">
+    <value>KeePass-Datenbank (.kdbx)</value>
+  </data>
+  <data name="Vault_KeePass_Entry" xml:space="preserve">
+    <value>Eintrag: Gruppe/Titel, Titel oder UUID</value>
+  </data>
+  <data name="Vault_KeePass_Hint" xml:space="preserve">
+    <value>Das Master-Passwort wird beim Verbinden abgefragt und nie gespeichert. Danach bleibt die Datenbank {0} Minuten entsperrt, nur im Arbeitsspeicher.</value>
+  </data>
+  <data name="Vault_KeePass_KeyFile" xml:space="preserve">
+    <value>Schlüsseldatei (optional)</value>
+  </data>
+  <data name="Vault_OnePassword_Hint" xml:space="preserve">
+    <value>Das Passwort wird beim Verbinden mit „op read“ geholt und nicht gespeichert. 1Password fragt dabei selbst nach der Freigabe.</value>
+  </data>
+  <data name="Vault_OnePassword_Reference" xml:space="preserve">
+    <value>op://Tresor/Eintrag/password</value>
+  </data>
+  <data name="Vault_PickEntry" xml:space="preserve">
+    <value>Auswählen …</value>
+  </data>
+  <data name="Vault_Source_App" xml:space="preserve">
+    <value>Passwort in Remote-Manager (Windows Credential Manager)</value>
+  </data>
+  <data name="Vault_Source_KeePass" xml:space="preserve">
+    <value>Passwort aus KeePass (.kdbx)</value>
+  </data>
+  <data name="Vault_Source_OnePassword" xml:space="preserve">
+    <value>Passwort aus 1Password (op-CLI)</value>
+  </data>
   <data name="View_ListTip" xml:space="preserve">
     <value>Liste (Strg+2)</value>
   </data>
   <data name="View_TilesTip" xml:space="preserve">
     <value>Kacheln (Strg+1)</value>
+  </data>
+  <data name="Vnc_AuthFailed" xml:space="preserve">
+    <value>Der Server hat das Passwort abgelehnt.</value>
+  </data>
+  <data name="Vnc_Connected" xml:space="preserve">
+    <value>Verbunden: {0} ({1} × {2})</value>
+  </data>
+  <data name="Vnc_ConnectFailed" xml:space="preserve">
+    <value>Verbindung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Vnc_Connecting" xml:space="preserve">
+    <value>Verbinde mit {0} …</value>
+  </data>
+  <data name="Vnc_ConnectionLost" xml:space="preserve">
+    <value>Verbindung getrennt: {0}</value>
+  </data>
+  <data name="Vnc_CtrlAltDel" xml:space="preserve">
+    <value>Strg+Alt+Entf</value>
+  </data>
+  <data name="Vnc_Disconnected" xml:space="preserve">
+    <value>Getrennt.</value>
+  </data>
+  <data name="Vnc_Footer" xml:space="preserve">
+    <value>Eingebettet über das VNC-Protokoll (RFB). Das Passwort wird erst beim Verbinden aus seiner Quelle geholt.</value>
+  </data>
+  <data name="Vnc_OpenExternal" xml:space="preserve">
+    <value>Extern öffnen</value>
+  </data>
+  <data name="Vnc_PasswordPlaceholderStored" xml:space="preserve">
+    <value>Leer lassen für das gespeicherte Passwort</value>
+  </data>
+  <data name="Vnc_PasswordRequired" xml:space="preserve">
+    <value>Der Server verlangt ein Passwort. Gib es ein oder hinterlege eins in der Verbindung.</value>
+  </data>
+  <data name="Vnc_Quality_Auto" xml:space="preserve">
+    <value>Bildqualität: automatisch</value>
+  </data>
+  <data name="Vnc_Quality_High" xml:space="preserve">
+    <value>Bildqualität: hoch</value>
+  </data>
+  <data name="Vnc_Quality_Low" xml:space="preserve">
+    <value>Bildqualität: niedrig (langsame Leitung)</value>
+  </data>
+  <data name="Vnc_Quality_Medium" xml:space="preserve">
+    <value>Bildqualität: mittel</value>
+  </data>
+  <data name="Vnc_Reconnecting" xml:space="preserve">
+    <value>Verbindung unterbrochen, verbinde neu …</value>
+  </data>
+  <data name="Vnc_ScaleTip" xml:space="preserve">
+    <value>An Fenstergröße anpassen</value>
+  </data>
+  <data name="Vnc_Settings_External" xml:space="preserve">
+    <value>Externen VNC-Viewer verwenden (TightVNC, TigerVNC, UltraVNC, RealVNC)</value>
+  </data>
+  <data name="Vnc_Settings_Scale" xml:space="preserve">
+    <value>An Fenstergröße anpassen</value>
+  </data>
+  <data name="Vnc_Settings_Title" xml:space="preserve">
+    <value>VNC</value>
+  </data>
+  <data name="Vnc_Settings_ViewOnly" xml:space="preserve">
+    <value>Nur ansehen (keine Maus- und Tastatureingaben senden)</value>
+  </data>
+  <data name="Vnc_StoredPasswordRejected" xml:space="preserve">
+    <value>Der Server hat das gespeicherte Passwort abgelehnt. Gib das richtige ein.</value>
+  </data>
+  <data name="Vnc_ViewerFailed" xml:space="preserve">
+    <value>Der VNC-Viewer konnte nicht gestartet werden: {0}</value>
+  </data>
+  <data name="Vnc_ViewerMissing" xml:space="preserve">
+    <value>Kein VNC-Viewer gefunden. Installiere TightVNC, TigerVNC, UltraVNC oder RealVNC Viewer, oder nutze die eingebettete Sitzung.</value>
+  </data>
+  <data name="Vnc_ViewerStarted" xml:space="preserve">
+    <value>{0} gestartet.</value>
+  </data>
+  <data name="Vnc_ViewOnly" xml:space="preserve">
+    <value>Nur ansehen</value>
+  </data>
+  <data name="Vnc_ViewOnlyTip" xml:space="preserve">
+    <value>Keine Maus- und Tastatureingaben senden</value>
   </data>
 </root>

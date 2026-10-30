@@ -22,6 +22,8 @@ src\RemoteManager.App\bin\Debug\net10.0-windows\RemoteManager.App.exe --selftest
 
 The self-test writes `selftest.log` and probe screenshots to `%LOCALAPPDATA%\RemoteManager\spike`. Set
 `REMOTE_MANAGER_DATA` to a folder to run the app (or the self-test) against other data than your own.
+The VNC checks use an in-process test server; `RM_VNC_HOST` (with `RM_VNC_PORT`, `RM_VNC_PASSWORD`, `RM_VNC_KEYS`)
+adds a session against a real VNC server.
 
 ## Model (`Core/Model`)
 
@@ -58,7 +60,13 @@ The self-test writes `selftest.log` and probe screenshots to `%LOCALAPPDATA%\Rem
 ## Credentials (`Core/Credentials`)
 
 - `ICredentialSource`: async read/write/delete by key. `WindowsCredentialSource` (id `wincred`, target
-  `RemoteManager:<key>`) is the only one now; KeePass and 1Password are planned as further sources.
+  `RemoteManager:<key>`) is the writable default. `KeePassCredentialSource` (id `keepass`, key = JSON with
+  database, entry, optional key file) and `OnePasswordCredentialSource` (id `1password`, key = `op://…` reference)
+  are read-only: the connection stores only the reference, the secret is fetched at connect time. Failures throw
+  `CredentialSourceException` (locked, canceled, entry missing, CLI missing); the app turns them into German
+  messages (`App/Credentials/CredentialErrors`). Details and library choices: `docs/vnc-and-vaults.md`.
+- In the editor, `App/Credentials/PasswordSourcePanel` picks the source; `CredentialService.UseReferenceAsync`
+  stores a password-manager reference (and deletes an own Credential Manager password).
 - `CredentialService.Resolve(connection)`: the connection's own user/domain/secret when it sets a user or a
   secret, otherwise those of the nearest ancestor group that does. User, domain, and secret are inherited
   together. A connection's own password is stored under its id; a group's under `group-<id>`.
@@ -102,7 +110,8 @@ The main window, editor, and status checks only talk to `ConnectionHandlerRegist
   `IConnectionHost` gives access to copy-password, toasts, `MarkConnected`, and `Save`.
 
 Today: `Rdp/RdpHandler` (embedded `SessionWindow`), `RemoteTools/*` (TeamViewer, AnyDesk, RustDesk; launch in
-Phase 2), `Ssh/*` and `Vnc/*` (Phase 3). The not-yet-built ones show `PlannedConnectionDialog`. To build one
+Phase 2), `Vnc/VncHandler` (embedded `VncSessionWindow` on Community.MarcusW.VncClient, external viewer as
+fallback), `Ssh/*` (Phase 3). The not-yet-built ones show `PlannedConnectionDialog`. To build one
 out, replace its `Open` and add a settings editor; a brand-new type also needs a `ConnectionType` value and
 its settings record in `ConnectionSettings.TypeFor`.
 
