@@ -183,15 +183,23 @@ public partial class SessionWindow : Window, ISessionWindow
         passwordToSave = typed.Length > 0 && SavePasswordBox.IsChecked == true ? typed : null;
 
         RdpSettings settings = Connection.Model.SettingsAs<RdpSettings>();
-        (int width, int height, Devolutions.MsRdpEx.Avalonia.RdpDisplayMode mode) = settings.Display switch
+        string gatewayPassword = "";
+        if (settings.GatewayUsage != RdpGatewayUsage.None && !settings.GatewayUsesConnectionCredentials && settings.GatewayCredential is { } gatewayCredential)
         {
-            Core.Model.Settings.RdpDisplayMode.SmartSizing => (0, 0, Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.SmartSizing),
-            Core.Model.Settings.RdpDisplayMode.FixedResolution => (settings.DesktopWidth, settings.DesktopHeight, Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.SmartSizing),
-            _ => (0, 0, Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.FitToWindow),
-        };
+            try
+            {
+                gatewayPassword = await AppHost.Current.Credentials.ReadAsync(gatewayCredential) ?? "";
+            }
+            catch (Win32Exception ex)
+            {
+                Log($"Gateway password could not be read: {ex.Message}");
+            }
+        }
 
         RdpView.UseRemoteKeyboardShortcuts = settings.Keyboard == RdpKeyboardMode.Session;
-        RdpView.DisplayMode = mode;
+        RdpView.DisplayMode = settings.Display == Core.Model.Settings.RdpDisplayMode.FitToWindow
+            ? Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.FitToWindow
+            : Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.SmartSizing;
 
         // Show the surface and lay it out first: the initial session size comes from the viewport.
         ShowSessionSurface();
@@ -200,21 +208,14 @@ public partial class SessionWindow : Window, ISessionWindow
 
         try
         {
-            // Server authentication: warn on certificate problems instead of silently connecting.
-            // RdpClientView.Connect leaves AuthenticationLevel untouched, so set it on the client first.
-            RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.AuthenticationLevel = (uint)Math.Clamp(settings.AuthenticationLevel, 0, 2);
-            if (Connection.Model.EffectivePort != DefaultPorts.For(ConnectionType.Rdp))
-                RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.RDPPort = Connection.Model.EffectivePort;
-
-            var connectionSettings = new RdpConnectionSettings(
-                HostName: host,
-                UserName: UserBox.Text?.Trim() ?? "",
-                Password: password,
-                Domain: DomainBox.Text?.Trim() ?? "",
-                DesktopWidth: width,
-                DesktopHeight: height);
-
-            RdpView.Connect(connectionSettings);
+            (int width, int height) = settings.Display == Core.Model.Settings.RdpDisplayMode.FixedResolution && settings.DesktopWidth > 0 && settings.DesktopHeight > 0
+                ? (settings.DesktopWidth, settings.DesktopHeight)
+                : (RdpView.ViewportPixelSize.Width, RdpView.ViewportPixelSize.Height);
+            var logon = new RdpLogon(host, Connection.Model.EffectivePort, UserBox.Text?.Trim() ?? "", DomainBox.Text?.Trim() ?? "", password, gatewayPassword);
+            RdpClientConfigurator.Apply(RdpView, settings, logon, width, height);
+            Log(RdpClientConfigurator.Describe(settings));
+            // Only fit-to-window follows the window size; the other modes keep the session size and scale.
+            RdpView.ConnectConfigured(manageDynamicResolution: settings.Display == Core.Model.Settings.RdpDisplayMode.FitToWindow);
         }
         catch (Exception ex)
         {

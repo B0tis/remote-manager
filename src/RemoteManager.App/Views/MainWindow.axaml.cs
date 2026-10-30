@@ -61,6 +61,7 @@ public partial class MainWindow : Window, IConnectionHost
         RefreshButton.Click += (_, _) => RefreshStatus();
         ConnectButton.Click += (_, _) => OpenSelected();
         AddButton.Click += (_, _) => AddConnection();
+        MoreButton.Flyout = ImportExportCommands.CreateMenu(this);
         toastTimer.Tick += (_, _) =>
         {
             toastTimer.Stop();
@@ -90,6 +91,7 @@ public partial class MainWindow : Window, IConnectionHost
     public bool IsListView => ListPanel.IsVisible;
     public FAInfoBar ToastBar => Toast;
     public ListBox Tiles => TileList;
+    public Button More => MoreButton;
     public Task? StatusRefresh { get; private set; }
 
     Window IConnectionHost.Owner => this;
@@ -198,6 +200,25 @@ public partial class MainWindow : Window, IConnectionHost
         ListToggle.IsChecked = list;
         ActiveList.SelectedItem = selected;
         UpdateEmptyState();
+    }
+
+    /// <summary>After an import: items for new connections, fresh labels for changed ones, sidebar and status.</summary>
+    public void SyncWithLibrary()
+    {
+        foreach (Connection connection in app.Library.Connections)
+        {
+            if (!items.Exists(i => i.Model == connection))
+                items.Add(CreateItem(connection));
+        }
+
+        foreach (ConnectionItem item in items)
+        {
+            item.RefreshCredentialState();
+            item.Changed();
+        }
+
+        BuildNavigation();
+        RefreshStatus();
     }
 
     private void BuildNavigation()

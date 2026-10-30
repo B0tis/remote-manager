@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Views.ImportView"
+             Width="480">
+  <!-- Import dialog: format (one IImporter each), file, optional target group. -->
+  <StackPanel Spacing="12">
+    <StackPanel Spacing="4">
+      <TextBlock Text="{x:Static res:Strings.Import_Format}" FontSize="12" Opacity="0.7" />
+      <ComboBox x:Name="FormatBox" HorizontalAlignment="Stretch" />
+    </StackPanel>
+    <StackPanel Spacing="4">
+      <TextBlock Text="{x:Static res:Strings.Import_File}" FontSize="12" Opacity="0.7" />
+      <Grid ColumnDefinitions="*,8,Auto">
+        <TextBox x:Name="FileBox" IsReadOnly="True" PlaceholderText="{x:Static res:Strings.Import_FilePlaceholder}" />
+        <Button x:Name="BrowseButton" Grid.Column="2" Content="{x:Static res:Strings.Import_Browse}" />
+      </Grid>
+    </StackPanel>
+    <AutoCompleteBox x:Name="TargetBox" PlaceholderText="{x:Static res:Strings.Import_TargetGroup}" FilterMode="Contains" MinimumPrefixLength="0" />
+    <TextBlock Text="{x:Static res:Strings.Import_Hint}" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
+    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource SystemFillColorCriticalBrush}" IsVisible="False" TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>

@@ -25,7 +25,12 @@
       <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Field_User}" />
       <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_DomainOptional}" />
     </Grid>
-    <TextBlock x:Name="InheritedHint" Opacity="0.55" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
+    <!-- Which group logon applies (inherited or replaced by the own one), and the group's logon in a flyout. -->
+    <Grid ColumnDefinitions="*,Auto">
+      <TextBlock x:Name="InheritedHint" Opacity="0.55" FontSize="12" TextWrapping="Wrap" IsVisible="False" VerticalAlignment="Center" />
+      <Button x:Name="GroupLogonButton" Grid.Column="1" Classes="toolbar" Padding="8,2" FontSize="12" VerticalAlignment="Top"
+              Content="{x:Static res:Strings.Editor_GroupLogonButton}" IsVisible="False" />
+    </Grid>
 
     <!-- The stored password is never read back into this dialog: the box only takes a new one. -->
     <StackPanel Spacing="6">

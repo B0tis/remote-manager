@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RDCMan 2.2 (schema 1): properties directly on the server element. -->
+<RDCMan schemaVersion="1">
+  <version>2.2</version>
+  <file>
+    <properties>
+      <name>Alt</name>
+      <expanded>True</expanded>
+      <comment />
+      <logonCredentials inherit="FromParent" />
+    </properties>
+    <group>
+      <properties>
+        <name>Labor</name>
+        <expanded>True</expanded>
+      </properties>
+      <server>
+        <name>lab-rdp01</name>
+        <displayName>Labor RDP</displayName>
+        <comment>Testserver</comment>
+        <logonCredentials inherit="None">
+          <userName>tester</userName>
+          <domain>LAB</domain>
+          <password storeAsClearText="True">Klartext-1</password>
+        </logonCredentials>
+        <connectionSettings inherit="None">
+          <connectToConsole>False</connectToConsole>
+          <startProgram />
+          <workingDir />
+          <port>3391</port>
+        </connectionSettings>
+      </server>
+    </group>
+  </file>
+</RDCMan>

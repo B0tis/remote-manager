@@ -129,6 +129,10 @@
               </ToggleButton>
             </StackPanel>
           </Border>
+          <!-- Import and JSON backup (ImportExportCommands). -->
+          <Button x:Name="MoreButton" ToolTip.Tip="{x:Static res:Strings.Action_More}" Padding="9">
+            <ui:FASymbolIcon Symbol="More" FontSize="16" />
+          </Button>
           <Button x:Name="RefreshButton" ToolTip.Tip="{x:Static res:Strings.Status_RefreshTip}" Padding="9">
             <ui:FASymbolIcon Symbol="Refresh" FontSize="16" />
           </Button>

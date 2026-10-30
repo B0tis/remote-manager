@@ -106,6 +106,39 @@ Phase 2), `Ssh/*` and `Vnc/*` (Phase 3). The not-yet-built ones show `PlannedCon
 out, replace its `Open` and add a settings editor; a brand-new type also needs a `ConnectionType` value and
 its settings record in `ConnectionSettings.TypeFor`.
 
+## RDP start (`App/Connections/Rdp`, `Core/Rdp`)
+
+- Embedded: `SessionWindow` puts every `RdpSettings` option onto the MsRdpEx client through
+  `RdpClientConfigurator` (server, port, user, NLA, authentication level, admin session, gateway, redirections,
+  audio, start program, multimon; Restricted Admin / Remote Credential Guard through `IMsRdpExtendedSettings`)
+  and then calls `RdpClientView.ConnectConfigured`. `RdpClientView.Connect` is not used: it overwrites NLA and
+  clipboard redirection with its own defaults. Every option is set on every connect (the client is reused).
+- External: "Mit mstsc öffnen" and every RemoteApp go through `ExternalRdpLauncher`: `RdpFileMapping.ToRdpFile`
+  writes a temporary .rdp file (UTF-16, never a password), Restricted Admin / Remote Credential Guard / multimon /
+  admin become mstsc switches, and the stored password is written as `TERMSRV/<host>` (domain password, persisted
+  for the logon session only) unless the user already has such an entry. File and entry are removed when mstsc exits.
+- The gateway's own password is a `CredentialRef` in `RdpSettings.GatewayCredential` (key `gateway-<guid>`).
+
+## Import and export (`Core/ImportExport`)
+
+| Importer | Reads | Groups | Passwords |
+| --- | --- | --- | --- |
+| `OneRemoteImporter` | 1Remote/PRemoteM `1Remote.db` (table `Server`, JSON per row) or JSON export (.prma) | none (1Remote has tags) | not taken over (1Remote's own encryption) |
+| `RdcManImporter` | RDCMan .rdg, schema 1 and 3 | file and groups, nested | DPAPI of the current user, else reported |
+| `MRemoteNgImporter` | confCons.xml (also fully encrypted ones) | containers, nested | with mRemoteNG's default master password (AES-GCM, `MRemoteNgCrypto`), else reported |
+| `RdpFileImporter` | .rdp | none | never (`password 51:b:` is machine-bound) |
+| `JsonBackupImporter` | own backup | ids kept | references only |
+
+`JsonBackupExporter` writes everything (ids, settings, credential references) but no secret. `ImportService`
+merges an `ImportResult`: groups with the same name under the same parent are reused, a known id is replaced in
+place (backup restore), an identical connection in the same group is skipped, passwords go to the default
+credential source. It adds and updates through `ConnectionLibrary.Add/Update` (not `AddRange`, which reloads every
+object) so windows that hold a connection keep a live one. The UI is `Views/ImportView` + `ImportExportCommands`
+(the "…" button in the overview). Sample files for the tests are in `tests/RemoteManager.Core.Tests/Samples`.
+
+Inheritance in the editor: the connection editor shows which group logon applies for the group typed right now
+(inherited, or replaced by the connection's own) and edits the group's logon in a flyout (`Views/GroupLogonPanel`).
+
 ## UI text
 
 The UI is German. Every user-facing string is in `App/Resources/Strings.resx`; the `Strings` class is
