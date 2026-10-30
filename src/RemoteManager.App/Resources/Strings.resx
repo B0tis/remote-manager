@@ -21,6 +21,12 @@
   <data name="Action_Connect" xml:space="preserve">
     <value>Verbinden</value>
   </data>
+  <data name="Action_ConnectAll" xml:space="preserve">
+    <value>Alle verbinden</value>
+  </data>
+  <data name="Action_ConnectCount" xml:space="preserve">
+    <value>Verbinden ({0})</value>
+  </data>
   <data name="Action_CopyPassword" xml:space="preserve">
     <value>Passwort kopieren</value>
   </data>
@@ -30,23 +36,47 @@
   <data name="Action_DeleteEllipsis" xml:space="preserve">
     <value>Löschen…</value>
   </data>
+  <data name="Action_DeleteGroup" xml:space="preserve">
+    <value>Gruppe löschen …</value>
+  </data>
   <data name="Action_Duplicate" xml:space="preserve">
     <value>Duplizieren</value>
   </data>
   <data name="Action_Edit" xml:space="preserve">
     <value>Bearbeiten…</value>
   </data>
+  <data name="Action_EditGroup" xml:space="preserve">
+    <value>Gruppe bearbeiten …</value>
+  </data>
   <data name="Action_Favorite" xml:space="preserve">
     <value>Zu Favoriten hinzufügen</value>
   </data>
+  <data name="Action_Move" xml:space="preserve">
+    <value>Verschieben</value>
+  </data>
+  <data name="Action_MoveToGroup" xml:space="preserve">
+    <value>In Gruppe verschieben …</value>
+  </data>
   <data name="Action_New" xml:space="preserve">
     <value>Neue Verbindung</value>
+  </data>
+  <data name="Action_NewConnectionHere" xml:space="preserve">
+    <value>Neue Verbindung hier …</value>
+  </data>
+  <data name="Action_NewGroup" xml:space="preserve">
+    <value>Neue Gruppe …</value>
+  </data>
+  <data name="Action_NewSubgroup" xml:space="preserve">
+    <value>Neue Untergruppe …</value>
   </data>
   <data name="Action_Remove" xml:space="preserve">
     <value>Entfernen</value>
   </data>
   <data name="Action_Save" xml:space="preserve">
     <value>Speichern</value>
+  </data>
+  <data name="Action_ToggleFavorite" xml:space="preserve">
+    <value>Favorit an/aus</value>
   </data>
   <data name="Action_Unfavorite" xml:space="preserve">
     <value>Aus Favoriten entfernen</value>
@@ -66,6 +96,12 @@
   <data name="Column_Name" xml:space="preserve">
     <value>Name</value>
   </data>
+  <data name="Column_SortTip" xml:space="preserve">
+    <value>Nach {0} sortieren (nochmal klicken: absteigend, dann Gruppenreihenfolge)</value>
+  </data>
+  <data name="Column_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
   <data name="Column_Tags" xml:space="preserve">
     <value>Tags</value>
   </data>
@@ -80,6 +116,63 @@
   </data>
   <data name="Delete_Title" xml:space="preserve">
     <value>{0} löschen?</value>
+  </data>
+  <data name="Delete_TitleMany" xml:space="preserve">
+    <value>{0} Verbindungen löschen?</value>
+  </data>
+  <data name="Details_Change" xml:space="preserve">
+    <value>Ändern</value>
+  </data>
+  <data name="Details_Empty" xml:space="preserve">
+    <value>Wähle eine Verbindung aus, um ihre Details zu sehen.</value>
+  </data>
+  <data name="Details_HideTip" xml:space="preserve">
+    <value>Details ausblenden (Strg+I)</value>
+  </data>
+  <data name="Details_History" xml:space="preserve">
+    <value>Verlauf</value>
+  </data>
+  <data name="Details_HistoryEmpty" xml:space="preserve">
+    <value>Noch keine Verbindung aufgezeichnet.</value>
+  </data>
+  <data name="Details_Host" xml:space="preserve">
+    <value>Host / ID</value>
+  </data>
+  <data name="Details_Inherited" xml:space="preserve">
+    <value>{0} (geerbt von {1})</value>
+  </data>
+  <data name="Details_More" xml:space="preserve">
+    <value>… und {0} weitere</value>
+  </data>
+  <data name="Details_NoLogon" xml:space="preserve">
+    <value>Keine Anmeldedaten</value>
+  </data>
+  <data name="Details_NotesPlaceholder" xml:space="preserve">
+    <value>Notizen zu dieser Verbindung …</value>
+  </data>
+  <data name="Details_PasswordOnly" xml:space="preserve">
+    <value>Nur Passwort</value>
+  </data>
+  <data name="Details_Selected" xml:space="preserve">
+    <value>{0} Verbindungen ausgewählt</value>
+  </data>
+  <data name="Details_StartParameters" xml:space="preserve">
+    <value>Startparameter</value>
+  </data>
+  <data name="Details_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Details_Title" xml:space="preserve">
+    <value>DETAILS</value>
+  </data>
+  <data name="Details_ToggleTip" xml:space="preserve">
+    <value>Detailbereich ein/aus (Strg+I)</value>
+  </data>
+  <data name="Details_User" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="Details_UserWithPassword" xml:space="preserve">
+    <value>{0} · Passwort gespeichert</value>
   </data>
   <data name="Duplicate_Name" xml:space="preserve">
     <value>{0} (Kopie)</value>
@@ -159,11 +252,107 @@
   <data name="Field_User" xml:space="preserve">
     <value>Benutzer</value>
   </data>
+  <data name="GroupDelete_Message" xml:space="preserve">
+    <value>Untergruppen und Verbindungen wandern nach „{0}“. Ein gespeichertes Gruppenpasswort wird aus der Windows-Anmeldeinformationsverwaltung gelöscht.</value>
+  </data>
+  <data name="GroupDelete_Title" xml:space="preserve">
+    <value>Gruppe „{0}“ löschen?</value>
+  </data>
+  <data name="GroupEditor_Error_Duplicate" xml:space="preserve">
+    <value>Auf dieser Ebene gibt es schon eine Gruppe mit diesem Namen.</value>
+  </data>
+  <data name="GroupEditor_Error_Slash" xml:space="preserve">
+    <value>Der Name darf keinen Schrägstrich (/) enthalten.</value>
+  </data>
+  <data name="GroupEditor_Logon" xml:space="preserve">
+    <value>Anmeldung für die Gruppe</value>
+  </data>
+  <data name="GroupEditor_LogonHint" xml:space="preserve">
+    <value>Verbindungen in dieser Gruppe ohne eigene Anmeldedaten verwenden diese.</value>
+  </data>
+  <data name="GroupEditor_Parent" xml:space="preserve">
+    <value>Übergeordnete Gruppe</value>
+  </data>
+  <data name="GroupEditor_TitleEdit" xml:space="preserve">
+    <value>Gruppe „{0}“ bearbeiten</value>
+  </data>
+  <data name="GroupEditor_TitleNew" xml:space="preserve">
+    <value>Neue Gruppe</value>
+  </data>
+  <data name="GroupEditor_TopLevel" xml:space="preserve">
+    <value>(oberste Ebene)</value>
+  </data>
+  <data name="GroupHeader_Summary" xml:space="preserve">
+    <value>eingeklappt · {0} online, {1} offline</value>
+  </data>
   <data name="Group_None" xml:space="preserve">
     <value>Keine Gruppe</value>
   </data>
+  <data name="History_Connected" xml:space="preserve">
+    <value>Verbunden</value>
+  </data>
+  <data name="History_Failed" xml:space="preserve">
+    <value>Fehlgeschlagen</value>
+  </data>
+  <data name="History_Hours" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="History_Launched" xml:space="preserve">
+    <value>Extern gestartet</value>
+  </data>
+  <data name="History_Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="History_UnderAMinute" xml:space="preserve">
+    <value>unter 1 min</value>
+  </data>
+  <data name="Key_Ctrl" xml:space="preserve">
+    <value>Strg</value>
+  </data>
+  <data name="Key_Shift" xml:space="preserve">
+    <value>Umschalt</value>
+  </data>
+  <data name="Key_Space" xml:space="preserve">
+    <value>Leertaste</value>
+  </data>
   <data name="LastConnected_Never" xml:space="preserve">
     <value>Nie</value>
+  </data>
+  <data name="Launcher_ButtonTip" xml:space="preserve">
+    <value>Quick-Launcher ({0}, in der App auch Strg+K)</value>
+  </data>
+  <data name="Launcher_ChangeHotkey" xml:space="preserve">
+    <value>Ändern</value>
+  </data>
+  <data name="Launcher_Hints" xml:space="preserve">
+    <value>Enter verbinden · Strg+Enter in der Übersicht zeigen · Esc schließen</value>
+  </data>
+  <data name="Launcher_HotkeyInvalid" xml:space="preserve">
+    <value>Bitte Strg, Alt oder Win mit einem Buchstaben, einer Ziffer, F-Taste oder Leertaste.</value>
+  </data>
+  <data name="Launcher_HotkeyLabel" xml:space="preserve">
+    <value>Hotkey: {0}</value>
+  </data>
+  <data name="Launcher_HotkeyNone" xml:space="preserve">
+    <value>Kein Hotkey aktiv</value>
+  </data>
+  <data name="Launcher_HotkeyTaken" xml:space="preserve">
+    <value>{0} ist schon von einem anderen Programm belegt.</value>
+  </data>
+  <data name="Launcher_Placeholder" xml:space="preserve">
+    <value>Verbindung suchen: Name, Host, Tag, Gruppe …</value>
+  </data>
+  <data name="Launcher_PressHotkey" xml:space="preserve">
+    <value>Neue Tastenkombination drücken (Esc bricht ab) …</value>
+  </data>
+  <data name="Launcher_Title" xml:space="preserve">
+    <value>Quick-Launcher</value>
+  </data>
+  <data name="Move_Title" xml:space="preserve">
+    <value>„{0}“ verschieben nach</value>
+  </data>
+  <data name="Move_TitleMany" xml:space="preserve">
+    <value>{0} Verbindungen verschieben nach</value>
   </data>
   <data name="Nav_All" xml:space="preserve">
     <value>Alle Verbindungen</value>
@@ -306,6 +495,90 @@
   <data name="Session_StoredPasswordRejected" xml:space="preserve">
     <value>Das gespeicherte Passwort wurde abgelehnt. Bitte neu eingeben; mit „Passwort speichern“ wird es ersetzt.
 {0}</value>
+  </data>
+  <data name="StartParams_Custom" xml:space="preserve">
+    <value>Eigene Einstellungen</value>
+  </data>
+  <data name="StartParams_Default" xml:space="preserve">
+    <value>Standardeinstellungen</value>
+  </data>
+  <data name="StartParams_Rdp_Admin" xml:space="preserve">
+    <value>Admin-Sitzung (Konsole)</value>
+  </data>
+  <data name="StartParams_Rdp_AudioNone" xml:space="preserve">
+    <value>Ton aus</value>
+  </data>
+  <data name="StartParams_Rdp_AudioRemote" xml:space="preserve">
+    <value>Ton auf dem Remote-PC</value>
+  </data>
+  <data name="StartParams_Rdp_Clipboard" xml:space="preserve">
+    <value>Zwischenablage</value>
+  </data>
+  <data name="StartParams_Rdp_CredentialGuard" xml:space="preserve">
+    <value>Remote Credential Guard</value>
+  </data>
+  <data name="StartParams_Rdp_Drives" xml:space="preserve">
+    <value>Laufwerke</value>
+  </data>
+  <data name="StartParams_Rdp_External" xml:space="preserve">
+    <value>Extern mit mstsc</value>
+  </data>
+  <data name="StartParams_Rdp_Fit" xml:space="preserve">
+    <value>Anzeige passt sich dem Fenster an</value>
+  </data>
+  <data name="StartParams_Rdp_Fixed" xml:space="preserve">
+    <value>Feste Auflösung {0} × {1}</value>
+  </data>
+  <data name="StartParams_Rdp_Gateway" xml:space="preserve">
+    <value>Gateway {0}</value>
+  </data>
+  <data name="StartParams_Rdp_KeysFullScreen" xml:space="preserve">
+    <value>Windows-Tasten nur im Vollbild an die Sitzung</value>
+  </data>
+  <data name="StartParams_Rdp_KeysLocal" xml:space="preserve">
+    <value>Windows-Tasten bleiben lokal</value>
+  </data>
+  <data name="StartParams_Rdp_KeysSession" xml:space="preserve">
+    <value>Windows-Tasten an die Sitzung</value>
+  </data>
+  <data name="StartParams_Rdp_Microphone" xml:space="preserve">
+    <value>Mikrofon</value>
+  </data>
+  <data name="StartParams_Rdp_Multimon" xml:space="preserve">
+    <value>alle Monitore</value>
+  </data>
+  <data name="StartParams_Rdp_NlaOff" xml:space="preserve">
+    <value>NLA aus</value>
+  </data>
+  <data name="StartParams_Rdp_NlaOn" xml:space="preserve">
+    <value>NLA an</value>
+  </data>
+  <data name="StartParams_Rdp_Ports" xml:space="preserve">
+    <value>Anschlüsse</value>
+  </data>
+  <data name="StartParams_Rdp_Printers" xml:space="preserve">
+    <value>Drucker</value>
+  </data>
+  <data name="StartParams_Rdp_Redirected" xml:space="preserve">
+    <value>Umgeleitet: {0}</value>
+  </data>
+  <data name="StartParams_Rdp_RemoteApp" xml:space="preserve">
+    <value>RemoteApp: {0}</value>
+  </data>
+  <data name="StartParams_Rdp_RestrictedAdmin" xml:space="preserve">
+    <value>Restricted Admin</value>
+  </data>
+  <data name="StartParams_Rdp_SmartCards" xml:space="preserve">
+    <value>Smartcards</value>
+  </data>
+  <data name="StartParams_Rdp_SmartSizing" xml:space="preserve">
+    <value>Skaliert ins Fenster</value>
+  </data>
+  <data name="StartParams_Rdp_StartProgram" xml:space="preserve">
+    <value>Startprogramm: {0}</value>
+  </data>
+  <data name="Status_CheckedAt" xml:space="preserve">
+    <value>Zuletzt geprüft: {0}</value>
   </data>
   <data name="Status_Hint_Rdp" xml:space="preserve">
     <value>Status per TCP-Prüfung des RDP-Ports im Hintergrund. Keine Antwort = unbekannt, abgelehnt = offline.</value>

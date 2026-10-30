@@ -85,6 +85,7 @@ a list**, so parallel work does not collide.
 | Export | `IExporter` | `Core/ImportExport/` | Core, App |
 | Credential source | `ICredentialSource` | `Core/Credentials/` | Core, App |
 | Schema change | numbered `.sql` file | `Core/Storage/Migrations/` | embedded |
+| Start parameter summary (detail panel) | `IStartParameterSummary` | next to the handler | App |
 
 `AppHost` (App) creates everything at startup: library, `CredentialService`, `ConnectionHandlerRegistry`,
 importers, exporters, `StatusChecker`. Windows reach it through `AppHost.Current`.
@@ -105,6 +106,36 @@ Today: `Rdp/RdpHandler` (embedded `SessionWindow`), `RemoteTools/*` (TeamViewer,
 Phase 2), `Ssh/*` and `Vnc/*` (Phase 3). The not-yet-built ones show `PlannedConnectionDialog`. To build one
 out, replace its `Open` and add a settings editor; a brand-new type also needs a `ConnectionType` value and
 its settings record in `ConnectionSettings.TypeFor`.
+
+## Overview (`App/Views`)
+
+- **Sections:** in "Alle" and in a group, tiles and list show group headers (`GroupHeaderItem`: chevron, count,
+  online summary when collapsed), each followed by its own connections, depth-first; ungrouped connections
+  come last under "Keine Gruppe". `SectionWrapPanel` lets a header span a whole tile row. Collapsing is
+  `ConnectionGroup.IsCollapsed` (saved; the sidebar tree uses the same flag). Favorites, recent, and tags
+  stay flat.
+- **List:** column headers sort ascending, descending, then back to the group order (setting `overview.sort`);
+  a sorted list is flat. Below 900 px the group and tag columns hide. Both views use multi-select.
+- **Drag and drop** (`MainWindow.DragDrop.cs`): connections onto a header or sidebar group (into it) or onto a
+  connection (before/after it); a group header onto another header (upper part: before it, otherwise into
+  it) or onto "Alle" (top level). `MainWindow.Drop` holds the rules; `ConnectionLibrary.MoveConnections` /
+  `MoveGroup` renumber and save the order.
+- **Groups** (`MainWindow.Groups.cs`, `GroupEditor`): create, edit (name, parent, description, inherited logon
+  with password in the Credential Manager), delete (content moves up); context menu on headers and sidebar groups.
+- **Detail panel** (`ConnectionDetailPanel`): a column, not an overlay. Preview, actions, host, logon (with the
+  group it is inherited from), status with check time, start parameters (`IStartParameterSummary`), notes
+  (saved when focus leaves), history; bulk actions for several selected connections. Toggle with Strg+I
+  (setting `overview.details`).
+- **History** (`Core/History/ConnectionHistory`, migration 0002): an entry per logon (`MarkConnected`), ended
+  when the session window closes. Feeds the detail panel and the launcher ranking.
+- **Quick launcher** (`QuickLauncherWindow`, `Services/GlobalHotkey`): a system-wide hotkey (RegisterHotKey on
+  the main window, default Strg+Alt+R, setting `launcher.hotkey`, changeable in the launcher) or Strg+K opens
+  it. `Core/Search/FuzzySearch` ranks over name, host, tags, group, description, and type plus usage from the
+  history. Enter connects, Strg+Enter shows the connection in the overview, Esc closes.
+- **Sidebar note:** FANavigationView re-posts its selection animation until the selected item has an
+  indicator; selecting a freshly created or hidden (collapsed parent) item starves the UI thread. The main
+  window therefore rebuilds the sidebar only when groups or tags changed, clears the selection before
+  replacing items, selects again after layout, and never selects an item inside a collapsed group.
 
 ## UI text
 

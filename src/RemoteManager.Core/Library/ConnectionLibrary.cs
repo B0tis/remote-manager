@@ -7,7 +7,7 @@ namespace RemoteManager.Core.Library;
 /// The groups and connections in memory, written through to the <see cref="IConnectionStore"/> on
 /// every change. Not thread-safe: use it from the UI thread.
 /// </summary>
-public sealed class ConnectionLibrary
+public sealed partial class ConnectionLibrary
 {
     /// <summary>Separator of group paths as shown and typed in the UI ("Kunde A / Standort 1").</summary>
     public const string PathSeparator = " / ";

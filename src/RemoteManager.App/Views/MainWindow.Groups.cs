@@ -1,0 +1,174 @@
+using System.ComponentModel;
+using System.Globalization;
+using Avalonia.Controls;
+using FluentAvalonia.UI.Controls;
+using RemoteManager.App.Resources;
+using RemoteManager.Core.Model;
+
+namespace RemoteManager.App.Views;
+
+/// <summary>Group management: create, edit (name, parent, logon), delete, collapse, and the group context menu.</summary>
+public partial class MainWindow
+{
+    /// <summary>Asks for a new group under <paramref name="parentId"/>; returns it after it was added, or null on cancel.</summary>
+    internal async Task<ConnectionGroup?> CreateGroupAsync(string? parentId)
+    {
+        var group = new ConnectionGroup { ParentId = parentId };
+        (bool saved, string? parent) = await GroupEditor.ShowAsync(group, isNew: true);
+        if (!saved)
+            return null;
+
+        group.ParentId = parent;
+        group.SortOrder = app.Library.ChildrenOf(parent).Count();
+        app.Library.AddGroup(group);
+        AfterGroupChange();
+        return group;
+    }
+
+    /// <summary>Edits name, parent, description, and logon of a group.</summary>
+    internal async Task EditGroupAsync(ConnectionGroup group)
+    {
+        string? oldParent = group.ParentId;
+        (bool saved, string? parent) = await GroupEditor.ShowAsync(group, isNew: false);
+        if (!saved)
+            return;
+
+        app.Library.UpdateGroup(group);
+        if (parent != oldParent)
+            app.Library.MoveGroup(group, parent);
+        foreach (ConnectionItem item in items)
+            item.RefreshCredentialState();
+        AfterGroupChange();
+    }
+
+    internal async Task DeleteGroupAsync(ConnectionGroup group)
+    {
+        string target = app.Library.FindGroup(group.ParentId) is { } parent ? app.Library.PathOf(parent.Id) : Strings.Group_None;
+        var dialog = new FAContentDialog
+        {
+            Title = string.Format(CultureInfo.CurrentCulture, Strings.GroupDelete_Title, group.Name),
+            Content = string.Format(CultureInfo.CurrentCulture, Strings.GroupDelete_Message, target),
+            PrimaryButtonText = Strings.Action_Delete,
+            CloseButtonText = Strings.Action_Cancel,
+        };
+        if (await dialog.ShowAsync() == FAContentDialogResult.Primary)
+            await RemoveGroupAsync(group);
+    }
+
+    /// <summary>Removes the group and its stored password; subgroups and connections move up to its parent.</summary>
+    internal async Task RemoveGroupAsync(ConnectionGroup group)
+    {
+        if (group.Credential is not null)
+        {
+            try
+            {
+                await app.Credentials.RemoveGroupSecretAsync(group);
+            }
+            catch (Win32Exception ex)
+            {
+                ShowToast(group.Name, string.Format(CultureInfo.CurrentCulture, Strings.Password_RemoveFailed, ex.Message), FAInfoBarSeverity.Error);
+            }
+        }
+
+        app.Library.RemoveGroup(group);
+        if (filter == $"group:{group.Id}")
+            filter = "all";
+        foreach (ConnectionItem item in items)
+            item.RefreshCredentialState();
+        AfterGroupChange();
+    }
+
+    /// <summary>Collapses or expands a group section; the state is saved and the sidebar follows.</summary>
+    public void ToggleCollapsed(GroupHeaderItem header)
+    {
+        if (header.Group is not { } group)
+            return;
+        group.IsCollapsed = !group.IsCollapsed;
+        app.Library.UpdateGroup(group);
+        if (Nav.MenuItemsSource?.OfType<FANavigationViewItem>() is { } navItems
+            && Flatten(navItems).FirstOrDefault(i => (string?)i.Tag == $"group:{group.Id}") is { MenuItemsSource: not null } item)
+        {
+            buildingNavigation = true;
+            item.IsExpanded = !group.IsCollapsed;
+            buildingNavigation = false;
+            SelectNavigationItem(Nav.SelectedItem as FANavigationViewItem);
+        }
+
+        ApplyFilter();
+    }
+
+    /// <summary>Asks for a target group and moves the connections there (end of the group).</summary>
+    internal async void MoveToGroupAsync(IReadOnlyList<ConnectionItem> connections)
+    {
+        List<Connection> moving = [.. connections.Select(c => c.Model).Where(app.Library.Contains)];
+        if (moving.Count == 0)
+            return;
+
+        List<string?> ids = [null, .. app.Library.DescendantsOf(null).Select(g => g.Id)];
+        var picker = new ComboBox
+        {
+            ItemsSource = ids.Select(id => id is null ? Strings.Group_None : app.Library.PathOf(id)).ToList(),
+            SelectedIndex = Math.Max(0, ids.IndexOf(moving[0].GroupId)),
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+            MinWidth = 320,
+        };
+        var dialog = new FAContentDialog
+        {
+            Title = moving.Count == 1
+                ? string.Format(CultureInfo.CurrentCulture, Strings.Move_Title, connections[0].Name)
+                : string.Format(CultureInfo.CurrentCulture, Strings.Move_TitleMany, moving.Count),
+            Content = picker,
+            PrimaryButtonText = Strings.Action_Move,
+            CloseButtonText = Strings.Action_Cancel,
+            DefaultButton = FAContentDialogButton.Primary,
+        };
+        if (await dialog.ShowAsync() != FAContentDialogResult.Primary || picker.SelectedIndex < 0)
+            return;
+
+        app.Library.MoveConnections(moving, ids[picker.SelectedIndex]);
+        AfterGroupChange();
+    }
+
+    /// <summary>After groups or memberships changed: labels, sidebar, sections, inherited logons.</summary>
+    private void AfterGroupChange()
+    {
+        RefreshLabels();
+        BuildNavigation();
+        Details.Refresh();
+    }
+
+    /// <summary>Context menu of a group header or sidebar group; <paramref name="group"/> null is "Ohne Gruppe".</summary>
+    private ContextMenu CreateGroupMenu(ConnectionGroup? group)
+    {
+        var connectAll = new MenuItem { Header = Strings.Action_ConnectAll, Icon = new FASymbolIcon { Symbol = FASymbol.Play } };
+        var newConnection = new MenuItem { Header = Strings.Action_NewConnectionHere, Icon = new FASymbolIcon { Symbol = FASymbol.Add } };
+        var newGroup = new MenuItem
+        {
+            Header = group is null ? Strings.Action_NewGroup : Strings.Action_NewSubgroup,
+            Icon = new FASymbolIcon { Symbol = FASymbol.NewFolder },
+        };
+        var edit = new MenuItem { Header = Strings.Action_EditGroup, Icon = new FASymbolIcon { Symbol = FASymbol.Edit } };
+        var delete = new MenuItem { Header = Strings.Action_DeleteGroup, Icon = new FASymbolIcon { Symbol = FASymbol.Delete } };
+        object[] entries = group is null
+            ? [connectAll, newConnection, newGroup]
+            : [connectAll, newConnection, newGroup, edit, new Separator(), delete];
+        var menu = new ContextMenu { ItemsSource = entries };
+
+        List<ConnectionItem> Members() => group is null
+            ? [.. items.Where(c => app.Library.FindGroup(c.Model.GroupId) is null)]
+            : [.. items.Where(c => app.Library.IsInGroup(c.Model, group.Id))];
+
+        menu.Opening += (_, _) =>
+        {
+            int count = Members().Count;
+            connectAll.IsEnabled = count > 0;
+            connectAll.Header = string.Format(CultureInfo.CurrentCulture, Strings.Action_ConnectCount, count);
+        };
+        connectAll.Click += (_, _) => OpenAll(Members());
+        newConnection.Click += (_, _) => AddConnection(group?.Id);
+        newGroup.Click += async (_, _) => await CreateGroupAsync(group?.Id);
+        edit.Click += async (_, _) => await EditGroupAsync(group!);
+        delete.Click += async (_, _) => await DeleteGroupAsync(group!);
+        return menu;
+    }
+}
