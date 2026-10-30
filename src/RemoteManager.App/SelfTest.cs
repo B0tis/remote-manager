@@ -8,7 +8,7 @@ using Avalonia.Threading;
 namespace RemoteManager.App;
 
 /// <summary>
-/// Automated spike checks (<c>--selftest</c>). Writes a log plus probe screenshots to
+/// Automated checks (<c>--selftest</c>). Writes a log plus probe screenshots to
 /// %LOCALAPPDATA%\RemoteManager\spike and exits with 0 when every executed check passed.
 /// Checks that need a real RDP server only run when RM_SPIKE_HOST is set
 /// (RM_SPIKE_USER / RM_SPIKE_DOMAIN / RM_SPIKE_PASSWORD prefill the form; never logged).
@@ -35,133 +35,160 @@ internal static class SelfTest
         return failures == 0 ? 0 : 1;
     }
 
+
     private static async Task RunChecksAsync(MainWindow window)
     {
-        Log($"Remote-Manager spike self-test {DateTime.Now:O}");
+        Log($"Remote-Manager self-test {DateTime.Now:O}");
         Log($"OS {Environment.OSVersion}, .NET {Environment.Version}, {AppOptions.Describe()}");
         await Task.Delay(500);
-        Log($"Window RenderScaling {window.RenderScaling}");
+        Log($"Window RenderScaling {window.RenderScaling}, transparency {window.ActualTransparencyLevel}");
         foreach (Screen screen in window.Screens.All)
             Log($"Screen {screen.DisplayName}: bounds {screen.Bounds}, scaling {screen.Scaling}, primary {screen.IsPrimary}");
 
-        // --- Two sessions, both get a live ActiveX client --------------------------------------------
-        SessionView first = window.Sessions[0];
-        SessionView second = window.AddSession();
-        foreach (SessionView s in window.Sessions)
+        // --- Overview: store, tile view, list view ------------------------------------------------
+        Check($"Overview lists the stored connections ({window.Connections.Count}, store {ConnectionStore.FilePath})",
+            window.Connections.Count > 0 && window.VisibleConnections.Count == window.Connections.Count);
+        window.Activate();
+        await Settle(2500); // let the status checks finish
+        SaveScreenProbe(window, "overview-tiles.png");
+        window.SetListView(true);
+        await Settle(600);
+        Check("List view toggle", window.IsListView);
+        SaveScreenProbe(window, "overview-list.png");
+        window.SetListView(false);
+        await Settle(300);
+
+        // The edit dialog is an in-window FAContentDialog; that is fine here because the overview never hosts a session.
+        Connection edited = window.Connections[0];
+        string nameBefore = edited.Name;
+        Task<bool> editing = ConnectionEditor.ShowAsync(edited, isNew: false, ["Homelab"]);
+        await Settle(800);
+        SaveScreenProbe(window, "edit-dialog.png");
+        ConnectionEditor.OpenDialog?.Hide();
+        Check("Edit dialog opens and Cancel leaves the connection unchanged", !await editing && edited.Name == nameBefore);
+
+        // --- Two session windows, each with its own RDP client -------------------------------------
+        // Temporary connections; they are not added to the store.
+        var a = new Connection { Name = "Selftest A", Host = "127.0.0.1", Description = "Loopback: refused by the RDP client", UserName = "selftest" };
+        var b = new Connection { Name = "Selftest B", Host = "rm-selftest-unreachable.invalid", Description = "DNS failure" };
+        SessionWindow first = window.OpenSession(a)!;
+        SessionWindow second = window.OpenSession(b)!;
+        foreach (SessionWindow s in new[] { first, second })
             s.StatusLogged += (_, message) => Log($"  [{s.Title}] {message}");
 
-        Check("Both RDP clients ready",
+        Check("Both session windows get a ready RDP client",
             await WaitFor(() => first.Rdp.IsClientReady && second.Rdp.IsClientReady, TimeSpan.FromSeconds(20)));
+        Check("Window titles are the connection names", first.Title == a.Name && second.Title == b.Name);
+        Check("Opening the same connection again reuses its window",
+            window.OpenSession(a) == first && window.SessionWindows.Count == 2);
 
-        // --- Tab switching via IsVisible keeps the native window ------------------------------------
-        // Idle surfaces are hidden; show both as if connected so the switch is observable.
-        first.Rdp.IsVisible = second.Rdp.IsVisible = true;
+        nint firstWindow = HandleOf(first), secondWindow = HandleOf(second), mainWindow = HandleOf(window);
         nint firstHost = first.Rdp.HostWindowHandle, secondHost = second.Rdp.HostWindowHandle;
-        Log($"Host HWNDs: first 0x{firstHost:X}, second 0x{secondHost:X}");
-        bool stable = true;
-        for (int i = 0; i < 6; i++)
+        Log($"Session windows 0x{firstWindow:X} / 0x{secondWindow:X}, RDP hosts 0x{firstHost:X} / 0x{secondHost:X}, main 0x{mainWindow:X}");
+        Check("Each RDP host HWND lives in its own top-level window",
+            firstHost != 0 && secondHost != 0 && firstWindow != secondWindow && firstWindow != mainWindow
+            && GetAncestor(firstHost, GaRoot) == firstWindow && GetAncestor(secondHost, GaRoot) == secondWindow);
+
+        second.Activate();
+        await Settle(800);
+        SaveScreenProbe(second, "session-window.png");
+
+        // --- Failed connects report Disconnected, and the same window can connect again ------------
+        // The RDP client refuses loopback (reason 1800 here); the .invalid name exercises
+        // DNS failure. RM_SPIKE_UNREACHABLE adds another host.
+        foreach ((SessionWindow s, string label) in new[] { (first, "first"), (second, "second"), (first, "same window again") })
+            await CheckFailedConnect(s, label);
+        if (Environment.GetEnvironmentVariable("RM_SPIKE_UNREACHABLE") is { Length: > 0 } custom)
         {
-            SessionView shown = i % 2 == 0 ? first : second;
-            SessionView hidden = i % 2 == 0 ? second : first;
-            window.SelectSession(shown);
-            await Settle(300);
-            bool ok = first.Rdp.HostWindowHandle == firstHost && second.Rdp.HostWindowHandle == secondHost
-                && IsWindow(firstHost) && IsWindow(secondHost)
-                && first.Rdp.IsClientReady && second.Rdp.IsClientReady
-                && IsWindowVisible(shown.Rdp.HostWindowHandle) && !IsWindowVisible(hidden.Rdp.HostWindowHandle);
-            stable &= ok;
-            if (!ok)
-                Log($"  switch {i}: shownVisible={IsWindowVisible(shown.Rdp.HostWindowHandle)} hiddenVisible={IsWindowVisible(hidden.Rdp.HostWindowHandle)}");
+            SessionWindow s = window.OpenSession(new Connection { Name = "Selftest custom", Host = custom })!;
+            await WaitFor(() => s.Rdp.IsClientReady, TimeSpan.FromSeconds(20));
+            await CheckFailedConnect(s, "RM_SPIKE_UNREACHABLE");
+            s.Close();
         }
 
-        Check("Tab switching keeps both HWNDs and clients; only the selected one is visible", stable);
-        first.Rdp.IsVisible = second.Rdp.IsVisible = false;
+        second.Activate();
+        await Settle(800);
+        SaveScreenProbe(second, "session-window-disconnected.png");
 
-        // --- Closing a tab disposes its session and destroys its native window -----------------------
-        SessionView third = window.AddSession();
-        bool thirdReady = await WaitFor(() => third.Rdp.IsClientReady, TimeSpan.FromSeconds(20));
-        nint thirdHost = third.Rdp.HostWindowHandle;
-        window.CloseSession(third);
+        // --- Closing one window disposes its session and destroys its HWND -------------------------
+        second.Close();
         await Settle(500);
-        Check("Closing a tab disposes its RDP view and destroys its HWND",
-            thirdReady && thirdHost != 0 && !IsWindow(thirdHost) && window.Sessions.Count == 2);
-
-        // --- Disconnect handling: unresolvable host, then reuse the same view ------------------------
-        window.SelectSession(second);
-        await Settle(300);
-        // 127.0.0.1 has no RDP listener on this box (fast "connection refused"); the .invalid name
-        // exercises DNS failure. RM_SPIKE_UNREACHABLE overrides both.
-        string[] unreachable = Environment.GetEnvironmentVariable("RM_SPIKE_UNREACHABLE") is { Length: > 0 } custom
-            ? [custom]
-            : ["127.0.0.1", "rm-spike-unreachable.invalid"];
-        for (int attempt = 1; attempt <= unreachable.Length; attempt++)
-        {
-            bool disconnected = false;
-            void OnDisconnected(object? s, EventArgs e) => disconnected = true;
-            second.SessionDisconnected += OnDisconnected;
-            second.Host = unreachable[attempt - 1];
-            var sw = Stopwatch.StartNew();
-            second.Connect();
-            bool raised = await WaitFor(() => disconnected, TimeSpan.FromSeconds(120));
-            second.SessionDisconnected -= OnDisconnected;
-            Check($"Failed connect to {unreachable[attempt - 1]} raises Disconnected ({sw.Elapsed.TotalSeconds:F1}s, status \"{second.LastStatus}\")",
-                raised && second.Rdp.IsClientReady && !second.IsSessionActive);
-        }
+        Check("Closing a session window destroys its RDP HWND and keeps the other session",
+            !IsWindow(secondHost) && IsWindow(firstHost) && first.Rdp.IsClientReady
+            && window.SessionWindows.Count == 1 && window.SessionWindows[0] == first);
 
         // --- Real server (optional) --------------------------------------------------------------------
         if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_HOST")))
-            await RunLiveSessionChecksAsync(window, first, second);
+            await RunLiveSessionChecksAsync(window);
         else
-            Log("SKIP live-session checks (RM_SPIKE_HOST not set): logon, screenshot, resize, tab switch while connected.");
+            Log("SKIP live-session checks (RM_SPIKE_HOST not set): logon, snapshot as preview, resize, DPI.");
 
-        // --- Airspace probes -------------------------------------------------------------------------
-        await RunAirspaceProbesAsync(window, first);
+        // --- Airspace probe: a menu flyout over a visible RDP surface --------------------------------
+        await RunAirspaceProbeAsync(first);
+
+        first.Close();
+        await Settle(500);
+        Check("Closing the last session window destroys its HWND", !IsWindow(firstHost) && window.SessionWindows.Count == 0);
     }
 
-    private static async Task RunLiveSessionChecksAsync(MainWindow window, SessionView live, SessionView other)
+    private static async Task CheckFailedConnect(SessionWindow s, string label)
     {
-        window.SelectSession(live);
-        await Settle(300);
+        bool disconnected = false;
+        void OnDisconnected(object? sender, EventArgs e) => disconnected = true;
+        s.SessionDisconnected += OnDisconnected;
+        var sw = Stopwatch.StartNew();
+        s.Connect();
+        bool raised = await WaitFor(() => disconnected, TimeSpan.FromSeconds(120));
+        s.SessionDisconnected -= OnDisconnected;
+        await Settle(200);
+        Check($"Failed connect to {s.Connection.Host} ({label}) raises Disconnected ({sw.Elapsed.TotalSeconds:F1}s, status \"{s.LastStatus}\")",
+            raised && s.Rdp.IsClientReady && !s.IsSessionActive && !s.Rdp.IsVisible);
+    }
+
+    private static async Task RunLiveSessionChecksAsync(MainWindow window)
+    {
+        var connection = new Connection
+        {
+            Name = "Selftest live",
+            Host = Environment.GetEnvironmentVariable("RM_SPIKE_HOST")!,
+            UserName = Environment.GetEnvironmentVariable("RM_SPIKE_USER") ?? "",
+            Domain = Environment.GetEnvironmentVariable("RM_SPIKE_DOMAIN") ?? "",
+        };
+        SessionWindow live = window.OpenSession(connection)!;
+        live.StatusLogged += (_, message) => Log($"  [{live.Title}] {message}");
+        await WaitFor(() => live.Rdp.IsClientReady, TimeSpan.FromSeconds(20));
         live.Connect();
         bool loggedIn = await WaitFor(() => live.IsLoggedIn, TimeSpan.FromSeconds(90));
         Check("Live session logs in without a credential prompt (NLA, stored credentials)", loggedIn);
         if (!loggedIn)
+        {
+            live.Close();
             return;
+        }
 
         await Task.Delay(TimeSpan.FromSeconds(5));
         string? png = live.SaveSnapshot("selftest-live");
         Check($"Live snapshot is a non-blank PNG ({png})", png is not null && File.Exists(png) && !CapturedBlank(live));
-
-        // Tab switch while connected.
-        window.SelectSession(other);
-        await Settle(1000);
-        SessionFrame? hiddenFrame = SessionCapture.Capture(live.Rdp.HostWindowHandle);
-        Log($"Capture while tab hidden: {(hiddenFrame is null ? "failed" : hiddenFrame.IsBlank ? "blank" : $"ok via {hiddenFrame.Method}")}");
-        window.SelectSession(live);
-        await Settle(1000);
-        Check("Session survives a tab switch", live.IsSessionActive && live.IsLoggedIn);
+        Check("Snapshot becomes the connection preview", connection.HasPreview);
+        SaveScreenProbe(live, "session-window-live.png");
 
         // Resize: dynamic resolution should follow the viewport after the debounce.
         PixelSize before = live.LastRemoteDesktopSize;
-        window.Width -= 240;
-        window.Height -= 120;
+        live.Width -= 240;
+        live.Height -= 120;
         await Settle(4000);
         PixelSize viewport = live.Rdp.ViewportPixelSize;
         Log($"Resize: remote desktop {before} -> {live.LastRemoteDesktopSize}, viewport {viewport}");
         Check("Dynamic resolution follows a window resize", live.LastRemoteDesktopSize == viewport);
-        window.Width += 240;
-        window.Height += 120;
-        await Settle(2000);
 
         // Monitor move (only meaningful with a second screen at a different scaling).
-        Screen? current = window.Screens.ScreenFromWindow(window);
-        Screen? target = window.Screens.All.FirstOrDefault(s => current is null || s.Scaling != current.Scaling);
+        Screen? current = live.Screens.ScreenFromWindow(live);
+        Screen? target = live.Screens.All.FirstOrDefault(s => current is null || s.Scaling != current.Scaling);
         if (target is not null && current is not null)
         {
-            window.Position = new PixelPoint(target.WorkingArea.X + 50, target.WorkingArea.Y + 50);
+            live.Position = new PixelPoint(target.WorkingArea.X + 50, target.WorkingArea.Y + 50);
             await Settle(4000);
-            Log($"Moved to {target.DisplayName} (scaling {target.Scaling}): RenderScaling {window.RenderScaling}, viewport {live.Rdp.ViewportPixelSize}, remote {live.LastRemoteDesktopSize}");
-            live.SaveSnapshot("selftest-other-monitor");
+            Log($"Moved to {target.DisplayName} (scaling {target.Scaling}): RenderScaling {live.RenderScaling}, viewport {live.Rdp.ViewportPixelSize}, remote {live.LastRemoteDesktopSize}");
             Check("Session alive after moving to a monitor with different scaling", live.IsLoggedIn);
         }
         else
@@ -173,42 +200,32 @@ internal static class SelfTest
         bool gone = await WaitFor(() => !live.IsSessionActive, TimeSpan.FromSeconds(20));
         Check($"User disconnect leaves a thumbnail ({live.LastThumbnailPath})",
             gone && live.LastThumbnailPath is not null && File.Exists(live.LastThumbnailPath));
+        live.Close();
+        File.Delete(connection.ThumbnailPath);
     }
 
-    private static bool CapturedBlank(SessionView view) =>
-        SessionCapture.Capture(view.Rdp.HostWindowHandle) is not { IsBlank: false };
+    private static bool CapturedBlank(SessionWindow window) =>
+        SessionCapture.Capture(window.Rdp.HostWindowHandle) is not { IsBlank: false };
 
-    private static async Task RunAirspaceProbesAsync(MainWindow window, SessionView view)
+    private static async Task RunAirspaceProbeAsync(SessionWindow window)
     {
-        window.SelectSession(view);
+        window.Activate();
         await Settle(500);
-        // The surface is normally hidden while idle; show it so the probes have a native window to overlap.
-        view.Rdp.IsVisible = true;
+        // The surface is normally hidden while idle; show it so the probe has a native window to overlap.
+        window.Rdp.IsVisible = true;
         await Settle(500);
-        Log($"Airspace probes on '{view.Title}' (RDP host HWND visible {IsWindowVisible(view.Rdp.HostWindowHandle)})");
         int before = CountVisibleTopLevelWindows();
-        view.MenuButton.Flyout!.ShowAt(view.MenuButton);
+        window.MenuButton.Flyout!.ShowAt(window.MenuButton);
         await Settle(600);
         int after = CountVisibleTopLevelWindows();
         SaveScreenProbe(window, "probe-menu.png");
-        Log($"MenuFlyout open: visible top-level windows of this process {before} -> {after} (popup is {(after > before ? "a native window" : "in-window")})");
-        view.MenuButton.Flyout.Hide();
+        Check($"Menu flyout opens as a native window above the RDP surface (visible top-levels {before} -> {after})", after > before);
+        window.MenuButton.Flyout.Hide();
+        window.Rdp.IsVisible = false;
         await Settle(300);
-
-        var (dialog, closed) = view.ShowInWindowDialog(useAirspaceWorkaround: false);
-        await Settle(800);
-        SaveScreenProbe(window, "probe-contentdialog-no-workaround.png");
-        dialog.Hide();
-        await closed;
-        await Settle(300);
-
-        (dialog, closed) = view.ShowInWindowDialog(useAirspaceWorkaround: true);
-        await Settle(800);
-        SaveScreenProbe(window, "probe-contentdialog-workaround.png");
-        dialog.Hide();
-        await closed;
-        Log("Airspace probe screenshots written; inspect them to see what is drawn above the RDP surface.");
     }
+
+    private static nint HandleOf(Window window) => window.TryGetPlatformHandle()?.Handle ?? 0;
 
     private static void SaveScreenProbe(Window window, string name)
     {
@@ -298,6 +315,11 @@ internal static class SelfTest
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsWindowVisible(nint window);
+
+    private const uint GaRoot = 2;
+
+    [DllImport("user32.dll")]
+    private static extern nint GetAncestor(nint window, uint flags);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

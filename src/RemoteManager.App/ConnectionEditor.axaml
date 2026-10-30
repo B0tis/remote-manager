@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="RemoteManager.App.ConnectionEditor"
+             Width="460">
+  <StackPanel Spacing="12">
+    <Grid ColumnDefinitions="*,12,150">
+      <TextBox x:Name="NameBox" PlaceholderText="Name" />
+      <ComboBox x:Name="TypeBox" Grid.Column="2" HorizontalAlignment="Stretch" SelectedIndex="0">
+        <ComboBoxItem Content="RDP" />
+        <ComboBoxItem Content="TeamViewer" />
+        <ComboBoxItem Content="AnyDesk" />
+        <ComboBoxItem Content="RustDesk" />
+      </ComboBox>
+    </Grid>
+    <Grid ColumnDefinitions="*,12,90">
+      <TextBox x:Name="HostBox" PlaceholderText="Host or IP" />
+      <TextBox x:Name="PortBox" Grid.Column="2" PlaceholderText="Port" />
+    </Grid>
+    <TextBox x:Name="DescriptionBox" PlaceholderText="Description" />
+    <Grid ColumnDefinitions="*,12,*">
+      <AutoCompleteBox x:Name="GroupBox" PlaceholderText="Group" FilterMode="Contains" MinimumPrefixLength="0" />
+      <TextBox x:Name="TagsBox" Grid.Column="2" PlaceholderText="Tags, comma separated" />
+    </Grid>
+
+    <StackPanel x:Name="RdpOptions" Spacing="12">
+      <TextBlock Text="RDP logon" FontWeight="SemiBold" Margin="0,6,0,0" />
+      <Grid ColumnDefinitions="*,12,*">
+        <TextBox x:Name="UserBox" PlaceholderText="User" />
+        <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="Domain (optional)" />
+      </Grid>
+      <ComboBox x:Name="DisplayBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+        <ComboBoxItem Content="Fit to window (dynamic resolution)" />
+        <ComboBoxItem Content="Smart sizing (scaled)" />
+        <ComboBoxItem Content="1920 × 1080 (scaled)" />
+        <ComboBoxItem Content="1280 × 720 (scaled)" />
+      </ComboBox>
+      <CheckBox x:Name="WinKeysBox" Content="Send Windows keys (Win, Alt+Tab) to the session" IsChecked="True" />
+      <TextBlock Opacity="0.55" FontSize="12" TextWrapping="Wrap"
+                 Text="The password is entered when you connect and is not saved." />
+    </StackPanel>
+
+    <TextBlock x:Name="RemoteToolHint" Opacity="0.55" FontSize="12" TextWrapping="Wrap" IsVisible="False"
+               Text="TeamViewer, AnyDesk, and RustDesk sessions open in the tool's own window. Launching them arrives in Phase 2." />
+
+    <CheckBox x:Name="FavoriteBox" Content="Favorite" />
+    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource SystemFillColorCriticalBrush}" IsVisible="False" />
+  </StackPanel>
+</UserControl>
