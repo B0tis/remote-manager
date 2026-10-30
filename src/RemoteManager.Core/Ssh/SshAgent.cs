@@ -179,8 +179,10 @@ public sealed class PageantAgent : SshAgent
         try
         {
             var data = new CopyDataStruct { Id = AgentCopyDataId, Length = name.Length, Data = pinned.AddrOfPinnedObject() };
-            if (SendMessage(window, WmCopyData, 0, ref data) == 0)
-                throw new SshAgentException("Pageant did not answer (it may be waiting for a confirmation or refuse the request).");
+            // Never block for good: a busy or hung Pageant (dialog open) must not freeze the connect.
+            // 30 s leaves time for a confirmation prompt (pageant --confirm).
+            if (SendMessageTimeout(window, WmCopyData, 0, ref data, SmtoAbortIfHung, 30_000, out nint result) == 0 || result == 0)
+                throw new SshAgentException("Pageant did not answer (it may be busy, waiting for a confirmation, or refusing the request).");
         }
         finally
         {
@@ -206,8 +208,10 @@ public sealed class PageantAgent : SshAgent
     [DllImport("user32.dll", CharSet = CharSet.Unicode, EntryPoint = "FindWindowW")]
     private static extern nint FindWindow(string className, string windowName);
 
-    [DllImport("user32.dll", EntryPoint = "SendMessageW")]
-    private static extern nint SendMessage(nint window, uint message, nint wParam, ref CopyDataStruct lParam);
+    private const uint SmtoAbortIfHung = 0x0002;
+
+    [DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW")]
+    private static extern nint SendMessageTimeout(nint window, uint message, nint wParam, ref CopyDataStruct lParam, uint flags, uint timeout, out nint result);
 }
 
 /// <summary>Big-endian uint32 and length-prefixed strings of the SSH wire format.</summary>

@@ -11,5 +11,9 @@
       <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_1280}" />
     </ComboBox>
     <CheckBox x:Name="WinKeysBox" Content="{x:Static res:Strings.Rdp_WinKeys}" IsChecked="True" />
+    <StackPanel Spacing="4">
+      <TextBlock Text="{x:Static res:Strings.Rdp_SshTunnel}" FontSize="12" Opacity="0.7" />
+      <ComboBox x:Name="JumpBox" HorizontalAlignment="Stretch" ToolTip.Tip="{x:Static res:Strings.Rdp_SshTunnelTip}" />
+    </StackPanel>
   </StackPanel>
 </UserControl>

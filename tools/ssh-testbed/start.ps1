@@ -6,7 +6,7 @@
 #
 # The password and the key are generated for each run and live only in this session and the containers.
 #Requires -Version 7.3
-param([switch]$WithRdp)
+param([switch]$WithRdp, [switch]$WithPageant)
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $work = Join-Path ([IO.Path]::GetTempPath()) 'rm-ssh-testbed'
@@ -33,6 +33,12 @@ if ($WithRdp) {
     # xrdp desktop, only reachable through the jump host as rdp:3389 (user ubuntu, password ubuntu inside the image).
     docker run -d --name rm-ssh-rdp --hostname rdp --network rm-ssh-net --network-alias rdp --shm-size 1g scottyhardy/docker-remote-desktop:latest | Out-Null
     $env:RM_SSH_TEST_RDP = 'rdp'
+}
+
+if ($WithPageant) {
+    # Pageant only reads .ppk files; to-ppk.py converts the generated key (needs Python).
+    python (Join-Path $here 'to-ppk.py') $key "$key.ppk"
+    Start-Process (Join-Path $env:ProgramFiles 'PuTTY\pageant.exe') -ArgumentList "`"$key.ppk`""
 }
 
 $env:RM_SSH_TEST_HOST = '127.0.0.1'

@@ -117,6 +117,9 @@
   <data name="Editor_PasswordHint_Rdp" xml:space="preserve">
     <value>Gespeichert im Windows Credential Manager. Mit Passwort meldet sich die Sitzung direkt an (NLA); ohne wird es beim Verbinden abgefragt.</value>
   </data>
+  <data name="Editor_PasswordHint_Ssh" xml:space="preserve">
+    <value>Passwort oder Passphrase der Schlüsseldatei; wird in der Windows-Anmeldeinformationsverwaltung gespeichert.</value>
+  </data>
   <data name="Editor_PortPlaceholder" xml:space="preserve">
     <value>Port ({0})</value>
   </data>
@@ -161,6 +164,48 @@
   </data>
   <data name="Group_None" xml:space="preserve">
     <value>Keine Gruppe</value>
+  </data>
+  <data name="HostKey_Accept" xml:space="preserve">
+    <value>Vertrauen und verbinden</value>
+  </data>
+  <data name="HostKey_AcceptChanged" xml:space="preserve">
+    <value>Neuen Schlüssel übernehmen</value>
+  </data>
+  <data name="HostKey_Algorithm" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="HostKey_ChangedAdvice" xml:space="preserve">
+    <value>Übernehmen Sie den neuen Schlüssel nur, wenn Sie sicher wissen, warum er sich geändert hat (zum Beispiel nach einer Neuinstallation).</value>
+  </data>
+  <data name="HostKey_ChangedText" xml:space="preserve">
+    <value>{0} meldet einen anderen Schlüssel als beim letzten Mal. Das passiert nach einer Neuinstallation, kann aber auch ein Angriff (Man-in-the-Middle) sein.</value>
+  </data>
+  <data name="HostKey_ChangedTitle" xml:space="preserve">
+    <value>Achtung: Host-Schlüssel hat sich geändert</value>
+  </data>
+  <data name="HostKey_Declined" xml:space="preserve">
+    <value>Verbindung abgebrochen: Host-Schlüssel nicht bestätigt.</value>
+  </data>
+  <data name="HostKey_Fingerprint" xml:space="preserve">
+    <value>Fingerabdruck</value>
+  </data>
+  <data name="HostKey_Server" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="HostKey_Stored" xml:space="preserve">
+    <value>Bisher</value>
+  </data>
+  <data name="HostKey_UnknownAdvice" xml:space="preserve">
+    <value>Den Fingerabdruck zeigt der Server mit: ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</value>
+  </data>
+  <data name="HostKey_UnknownText" xml:space="preserve">
+    <value>Mit {0} wurde noch nie verbunden. Vertrauen Sie dem Schlüssel nur, wenn der Fingerabdruck mit dem des Servers übereinstimmt.</value>
+  </data>
+  <data name="HostKey_UnknownTitle" xml:space="preserve">
+    <value>Unbekannter Host-Schlüssel</value>
+  </data>
+  <data name="HostKey_WindowTitle" xml:space="preserve">
+    <value>SSH-Host-Schlüssel prüfen</value>
   </data>
   <data name="LastConnected_Never" xml:space="preserve">
     <value>Nie</value>
@@ -227,6 +272,15 @@
   </data>
   <data name="Rdp_Display_SmartSizing" xml:space="preserve">
     <value>Smart Sizing (skaliert)</value>
+  </data>
+  <data name="Rdp_SshTunnel" xml:space="preserve">
+    <value>Über SSH-Tunnel verbinden</value>
+  </data>
+  <data name="Rdp_SshTunnelFailed" xml:space="preserve">
+    <value>SSH-Tunnel fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Rdp_SshTunnelTip" xml:space="preserve">
+    <value>RDP läuft durch einen SSH-Tunnel über diese SSH-Verbindung (für Hosts hinter einem Jump-Host).</value>
   </data>
   <data name="Rdp_WinKeys" xml:space="preserve">
     <value>Windows-Tasten (Win, Alt+Tab) an die Sitzung senden</value>
@@ -306,6 +360,273 @@
   <data name="Session_StoredPasswordRejected" xml:space="preserve">
     <value>Das gespeicherte Passwort wurde abgelehnt. Bitte neu eingeben; mit „Passwort speichern“ wird es ersetzt.
 {0}</value>
+  </data>
+  <data name="Sftp_CopyPath" xml:space="preserve">
+    <value>Pfad kopieren</value>
+  </data>
+  <data name="Sftp_Create" xml:space="preserve">
+    <value>Anlegen</value>
+  </data>
+  <data name="Sftp_DeleteMany" xml:space="preserve">
+    <value>{0} Einträge</value>
+  </data>
+  <data name="Sftp_DeleteMessage" xml:space="preserve">
+    <value>„{0}“ wirklich löschen? Ordner werden mit ihrem ganzen Inhalt gelöscht.</value>
+  </data>
+  <data name="Sftp_Download" xml:space="preserve">
+    <value>Herunterladen</value>
+  </data>
+  <data name="Sftp_DownloadEllipsis" xml:space="preserve">
+    <value>Herunterladen …</value>
+  </data>
+  <data name="Sftp_Downloading" xml:space="preserve">
+    <value>Herunterladen</value>
+  </data>
+  <data name="Sftp_DownloadPickerTitle" xml:space="preserve">
+    <value>Zielordner für den Download wählen</value>
+  </data>
+  <data name="Sftp_DownloadTip" xml:space="preserve">
+    <value>Auswahl herunterladen</value>
+  </data>
+  <data name="Sftp_DropHint" xml:space="preserve">
+    <value>Loslassen zum Hochladen nach {0}</value>
+  </data>
+  <data name="Sftp_Empty" xml:space="preserve">
+    <value>Dieser Ordner ist leer. Dateien aus dem Explorer hierher ziehen, um sie hochzuladen.</value>
+  </data>
+  <data name="Sftp_Home" xml:space="preserve">
+    <value>Home-Ordner</value>
+  </data>
+  <data name="Sftp_InvalidName" xml:space="preserve">
+    <value>Ungültiger Name.</value>
+  </data>
+  <data name="Sftp_ListFailed" xml:space="preserve">
+    <value>{0} kann nicht geöffnet werden: {1}</value>
+  </data>
+  <data name="Sftp_Modified" xml:space="preserve">
+    <value>Geändert</value>
+  </data>
+  <data name="Sftp_NewFolder" xml:space="preserve">
+    <value>Neuer Ordner</value>
+  </data>
+  <data name="Sftp_NewFolderEllipsis" xml:space="preserve">
+    <value>Neuer Ordner …</value>
+  </data>
+  <data name="Sftp_Open" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="Sftp_OperationFailed" xml:space="preserve">
+    <value>Aktion fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Sftp_Overwrite" xml:space="preserve">
+    <value>Überschreiben</value>
+  </data>
+  <data name="Sftp_OverwriteMessage" xml:space="preserve">
+    <value>Im Ordner gibt es schon: {0}. Überschreiben?</value>
+  </data>
+  <data name="Sftp_OverwriteTitle" xml:space="preserve">
+    <value>Überschreiben?</value>
+  </data>
+  <data name="Sftp_Permissions" xml:space="preserve">
+    <value>Rechte</value>
+  </data>
+  <data name="Sftp_Refresh" xml:space="preserve">
+    <value>Aktualisieren</value>
+  </data>
+  <data name="Sftp_Rename" xml:space="preserve">
+    <value>Umbenennen</value>
+  </data>
+  <data name="Sftp_RenameEllipsis" xml:space="preserve">
+    <value>Umbenennen …</value>
+  </data>
+  <data name="Sftp_Size" xml:space="preserve">
+    <value>Größe</value>
+  </data>
+  <data name="Sftp_StartFolderPlaceholder" xml:space="preserve">
+    <value>Startordner (leer: Home-Ordner)</value>
+  </data>
+  <data name="Sftp_Title" xml:space="preserve">
+    <value>{0} – Dateien</value>
+  </data>
+  <data name="Sftp_TransferCanceled" xml:space="preserve">
+    <value>Übertragung abgebrochen.</value>
+  </data>
+  <data name="Sftp_TransferDone" xml:space="preserve">
+    <value>{0} abgeschlossen.</value>
+  </data>
+  <data name="Sftp_TransferFailed" xml:space="preserve">
+    <value>{0} fehlgeschlagen: {1}</value>
+  </data>
+  <data name="Sftp_TransferProgress" xml:space="preserve">
+    <value>{0}: {1} ({2} von {3}, {4} von {5})</value>
+  </data>
+  <data name="Sftp_Up" xml:space="preserve">
+    <value>Übergeordneter Ordner</value>
+  </data>
+  <data name="Sftp_Upload" xml:space="preserve">
+    <value>Hochladen</value>
+  </data>
+  <data name="Sftp_Uploading" xml:space="preserve">
+    <value>Hochladen</value>
+  </data>
+  <data name="Sftp_UploadPickerTitle" xml:space="preserve">
+    <value>Dateien zum Hochladen wählen</value>
+  </data>
+  <data name="Sftp_UploadTip" xml:space="preserve">
+    <value>Dateien hochladen (oder aus dem Explorer hierher ziehen)</value>
+  </data>
+  <data name="Ssh_Auth_Agent" xml:space="preserve">
+    <value>Anmeldung über SSH-Agent (OpenSSH-Agent oder Pageant)</value>
+  </data>
+  <data name="Ssh_Auth_AgentHint" xml:space="preserve">
+    <value>Die Schlüssel bleiben im Agent; Remote-Manager speichert nichts davon.</value>
+  </data>
+  <data name="Ssh_Auth_KeyFile" xml:space="preserve">
+    <value>Anmeldung mit Schlüsseldatei</value>
+  </data>
+  <data name="Ssh_Auth_KeyFileHint" xml:space="preserve">
+    <value>OpenSSH- oder PuTTY-Schlüssel (.ppk). Eine Passphrase wird wie ein Passwort in der Windows-Anmeldeinformationsverwaltung gespeichert.</value>
+  </data>
+  <data name="Ssh_Auth_Password" xml:space="preserve">
+    <value>Anmeldung mit Passwort</value>
+  </data>
+  <data name="Ssh_Auth_PasswordHint" xml:space="preserve">
+    <value>Passwort oben speichern oder beim Verbinden eingeben.</value>
+  </data>
+  <data name="Ssh_Browse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="Ssh_Card_AgentHint" xml:space="preserve">
+    <value>Anmeldung über den SSH-Agent (OpenSSH-Agent oder Pageant).</value>
+  </data>
+  <data name="Ssh_Card_Connecting" xml:space="preserve">
+    <value>Verbinde …</value>
+  </data>
+  <data name="Ssh_Card_KeyHint" xml:space="preserve">
+    <value>Anmeldung mit Schlüsseldatei {0}</value>
+  </data>
+  <data name="Ssh_Card_Passphrase" xml:space="preserve">
+    <value>Passphrase des Schlüssels (falls nötig)</value>
+  </data>
+  <data name="Ssh_Card_PassphraseStored" xml:space="preserve">
+    <value>Passphrase gespeichert (leer lassen)</value>
+  </data>
+  <data name="Ssh_Card_Via" xml:space="preserve">
+    <value>Über Jump-Host {0}</value>
+  </data>
+  <data name="Ssh_Error_Agent" xml:space="preserve">
+    <value>SSH-Agent: {0}</value>
+  </data>
+  <data name="Ssh_Error_Auth" xml:space="preserve">
+    <value>Anmeldung abgelehnt ({0}). Benutzer, Passwort oder Schlüssel prüfen.</value>
+  </data>
+  <data name="Ssh_Error_Canceled" xml:space="preserve">
+    <value>Abgebrochen.</value>
+  </data>
+  <data name="Ssh_Error_ForwardInvalid" xml:space="preserve">
+    <value>Weiterleitung in Zeile {0} ist ungültig (Beispiel: L 8080:intranet:80).</value>
+  </data>
+  <data name="Ssh_Error_JumpHostLoop" xml:space="preserve">
+    <value>Die Jump-Hosts bilden eine Schleife (bei „{0}“).</value>
+  </data>
+  <data name="Ssh_Error_JumpHostMissing" xml:space="preserve">
+    <value>Der eingetragene Jump-Host existiert nicht mehr.</value>
+  </data>
+  <data name="Ssh_Error_JumpHostNotSsh" xml:space="preserve">
+    <value>„{0}“ ist keine SSH-Verbindung und kann kein Jump-Host sein.</value>
+  </data>
+  <data name="Ssh_Error_KeyFileMissing" xml:space="preserve">
+    <value>Schlüsseldatei für „{0}“ nicht gefunden: {1}</value>
+  </data>
+  <data name="Ssh_Error_KeyFileUnreadable" xml:space="preserve">
+    <value>Schlüsseldatei für „{0}“ kann nicht gelesen werden: {1}</value>
+  </data>
+  <data name="Ssh_Error_KeyPathEmpty" xml:space="preserve">
+    <value>Bitte eine Schlüsseldatei angeben.</value>
+  </data>
+  <data name="Ssh_Error_MissingPassword" xml:space="preserve">
+    <value>Kein Passwort für „{0}“: bitte eingeben oder in der Verbindung speichern.</value>
+  </data>
+  <data name="Ssh_Error_MissingUser" xml:space="preserve">
+    <value>Für „{0}“ ist kein Benutzer eingetragen.</value>
+  </data>
+  <data name="Ssh_Error_Network" xml:space="preserve">
+    <value>Server nicht erreichbar: {0}</value>
+  </data>
+  <data name="Ssh_Error_NoAgentKeys" xml:space="preserve">
+    <value>Kein SSH-Agent mit Schlüsseln gefunden. OpenSSH-Agent oder Pageant starten und einen Schlüssel laden.</value>
+  </data>
+  <data name="Ssh_Error_Other" xml:space="preserve">
+    <value>Verbindung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Ssh_Error_PassphraseRequired" xml:space="preserve">
+    <value>Der Schlüssel von „{0}“ ist mit einer Passphrase geschützt: bitte eingeben.</value>
+  </data>
+  <data name="Ssh_Error_Timeout" xml:space="preserve">
+    <value>Zeitüberschreitung beim Verbinden.</value>
+  </data>
+  <data name="Ssh_Error_WrongPassphrase" xml:space="preserve">
+    <value>Falsche Passphrase für den Schlüssel von „{0}“.</value>
+  </data>
+  <data name="Ssh_Forwards" xml:space="preserve">
+    <value>Port-Weiterleitungen (eine pro Zeile)</value>
+  </data>
+  <data name="Ssh_ForwardsPlaceholder" xml:space="preserve">
+    <value>L 8080:intranet:80   R 9000:localhost:3000   D 1080</value>
+  </data>
+  <data name="Ssh_HostKeyForget" xml:space="preserve">
+    <value>Vergessen</value>
+  </data>
+  <data name="Ssh_HostKeyForgetTip" xml:space="preserve">
+    <value>Beim nächsten Verbinden wird der Schlüssel erneut abgefragt.</value>
+  </data>
+  <data name="Ssh_HostKeyNone" xml:space="preserve">
+    <value>Host-Schlüssel: noch nicht bestätigt</value>
+  </data>
+  <data name="Ssh_HostKeyStored" xml:space="preserve">
+    <value>Host-Schlüssel: {0}</value>
+  </data>
+  <data name="Ssh_JumpHost" xml:space="preserve">
+    <value>Jump-Host</value>
+  </data>
+  <data name="Ssh_JumpHost_Missing" xml:space="preserve">
+    <value>(gelöschte Verbindung)</value>
+  </data>
+  <data name="Ssh_JumpHost_None" xml:space="preserve">
+    <value>Kein Jump-Host (direkt verbinden)</value>
+  </data>
+  <data name="Ssh_KeyPathPlaceholder" xml:space="preserve">
+    <value>Pfad zur privaten Schlüsseldatei</value>
+  </data>
+  <data name="Ssh_KeyPickerTitle" xml:space="preserve">
+    <value>Private Schlüsseldatei wählen</value>
+  </data>
+  <data name="Ssh_Status_Closed" xml:space="preserve">
+    <value>Verbindung beendet</value>
+  </data>
+  <data name="Ssh_Status_Connected" xml:space="preserve">
+    <value>Verbunden als {0} mit {1}</value>
+  </data>
+  <data name="Ssh_Status_Connecting" xml:space="preserve">
+    <value>Verbinde mit {0} …</value>
+  </data>
+  <data name="Ssh_Status_ForwardFailed" xml:space="preserve">
+    <value>Weiterleitung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Ssh_Status_JumpHost" xml:space="preserve">
+    <value>Über Jump-Host {0} …</value>
+  </data>
+  <data name="Ssh_Terminal_Files" xml:space="preserve">
+    <value>Dateien</value>
+  </data>
+  <data name="Ssh_Terminal_FilesTip" xml:space="preserve">
+    <value>SFTP-Dateibrowser für diesen Server öffnen</value>
+  </data>
+  <data name="Ssh_Terminal_PageFailed" xml:space="preserve">
+    <value>Das Terminal konnte nicht geladen werden. Ist die WebView2-Runtime installiert?</value>
+  </data>
+  <data name="Ssh_Terminal_PasteTip" xml:space="preserve">
+    <value>Einfügen (Strg+Umschalt+V). Kopieren: markieren und Strg+Umschalt+C oder Rechtsklick.</value>
   </data>
   <data name="Status_Hint_Rdp" xml:space="preserve">
     <value>Status per TCP-Prüfung des RDP-Ports im Hintergrund. Keine Antwort = unbekannt, abgelehnt = offline.</value>

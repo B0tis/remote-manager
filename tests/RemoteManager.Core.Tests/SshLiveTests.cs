@@ -79,6 +79,21 @@ public sealed class SshLiveTests
             route.ConnectAsync(Jump(secret: "wrong-" + Guid.NewGuid(), known: known), i => new SshClient(i), Token));
     }
 
+    /// <summary>Pageant must be running with the testbed key loaded (pageant.exe with %TEMP%/rm-ssh-testbed/id_ed25519).</summary>
+    [Fact]
+    public async Task PageantLogonWorks()
+    {
+        var pageant = new PageantAgent();
+        Assert.SkipUnless(pageant.IsRunning, "Pageant is not running.");
+        string known = await KnownJumpKeyAsync();
+        Assert.NotEmpty(pageant.GetIdentities());
+        using var route = await SshRoute.OpenAsync([], Token);
+
+        SshClient client = await route.ConnectAsync(Jump(SshAuthMethod.Agent, known: known, agents: [pageant]), i => new SshClient(i), Token);
+
+        Assert.Equal(User, Run(client, "whoami"));
+    }
+
     [Fact]
     public async Task JumpHostReachesTheInnerTargetForSshSftpAndTcp()
     {

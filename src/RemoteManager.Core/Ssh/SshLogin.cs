@@ -10,7 +10,7 @@ namespace RemoteManager.Core.Ssh;
 /// Everything needed to log on to one SSH server, resolved from a <see cref="Connection"/>. The secret
 /// (password, or the key file's passphrase) only lives in memory; <see cref="ToString"/> never shows it.
 /// </summary>
-public sealed class SshLogin
+public sealed record SshLogin
 {
     public required string ConnectionId { get; init; }
     public required string Name { get; init; }
@@ -29,6 +29,7 @@ public sealed class SshLogin
     /// <summary>The accepted host key ("SHA256:..."), empty when the host was never confirmed.</summary>
     public string KnownHostKey { get; init; } = "";
 
+    // Records print every property; this one must never show Secret.
     public override string ToString() => $"{UserName}@{Host}:{Port} ({AuthMethod})";
 
     /// <summary>

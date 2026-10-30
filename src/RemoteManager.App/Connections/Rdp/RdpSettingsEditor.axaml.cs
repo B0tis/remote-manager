@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using RemoteManager.App.Connections.Ssh;
 using RemoteManager.Core.Model.Settings;
 
 namespace RemoteManager.App.Connections.Rdp;
@@ -28,6 +29,7 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
             && (d.Mode != RdpDisplayMode.FixedResolution || (d.Width, d.Height) == (loaded.DesktopWidth, loaded.DesktopHeight)));
         DisplayBox.SelectedIndex = Math.Max(0, index);
         WinKeysBox.IsChecked = loaded.Keyboard == RdpKeyboardMode.Session;
+        JumpHostPicker.Fill(JumpBox, loaded.JumpHostId);
     }
 
     public string? Validate() => null;
@@ -42,6 +44,7 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
             DesktopHeight = height,
             Keyboard = WinKeysBox.IsChecked == true ? RdpKeyboardMode.Session
                 : loaded.Keyboard == RdpKeyboardMode.Session ? RdpKeyboardMode.Local : loaded.Keyboard,
+            JumpHostId = JumpHostPicker.SelectedId(JumpBox),
         };
     }
 }

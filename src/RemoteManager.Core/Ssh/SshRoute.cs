@@ -1,6 +1,5 @@
 using System.Globalization;
 using RemoteManager.Core.Credentials;
-using RemoteManager.Core.Library;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
 using Renci.SshNet;
@@ -169,11 +168,11 @@ public static class SshJumpChain
     }
 
     /// <summary>The logons of the jump hosts (stored credentials only), outermost first.</summary>
-    public static async Task<IReadOnlyList<SshLogin>> LoginsAsync(string? jumpHostId, ConnectionLibrary library, CredentialService credentials,
+    public static async Task<IReadOnlyList<SshLogin>> LoginsAsync(string? jumpHostId, Func<string, Connection?> find, CredentialService credentials,
         string? startId = null, CancellationToken cancellationToken = default)
     {
         var logins = new List<SshLogin>();
-        foreach (Connection jump in Resolve(jumpHostId, library.FindConnection, startId))
+        foreach (Connection jump in Resolve(jumpHostId, find, startId))
             logins.Add(await SshLogin.FromConnectionAsync(jump, credentials, cancellationToken: cancellationToken).ConfigureAwait(false));
         return logins;
     }

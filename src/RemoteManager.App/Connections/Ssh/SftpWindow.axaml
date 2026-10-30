@@ -1,0 +1,121 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:ssh="using:RemoteManager.App.Connections.Ssh"
+        xmlns:res="using:RemoteManager.App.Resources"
+        x:Class="RemoteManager.App.Connections.Ssh.SftpWindow"
+        Width="980" Height="640" MinWidth="560" MinHeight="360"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Padding="14,6" BorderThickness="0,0,0,1"
+            Background="{DynamicResource LayerFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Ellipse x:Name="StatusDot" Width="8" Height="8" VerticalAlignment="Center" Fill="#9CA3AF" />
+        <TextBlock x:Name="StatusText" Grid.Column="1" Margin="10,0" VerticalAlignment="Center"
+                   Opacity="0.8" Text="{x:Static res:Strings.Session_NotConnected}" TextTrimming="CharacterEllipsis" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+          <Button x:Name="ReconnectButton" Classes="toolbar" IsVisible="False" Content="{x:Static res:Strings.Session_Reconnect}" />
+          <Button x:Name="DisconnectButton" Classes="toolbar" IsEnabled="False" Content="{x:Static res:Strings.Session_Disconnect}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid>
+      <DockPanel x:Name="Browser" IsVisible="False">
+        <!-- Path and actions -->
+        <Grid DockPanel.Dock="Top" Margin="10,8" ColumnDefinitions="Auto,Auto,Auto,*,Auto" >
+          <Button x:Name="UpButton" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Sftp_Up}">
+            <ui:FASymbolIcon Symbol="Up" FontSize="16" />
+          </Button>
+          <Button x:Name="HomeButton" Grid.Column="1" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Sftp_Home}">
+            <ui:FASymbolIcon Symbol="Home" FontSize="16" />
+          </Button>
+          <Button x:Name="RefreshButton" Grid.Column="2" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Sftp_Refresh}">
+            <ui:FASymbolIcon Symbol="Refresh" FontSize="16" />
+          </Button>
+          <TextBox x:Name="PathBox" Grid.Column="3" Margin="6,0" FontFamily="Cascadia Mono,Consolas,monospace" />
+          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4">
+            <Button x:Name="NewFolderButton" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Sftp_NewFolder}">
+              <ui:FASymbolIcon Symbol="NewFolder" FontSize="16" />
+            </Button>
+            <Button x:Name="UploadButton" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Sftp_UploadTip}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ui:FASymbolIcon Symbol="Upload" FontSize="16" />
+                <TextBlock Text="{x:Static res:Strings.Sftp_Upload}" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button x:Name="DownloadButton" Classes="toolbar" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Sftp_DownloadTip}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ui:FASymbolIcon Symbol="Download" FontSize="16" />
+                <TextBlock Text="{x:Static res:Strings.Sftp_Download}" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button x:Name="RenameButton" Classes="toolbar" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Sftp_Rename}">
+              <ui:FASymbolIcon Symbol="Rename" FontSize="16" />
+            </Button>
+            <Button x:Name="DeleteButton" Classes="toolbar" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Action_Delete}">
+              <ui:FASymbolIcon Symbol="Delete" FontSize="16" />
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <!-- Transfer progress -->
+        <Border x:Name="TransferBar" DockPanel.Dock="Bottom" Padding="14,8" IsVisible="False" BorderThickness="0,1,0,0"
+                Background="{DynamicResource LayerFillColorDefaultBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+          <Grid ColumnDefinitions="*,12,240,12,Auto">
+            <TextBlock x:Name="TransferText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <ProgressBar x:Name="TransferProgress" Grid.Column="2" Minimum="0" Maximum="1" VerticalAlignment="Center" />
+            <Button x:Name="CancelTransferButton" Grid.Column="4" Classes="toolbar" Content="{x:Static res:Strings.Action_Cancel}" />
+          </Grid>
+        </Border>
+
+        <Grid>
+          <DockPanel>
+            <Grid DockPanel.Dock="Top" Margin="22,0,22,4" ColumnDefinitions="28,*,110,160,110" Opacity="0.6">
+              <TextBlock Grid.Column="1" Text="{x:Static res:Strings.Column_Name}" FontSize="12" />
+              <TextBlock Grid.Column="2" Text="{x:Static res:Strings.Sftp_Size}" FontSize="12" HorizontalAlignment="Right" Margin="0,0,12,0" />
+              <TextBlock Grid.Column="3" Text="{x:Static res:Strings.Sftp_Modified}" FontSize="12" />
+              <TextBlock Grid.Column="4" Text="{x:Static res:Strings.Sftp_Permissions}" FontSize="12" />
+            </Grid>
+            <ListBox x:Name="Entries" SelectionMode="Multiple" Margin="10,0,10,10" DragDrop.AllowDrop="True"
+                     Background="Transparent">
+              <ListBox.ContextMenu>
+                <ContextMenu x:Name="EntriesMenu">
+                  <MenuItem x:Name="MenuOpen" Header="{x:Static res:Strings.Sftp_Open}" />
+                  <MenuItem x:Name="MenuDownload" Header="{x:Static res:Strings.Sftp_DownloadEllipsis}" />
+                  <MenuItem x:Name="MenuRename" Header="{x:Static res:Strings.Sftp_RenameEllipsis}" />
+                  <MenuItem x:Name="MenuDelete" Header="{x:Static res:Strings.Action_DeleteEllipsis}" />
+                  <Separator />
+                  <MenuItem x:Name="MenuCopyPath" Header="{x:Static res:Strings.Sftp_CopyPath}" />
+                  <MenuItem x:Name="MenuNewFolder" Header="{x:Static res:Strings.Sftp_NewFolderEllipsis}" />
+                </ContextMenu>
+              </ListBox.ContextMenu>
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="ssh:SftpItem">
+                  <Grid ColumnDefinitions="28,*,110,160,110" Background="Transparent">
+                    <ui:FASymbolIcon Symbol="{Binding Symbol}" FontSize="16" HorizontalAlignment="Left" Foreground="{Binding IconBrush}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding SizeLabel}" Opacity="0.7" HorizontalAlignment="Right" Margin="0,0,12,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="{Binding ModifiedLabel}" Opacity="0.7" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="4" Text="{Binding Entry.Permissions}" Opacity="0.7" FontFamily="Cascadia Mono,Consolas,monospace" FontSize="12" VerticalAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+          <TextBlock x:Name="EmptyText" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5" IsVisible="False"
+                     Text="{x:Static res:Strings.Sftp_Empty}" IsHitTestVisible="False" />
+          <!-- Shown while files are dragged over the list. -->
+          <Border x:Name="DropHint" IsVisible="False" IsHitTestVisible="False" Margin="10,26,10,10" CornerRadius="8"
+                  BorderThickness="2" BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" Background="#183B82F6">
+            <TextBlock x:Name="DropHintText" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold" />
+          </Border>
+        </Grid>
+      </DockPanel>
+
+      <ssh:SshLogonCard x:Name="Card" />
+    </Grid>
+  </DockPanel>
+</Window>
