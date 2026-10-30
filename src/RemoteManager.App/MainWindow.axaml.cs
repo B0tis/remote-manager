@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 
 namespace RemoteManager.App;
@@ -14,14 +16,19 @@ public partial class MainWindow : Window
     private readonly List<Connection> connections;
     private readonly ObservableCollection<Connection> visible = [];
     private readonly List<SessionWindow> sessionWindows = [];
+    private readonly DispatcherTimer toastTimer = new() { Interval = TimeSpan.FromSeconds(4) };
     private string filter = "all";
+    private bool clipboardCleared;
 
     public MainWindow()
     {
         InitializeComponent();
         connections = ConnectionStore.Load();
         foreach (Connection c in connections)
+        {
             c.ReloadPreview();
+            c.RefreshCredentialState();
+        }
 
         TileList.ItemsSource = visible;
         RowList.ItemsSource = visible;
@@ -44,6 +51,11 @@ public partial class MainWindow : Window
         RefreshButton.Click += (_, _) => RefreshStatus();
         ConnectButton.Click += (_, _) => OpenSelected();
         AddButton.Click += (_, _) => AddConnection();
+        toastTimer.Tick += (_, _) =>
+        {
+            toastTimer.Stop();
+            Toast.IsOpen = false;
+        };
         Nav.SelectionChanged += (_, _) =>
         {
             if (Nav.SelectedItem is FANavigationViewItem { Tag: string tag })
@@ -61,6 +73,8 @@ public partial class MainWindow : Window
     public IReadOnlyList<Connection> VisibleConnections => visible;
     public IReadOnlyList<SessionWindow> SessionWindows => sessionWindows;
     public bool IsListView => ListPanel.IsVisible;
+    public FAInfoBar ToastBar => Toast;
+    public ListBox Tiles => TileList;
 
     private ListBox ActiveList => IsListView ? RowList : TileList;
     private Connection? Selected => ActiveList.SelectedItem as Connection;
@@ -70,12 +84,7 @@ public partial class MainWindow : Window
     {
         if (connection.Type != ConnectionType.Rdp)
         {
-            _ = new FAContentDialog
-            {
-                Title = $"{connection.TypeLabel}: {connection.Name}",
-                Content = $"{connection.TypeLabel} sessions run in the tool's own window. Launching {connection.TypeLabel} from Remote-Manager arrives in Phase 2.",
-                CloseButtonText = "OK",
-            }.ShowAsync();
+            ShowRemoteToolDialog(connection);
             return null;
         }
 
@@ -99,6 +108,76 @@ public partial class MainWindow : Window
         sessionWindows.Add(window);
         window.Show();
         return window;
+    }
+
+    /// <summary>
+    /// Copies the stored password to the clipboard; it is cleared after <paramref name="clearAfter"/>
+    /// (default 30 s) if the clipboard still holds it.
+    /// </summary>
+    public async Task CopyPasswordAsync(Connection connection, TimeSpan? clearAfter = null)
+    {
+        string? password;
+        try
+        {
+            password = CredentialStore.Read(connection.Id);
+        }
+        catch (Win32Exception ex)
+        {
+            ShowToast(connection.Name, $"Passwort konnte nicht gelesen werden: {ex.Message}", FAInfoBarSeverity.Error);
+            return;
+        }
+
+        if (password is null || Clipboard is not { } clipboard)
+        {
+            connection.RefreshCredentialState();
+            ShowToast(connection.Name, "Kein Passwort gespeichert.", FAInfoBarSeverity.Warning);
+            return;
+        }
+
+        TimeSpan delay = clearAfter ?? SecretClipboard.DefaultClearDelay;
+        await SecretClipboard.CopyAsync(clipboard, password, delay);
+        ShowToast(connection.Name, $"Kopiert, wird in {delay.TotalSeconds:0} s geleert", FAInfoBarSeverity.Success);
+    }
+
+    private void ShowToast(string title, string message, FAInfoBarSeverity severity)
+    {
+        Toast.Title = title;
+        Toast.Message = message;
+        Toast.Severity = severity;
+        Toast.IsOpen = true;
+        toastTimer.Stop();
+        toastTimer.Start();
+    }
+
+    private async void ShowRemoteToolDialog(Connection connection)
+    {
+        var dialog = new FAContentDialog
+        {
+            Title = $"{connection.TypeLabel}: {connection.Name}",
+            Content = $"{connection.TypeLabel} sessions run in the tool's own window. Launching {connection.TypeLabel} from Remote-Manager arrives in Phase 2.",
+            CloseButtonText = "OK",
+            // An empty text hides the button.
+            PrimaryButtonText = connection.HasStoredPassword ? "Passwort kopieren" : "",
+            DefaultButton = connection.HasStoredPassword ? FAContentDialogButton.Primary : FAContentDialogButton.Close,
+        };
+        RemoteToolDialog = dialog;
+        FAContentDialogResult result = await dialog.ShowAsync();
+        RemoteToolDialog = null;
+        if (result == FAContentDialogResult.Primary)
+            await CopyPasswordAsync(connection);
+    }
+
+    /// <summary>The TeamViewer/AnyDesk/RustDesk dialog while open (used by the self-test).</summary>
+    internal FAContentDialog? RemoteToolDialog { get; private set; }
+
+    /// <summary>Self-test only: lists a connection in the overview without saving it to the store.</summary>
+    internal void ShowUnsaved(Connection connection, bool show)
+    {
+        if (show)
+            connections.Add(connection);
+        else
+            connections.Remove(connection);
+        ApplyFilter();
     }
 
     public void SetListView(bool list)
@@ -241,13 +320,26 @@ public partial class MainWindow : Window
             PrimaryButtonText = "Delete",
             CloseButtonText = "Cancel",
         };
-        if (await dialog.ShowAsync() != FAContentDialogResult.Primary)
-            return;
+        if (await dialog.ShowAsync() == FAContentDialogResult.Primary)
+            RemoveConnection(connection);
+    }
 
+    /// <summary>Removes the connection with its window, preview image, and stored password, then saves.</summary>
+    internal void RemoveConnection(Connection connection)
+    {
         sessionWindows.FirstOrDefault(w => w.Connection == connection)?.Close();
         connections.Remove(connection);
         if (File.Exists(connection.ThumbnailPath))
             File.Delete(connection.ThumbnailPath);
+        try
+        {
+            CredentialStore.Delete(connection.Id);
+        }
+        catch (Win32Exception ex)
+        {
+            ShowToast(connection.Name, $"Gespeichertes Passwort konnte nicht entfernt werden: {ex.Message}", FAInfoBarSeverity.Error);
+        }
+
         Save();
         BuildNavigation();
     }
@@ -275,14 +367,21 @@ public partial class MainWindow : Window
         var connect = new MenuItem { Header = "Connect", Icon = new FASymbolIcon { Symbol = FASymbol.Play } };
         var edit = new MenuItem { Header = "Edit…", Icon = new FASymbolIcon { Symbol = FASymbol.Edit } };
         var favorite = new MenuItem { Icon = new FASymbolIcon { Symbol = FASymbol.Star } };
+        var copyPassword = new MenuItem { Header = "Passwort kopieren", Icon = new FASymbolIcon { Symbol = FASymbol.Permissions } };
         var duplicate = new MenuItem { Header = "Duplicate", Icon = new FASymbolIcon { Symbol = FASymbol.Copy } };
         var delete = new MenuItem { Header = "Delete…", Icon = new FASymbolIcon { Symbol = FASymbol.Delete } };
-        var menu = new ContextMenu { ItemsSource = new object[] { connect, edit, favorite, duplicate, new Separator(), delete } };
+        var menu = new ContextMenu { ItemsSource = new object[] { connect, copyPassword, edit, favorite, duplicate, new Separator(), delete } };
 
         menu.Opening += (_, e) =>
         {
             e.Cancel = Selected is null;
             favorite.Header = Selected?.IsFavorite == true ? "Remove from favorites" : "Add to favorites";
+            copyPassword.IsVisible = Selected?.HasStoredPassword == true;
+        };
+        copyPassword.Click += async (_, _) =>
+        {
+            if (Selected is { } c)
+                await CopyPasswordAsync(c);
         };
         connect.Click += (_, _) => OpenSelected();
         edit.Click += (_, _) => { if (Selected is { } c) EditConnection(c); };
@@ -299,6 +398,7 @@ public partial class MainWindow : Window
         {
             if (Selected is not { } c)
                 return;
+            // The copy gets a new id and therefore no stored password.
             var copy = new Connection
             {
                 Name = $"{c.Name} (copy)", Type = c.Type, Host = c.Host, Port = c.Port, Description = c.Description,
@@ -325,6 +425,24 @@ public partial class MainWindow : Window
         }
 
         base.OnKeyDown(e);
+    }
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        // A copied password must not outlive the app on the clipboard: clear it first, then close for real.
+        if (!clipboardCleared && SecretClipboard.HasPending)
+        {
+            e.Cancel = true;
+            clipboardCleared = true;
+            Dispatcher.UIThread.Post(async () =>
+            {
+                await SecretClipboard.ClearPendingAsync();
+                Close();
+            });
+            return;
+        }
+
+        base.OnClosing(e);
     }
 
     protected override void OnClosed(EventArgs e)

@@ -59,8 +59,11 @@
             <TextBox x:Name="UserBox" PlaceholderText="User" />
             <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="Domain (optional)" />
           </Grid>
-          <!-- The password only lives in this TextBox until Connect; it is cleared afterwards and never logged. -->
+          <!-- The password only lives in this TextBox until Connect; it is cleared afterwards and never logged.
+               With "Passwort speichern" it is kept in memory until logon succeeds, then written to the Credential Manager. -->
           <TextBox x:Name="PasswordBox" PasswordChar="●" PlaceholderText="Password" Classes="revealPasswordButton" />
+          <CheckBox x:Name="SavePasswordBox" Content="Passwort speichern"
+                    ToolTip.Tip="Nach erfolgreicher Anmeldung im Windows Credential Manager speichern" />
           <TextBlock x:Name="CardMessage" TextWrapping="Wrap" IsVisible="False"
                      Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
           <Button x:Name="ConnectButton" Classes="accent" HorizontalAlignment="Stretch" Height="36"
