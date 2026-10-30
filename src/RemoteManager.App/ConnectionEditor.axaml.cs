@@ -1,19 +1,43 @@
+using System.ComponentModel;
 using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
 
 namespace RemoteManager.App;
 
-/// <summary>Form for the add/edit dialog. The main window shows it in an FAContentDialog.</summary>
+/// <summary>
+/// Form for the add/edit dialog. The main window shows it in an FAContentDialog.
+/// The stored password is never shown: the dialog only knows whether one exists and takes a new one.
+/// </summary>
 public partial class ConnectionEditor : UserControl
 {
+    private bool hasStoredPassword;
+
     public ConnectionEditor()
     {
         InitializeComponent();
         TypeBox.SelectionChanged += (_, _) => UpdateTypeFields();
+        SavePasswordBox.IsCheckedChanged += (_, _) => UpdatePasswordState();
+        PasswordBox.TextChanged += (_, _) =>
+        {
+            // Typing a password here only makes sense to save it.
+            if (PasswordBox.Text?.Length > 0)
+                SavePasswordBox.IsChecked = true;
+        };
+        RemovePasswordButton.Click += (_, _) =>
+        {
+            PasswordBox.Text = "";
+            SavePasswordBox.IsChecked = false;
+        };
     }
 
-    /// <summary>The dialog while it is open (used by the self-test).</summary>
+    /// <summary>The dialog and its form while open (used by the self-test).</summary>
     public static FAContentDialog? OpenDialog { get; private set; }
+    public static ConnectionEditor? OpenEditor { get; private set; }
+
+    public TextBox Password => PasswordBox;
+    public CheckBox SavePassword => SavePasswordBox;
+    public Button RemovePassword => RemovePasswordButton;
+    public bool IsStoredPasswordShown => StoredRow.IsVisible && SavePasswordBox.IsChecked == true;
 
     /// <summary>Shows the dialog. Returns true when the user saved; <paramref name="connection"/> is then updated.</summary>
     public static async Task<bool> ShowAsync(Connection connection, bool isNew, IEnumerable<string> groups)
@@ -29,16 +53,40 @@ public partial class ConnectionEditor : UserControl
             CloseButtonText = "Cancel",
             DefaultButton = FAContentDialogButton.Primary,
         };
-        dialog.PrimaryButtonClick += (_, e) => e.Cancel = !editor.Validate();
+        dialog.PrimaryButtonClick += (_, e) => e.Cancel = !editor.TryCommit(connection);
         dialog.Opened += (_, _) => editor.NameBox.Focus();
 
         OpenDialog = dialog;
+        OpenEditor = editor;
         FAContentDialogResult result = await dialog.ShowAsync();
         OpenDialog = null;
-        if (result != FAContentDialogResult.Primary)
+        OpenEditor = null;
+        return result == FAContentDialogResult.Primary;
+    }
+
+    /// <summary>Validates, applies the password change to the Credential Manager, then updates <paramref name="c"/>.</summary>
+    public bool TryCommit(Connection c)
+    {
+        if (!Validate())
             return false;
 
-        editor.Store(connection);
+        try
+        {
+            string password = PasswordBox.Text ?? "";
+            if (SavePasswordBox.IsChecked != true)
+                CredentialStore.Delete(c.Id);
+            else if (password.Length > 0)
+                CredentialStore.Write(c.Id, password);
+        }
+        catch (Win32Exception ex)
+        {
+            ShowError($"Passwort konnte nicht gespeichert werden: {ex.Message}");
+            return false;
+        }
+
+        PasswordBox.Text = "";
+        Store(c);
+        c.RefreshCredentialState();
         return true;
     }
 
@@ -57,7 +105,10 @@ public partial class ConnectionEditor : UserControl
         DisplayBox.SelectedIndex = c.DisplayMode;
         WinKeysBox.IsChecked = c.WinKeysToSession;
         FavoriteBox.IsChecked = c.IsFavorite;
+        hasStoredPassword = CredentialStore.Exists(c.Id);
+        SavePasswordBox.IsChecked = hasStoredPassword;
         UpdateTypeFields();
+        UpdatePasswordState();
     }
 
     private bool Validate()
@@ -66,11 +117,17 @@ public partial class ConnectionEditor : UserControl
             string.IsNullOrWhiteSpace(NameBox.Text) ? "Name is required." :
             string.IsNullOrWhiteSpace(HostBox.Text) ? (IsRdp ? "Host is required." : "Remote ID is required.") :
             IsRdp && PortBox.Text is { Length: > 0 } port && !(int.TryParse(port, out int p) && p is > 0 and < 65536) ? "Port must be between 1 and 65535." :
+            SavePasswordBox.IsChecked == true && !hasStoredPassword && string.IsNullOrEmpty(PasswordBox.Text) ? "Passwort eingeben oder „Passwort speichern“ ausschalten." :
             null;
 
+        ShowError(error);
+        return error is null;
+    }
+
+    private void ShowError(string? error)
+    {
         ErrorText.Text = error;
         ErrorText.IsVisible = error is not null;
-        return error is null;
     }
 
     private void Store(Connection c)
@@ -92,11 +149,29 @@ public partial class ConnectionEditor : UserControl
 
     private bool IsRdp => TypeBox.SelectedIndex == (int)ConnectionType.Rdp;
 
+    private void UpdatePasswordState()
+    {
+        bool save = SavePasswordBox.IsChecked == true;
+        StoredRow.IsVisible = hasStoredPassword;
+        StoredText.Text = save ? "Passwort gespeichert" : "Gespeichertes Passwort wird beim Speichern entfernt";
+        StoredIcon.Opacity = save ? 1 : 0.4;
+        RemovePasswordButton.IsVisible = save;
+        PasswordBox.PlaceholderText = hasStoredPassword ? "Neues Passwort (leer = behalten)" : "Passwort";
+        UpdatePasswordHint();
+    }
+
+    private void UpdatePasswordHint() =>
+        PasswordHint.Text = IsRdp
+            ? "Gespeichert im Windows Credential Manager. Mit Passwort meldet sich die Sitzung direkt an (NLA); ohne wird es beim Verbinden abgefragt."
+            : "Gespeichert im Windows Credential Manager. „Passwort kopieren“ im Kontextmenü legt es für 30 s in die Zwischenablage.";
+
     private void UpdateTypeFields()
     {
+        UserRow.IsVisible = IsRdp;
         RdpOptions.IsVisible = IsRdp;
         PortBox.IsVisible = IsRdp;
         RemoteToolHint.IsVisible = !IsRdp;
         HostBox.PlaceholderText = IsRdp ? "Host or IP" : "Remote ID or alias";
+        UpdatePasswordHint();
     }
 }

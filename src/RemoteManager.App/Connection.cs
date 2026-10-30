@@ -12,14 +12,15 @@ public enum ConnectionType { Rdp, TeamViewer, AnyDesk, RustDesk }
 public enum OnlineStatus { Unknown, Online, Offline }
 
 /// <summary>
-/// One saved connection. Secrets are never part of it: the password is typed in the session window
-/// and handed straight to the RDP control (a credential store follows in Phase 1).
+/// One saved connection. Secrets are never part of it: a saved password lives in the Windows
+/// Credential Manager (<see cref="CredentialStore"/>), keyed by <see cref="Id"/>.
 /// </summary>
 public sealed class Connection : INotifyPropertyChanged
 {
     private bool isFavorite;
     private OnlineStatus status;
     private Bitmap? preview;
+    private bool hasStoredPassword;
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Name { get; set; } = "";
@@ -55,6 +56,14 @@ public sealed class Connection : INotifyPropertyChanged
     {
         get => preview;
         private set { preview = value; Changed(string.Empty); }
+    }
+
+    /// <summary>A password for this connection is in the Credential Manager (cached, see <see cref="RefreshCredentialState"/>).</summary>
+    [JsonIgnore]
+    public bool HasStoredPassword
+    {
+        get => hasStoredPassword;
+        private set { hasStoredPassword = value; Changed(nameof(HasStoredPassword)); }
     }
 
     [JsonIgnore] public bool HasPreview => Preview is not null;
@@ -120,6 +129,8 @@ public sealed class Connection : INotifyPropertyChanged
 
     /// <summary>Raises a change for every property, used after the edit dialog.</summary>
     public void Changed(string property = "") => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+
+    public void RefreshCredentialState() => HasStoredPassword = CredentialStore.Exists(Id);
 
     public void ReloadPreview()
     {
@@ -188,11 +199,13 @@ internal static class ConnectionStore
         return JsonSerializer.Deserialize<List<Connection>>(File.ReadAllText(FilePath), Options) ?? [];
     }
 
+    public static string Serialize(IEnumerable<Connection> connections) => JsonSerializer.Serialize(connections, Options);
+
     public static void Save(IEnumerable<Connection> connections)
     {
         Directory.CreateDirectory(AppPaths.Root);
         string temp = FilePath + ".tmp";
-        File.WriteAllText(temp, JsonSerializer.Serialize(connections, Options));
+        File.WriteAllText(temp, Serialize(connections));
         File.Move(temp, FilePath, overwrite: true);
     }
 

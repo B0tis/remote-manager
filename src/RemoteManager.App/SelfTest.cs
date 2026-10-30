@@ -1,7 +1,12 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 
@@ -10,8 +15,9 @@ namespace RemoteManager.App;
 /// <summary>
 /// Automated checks (<c>--selftest</c>). Writes a log plus probe screenshots to
 /// %LOCALAPPDATA%\RemoteManager\spike and exits with 0 when every executed check passed.
-/// Checks that need a real RDP server only run when RM_SPIKE_HOST is set
-/// (RM_SPIKE_USER / RM_SPIKE_DOMAIN / RM_SPIKE_PASSWORD prefill the form; never logged).
+/// Checks that need a real RDP server only run when RM_SPIKE_HOST is set (RM_SPIKE_USER /
+/// RM_SPIKE_DOMAIN fill the connection; RM_SPIKE_PASSWORD is stored as a temporary credential so the
+/// window logs on by itself; never logged). Credential checks use "RemoteManager:selftest-*" only.
 /// </summary>
 internal static class SelfTest
 {
@@ -66,6 +72,8 @@ internal static class SelfTest
         SaveScreenProbe(window, "edit-dialog.png");
         ConnectionEditor.OpenDialog?.Hide();
         Check("Edit dialog opens and Cancel leaves the connection unchanged", !await editing && edited.Name == nameBefore);
+
+        await RunCredentialChecksAsync(window);
 
         // --- Two session windows, each with its own RDP client -------------------------------------
         // Temporary connections; they are not added to the store.
@@ -131,6 +139,174 @@ internal static class SelfTest
         Check("Closing the last session window destroys its HWND", !IsWindow(firstHost) && window.SessionWindows.Count == 0);
     }
 
+    /// <summary>
+    /// Credential Manager round trip, edit dialog, connections.json, session auto-connect, and the
+    /// copy-password flow. Only uses "RemoteManager:selftest-*" targets and dummy values, and never
+    /// touches the credentials of real connections. Values are never logged.
+    /// </summary>
+    private static async Task RunCredentialChecksAsync(MainWindow window)
+    {
+        string[] ids = ["selftest-roundtrip", "selftest-rdp", "selftest-anydesk"];
+        foreach (string id in ids)
+            CredentialStore.Delete(id); // leftovers of an aborted run
+
+        // --- Round trip ---------------------------------------------------------------------------
+        string secret = $"Rm-{Guid.NewGuid():N}-äß€";
+        CredentialStore.Write(ids[0], secret);
+        bool written = CredentialStore.Exists(ids[0]) && CredentialStore.Read(ids[0]) == secret;
+        CredentialStore.Write(ids[0], secret + "2");
+        bool replaced = CredentialStore.Read(ids[0]) == secret + "2";
+        bool deleted = CredentialStore.Delete(ids[0]) && !CredentialStore.Exists(ids[0]) && CredentialStore.Read(ids[0]) is null
+            && !CredentialStore.Delete(ids[0]);
+        Check($"Credential Manager round trip ({CredentialStore.TargetFor(ids[0])}): write {written}, replace {replaced}, delete {deleted}",
+            written && replaced && deleted);
+
+        var rdp = new Connection
+        {
+            Id = ids[1], Name = "Selftest RDP", Host = "127.0.0.1", UserName = "selftest", Group = "Selftest",
+            Description = "Stored password, loopback (refused)",
+        };
+        var tool = new Connection
+        {
+            Id = ids[2], Name = "Selftest AnyDesk", Type = ConnectionType.AnyDesk, Host = "123 456 789", Port = 0,
+            Group = "Selftest", Description = "Stored password, copy flow", Tags = ["selftest"],
+        };
+        window.ShowUnsaved(rdp, true);
+        window.ShowUnsaved(tool, true);
+        IClipboard clipboard = window.Clipboard!;
+        string? userClipboard = await clipboard.TryGetTextAsync();
+        try
+        {
+            await RunEditorCredentialChecksAsync(window, rdp, secret);
+            await RunSessionCredentialChecksAsync(window, rdp);
+            await RunCopyPasswordChecksAsync(window, tool, clipboard);
+
+            // Deleting a connection deletes its credential. The tool connection leaves the list first,
+            // so the save inside RemoveConnection writes the user's connections unchanged.
+            window.ShowUnsaved(tool, false);
+            window.RemoveConnection(rdp);
+            Check("Deleting a connection deletes its stored password", !CredentialStore.Exists(rdp.Id));
+        }
+        finally
+        {
+            window.ShowUnsaved(rdp, false);
+            window.ShowUnsaved(tool, false);
+            foreach (string id in ids)
+                CredentialStore.Delete(id);
+            if (userClipboard is not null)
+                await clipboard.SetTextAsync(userClipboard);
+        }
+    }
+
+    private static async Task RunEditorCredentialChecksAsync(MainWindow window, Connection rdp, string secret)
+    {
+        Task<bool> editing = ConnectionEditor.ShowAsync(rdp, isNew: false, ["Selftest"]);
+        await Settle(800);
+        ConnectionEditor editor = ConnectionEditor.OpenEditor!;
+        editor.Password.Text = secret;
+        await Settle(300);
+        SaveRenderProbe(window, "edit-dialog-password.png");
+        Check("Typing a password turns on \"Passwort speichern\"", editor.SavePassword.IsChecked == true);
+        bool committed = editor.TryCommit(rdp);
+        ConnectionEditor.OpenDialog?.Hide();
+        await editing;
+        Check("Saving the edit dialog writes the password to the Credential Manager",
+            committed && CredentialStore.Read(rdp.Id) == secret && rdp.HasStoredPassword);
+
+        editing = ConnectionEditor.ShowAsync(rdp, isNew: false, ["Selftest"]);
+        await Settle(800);
+        editor = ConnectionEditor.OpenEditor!;
+        SaveRenderProbe(window, "edit-dialog-stored.png");
+        Check("Reopened dialog shows \"Passwort gespeichert\" and never the value",
+            editor.IsStoredPasswordShown && string.IsNullOrEmpty(editor.Password.Text));
+        editor.RemovePassword.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await Settle(300);
+        SaveRenderProbe(window, "edit-dialog-remove.png");
+        committed = editor.TryCommit(rdp);
+        ConnectionEditor.OpenDialog?.Hide();
+        await editing;
+        Check("\"Entfernen\" plus Save deletes the credential", committed && !CredentialStore.Exists(rdp.Id) && !rdp.HasStoredPassword);
+
+        // The JSON store never carries the password, neither for this connection nor for real ones.
+        CredentialStore.Write(rdp.Id, secret);
+        rdp.RefreshCredentialState();
+        string json = ConnectionStore.Serialize(window.Connections);
+        string onDisk = File.Exists(ConnectionStore.FilePath) ? await File.ReadAllTextAsync(ConnectionStore.FilePath) : "";
+        var passwordKey = new Regex("\"[A-Za-z]*(Password|Secret)[A-Za-z]*\"\\s*:", RegexOptions.IgnoreCase);
+        bool realLeak = window.Connections.Where(c => c.HasStoredPassword && c != rdp)
+            .Any(c => CredentialStore.Read(c.Id) is { Length: > 0 } p && (onDisk.Contains(p) || json.Contains(p)));
+        Check("connections.json has no password field and contains no stored password",
+            !json.Contains(secret) && !passwordKey.IsMatch(json) && !passwordKey.IsMatch(onDisk) && !realLeak);
+    }
+
+    private static async Task RunSessionCredentialChecksAsync(MainWindow window, Connection rdp)
+    {
+        bool disconnected = false;
+        SessionWindow s = window.OpenSession(rdp)!;
+        s.StatusLogged += (_, message) => Log($"  [{s.Title}] {message}");
+        s.SessionDisconnected += (_, _) => disconnected = true;
+        bool cardHidden = !s.IsConnectCardVisible;
+        bool raised = await WaitFor(() => disconnected, TimeSpan.FromSeconds(60));
+        await Settle(300);
+        Check($"With a stored password the session connects right away, without the card (status \"{s.LastStatus}\")",
+            cardHidden && raised && s.UsedStoredPassword && s.IsConnectCardVisible);
+
+        // A real rejection needs a server; render the state for review and check the message.
+        s.ShowStoredPasswordRejected();
+        await Settle(400);
+        SaveRenderProbe(s, "session-stored-password-rejected.png");
+        Check("Rejected stored password shows the card with a clear message", s.IsConnectCardVisible && s.CardMessageText.Contains("abgelehnt"));
+        s.Close();
+        await Settle(300);
+    }
+
+    private static async Task RunCopyPasswordChecksAsync(MainWindow window, Connection tool, IClipboard clipboard)
+    {
+        string secret = $"Rm-{Guid.NewGuid():N}";
+        CredentialStore.Write(tool.Id, secret);
+        tool.RefreshCredentialState();
+        window.SetListView(false);
+        window.Tiles.SelectedItem = tool;
+        window.Tiles.ScrollIntoView(tool);
+        await Settle(400);
+        // Opening the menu runs its Opening handler, which decides whether "Passwort kopieren" shows.
+        ContextMenu menu = window.Tiles.ContextMenu!;
+        menu.Open(window.Tiles);
+        await Settle(500);
+        bool menuItem = menu.IsOpen && menu.Items.OfType<MenuItem>().Any(i => i.Header as string == "Passwort kopieren" && i.IsVisible);
+        menu.Close();
+        Check("Context menu offers \"Passwort kopieren\" for a connection with a stored password", menuItem);
+
+        // Connect on a remote-tool entry: the dialog offers the same copy button.
+        window.OpenSession(tool);
+        await Settle(800);
+        bool dialogButton = window.RemoteToolDialog?.PrimaryButtonText == "Passwort kopieren";
+        SaveRenderProbe(window, "copy-password-dialog.png");
+        window.RemoteToolDialog?.Hide();
+        await Settle(300);
+        Check("Remote-tool dialog offers \"Passwort kopieren\"", dialogButton);
+
+        // Default delay first (for the probe), then a short one to see the clear happen.
+        await window.CopyPasswordAsync(tool);
+        await Settle(500);
+        SaveRenderProbe(window, "copy-password-toast.png");
+        bool copied = await clipboard.TryGetTextAsync() == secret;
+        Check($"Copy puts the password on the clipboard and shows \"{window.ToastBar.Message}\"",
+            copied && window.ToastBar.IsOpen && window.ToastBar.Message == "Kopiert, wird in 30 s geleert");
+
+        TimeSpan clearAfter = TimeSpan.FromSeconds(2);
+        await window.CopyPasswordAsync(tool, clearAfter);
+        await Task.Delay(clearAfter + TimeSpan.FromSeconds(1));
+        string? after = await clipboard.TryGetTextAsync();
+        Check("Clipboard is cleared after the delay", string.IsNullOrEmpty(after) && !SecretClipboard.HasPending);
+
+        await window.CopyPasswordAsync(tool, clearAfter);
+        await clipboard.SetTextAsync("remote-manager selftest: copied by the user");
+        await Task.Delay(clearAfter + TimeSpan.FromSeconds(1));
+        Check("Something copied afterwards stays on the clipboard",
+            await clipboard.TryGetTextAsync() == "remote-manager selftest: copied by the user");
+    }
+
     private static async Task CheckFailedConnect(SessionWindow s, string label)
     {
         bool disconnected = false;
@@ -149,17 +325,39 @@ internal static class SelfTest
     {
         var connection = new Connection
         {
+            Id = "selftest-live",
             Name = "Selftest live",
             Host = Environment.GetEnvironmentVariable("RM_SPIKE_HOST")!,
             UserName = Environment.GetEnvironmentVariable("RM_SPIKE_USER") ?? "",
             Domain = Environment.GetEnvironmentVariable("RM_SPIKE_DOMAIN") ?? "",
         };
+
+        // With RM_SPIKE_PASSWORD the password goes through the Credential Manager, so the window
+        // connects on its own (direct Windows logon); the credential is removed again afterwards.
+        string? password = Environment.GetEnvironmentVariable("RM_SPIKE_PASSWORD");
+        bool stored = !string.IsNullOrEmpty(password);
+        if (stored)
+            CredentialStore.Write(connection.Id, password!);
+        try
+        {
+            await RunLiveSessionAsync(window, connection, stored);
+        }
+        finally
+        {
+            CredentialStore.Delete(connection.Id);
+        }
+    }
+
+    private static async Task RunLiveSessionAsync(MainWindow window, Connection connection, bool stored)
+    {
         SessionWindow live = window.OpenSession(connection)!;
         live.StatusLogged += (_, message) => Log($"  [{live.Title}] {message}");
         await WaitFor(() => live.Rdp.IsClientReady, TimeSpan.FromSeconds(20));
-        live.Connect();
+        if (!stored)
+            live.Connect();
         bool loggedIn = await WaitFor(() => live.IsLoggedIn, TimeSpan.FromSeconds(90));
-        Check("Live session logs in without a credential prompt (NLA, stored credentials)", loggedIn);
+        Check($"Live session logs in without a credential prompt (NLA, {(stored ? "stored password, auto-connect" : "typed password")})",
+            loggedIn && live.UsedStoredPassword == stored);
         if (!loggedIn)
         {
             live.Close();
@@ -226,6 +424,34 @@ internal static class SelfTest
     }
 
     private static nint HandleOf(Window window) => window.TryGetPlatformHandle()?.Handle ?? 0;
+
+    /// <summary>
+    /// Renders the window's own visual tree to a PNG. Unlike a screen copy this never contains other
+    /// windows, whatever is in front of ours. It cannot show native child windows (the RDP surface)
+    /// or popups (menus), so the airspace probes stay screen copies.
+    /// </summary>
+    private static void SaveRenderProbe(Window window, string name)
+    {
+        double scale = window.RenderScaling;
+        var dpi = new Vector(96 * scale, 96 * scale);
+        Size size = window.ClientSize;
+        using var content = new RenderTargetBitmap(PixelSize.FromSize(size, scale), dpi);
+        content.Render(window);
+
+        // Mica is transparent in a render; put the theme's solid base color behind it.
+        IBrush background = window.TryFindResource("SolidBackgroundFillColorBaseBrush", window.ActualThemeVariant, out object? brush)
+            && brush is IBrush b ? b : Brushes.Black;
+        using var composed = new RenderTargetBitmap(PixelSize.FromSize(size, scale), dpi);
+        using (DrawingContext context = composed.CreateDrawingContext())
+        {
+            context.FillRectangle(background, new Avalonia.Rect(size));
+            context.DrawImage(content, new Avalonia.Rect(size));
+        }
+
+        string path = Path.Combine(AppPaths.Spike, name);
+        composed.Save(path, PngBitmapEncoderOptions.Default);
+        Log($"  probe saved: {path}");
+    }
 
     private static void SaveScreenProbe(Window window, string name)
     {

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -18,9 +19,17 @@ public partial class SessionWindow : Window
     // thumbnail: by the time Disconnected fires, the control may already show nothing.
     private static readonly TimeSpan FrameCaptureInterval = TimeSpan.FromSeconds(10);
 
+    // RDP disconnect reasons for a rejected logon (SSL/CredSSP class 0x07): wrong password, unknown
+    // user, account restricted, locked, or expired, password expired or must be changed.
+    private static readonly HashSet<int> LogonFailureReasons = [2055, 2567, 2823, 3335, 3591, 3847, 4615];
+
     private readonly DispatcherTimer frameTimer;
     private SessionFrame? lastGoodFrame;
     private bool disposed;
+    private bool connectWhenReady;
+    private bool usedStoredPassword;
+    // A typed password with "Passwort speichern": held until logon succeeds, so a wrong one is never saved.
+    private string? passwordToSave;
 
     // Workaround for MsRdpEx 2026.10.26: RdpClientView.Disconnected only fires for the
     // DisconnectedWithDetails event, which the RDP v11 control (classic IMsTscAxEvents sink,
@@ -47,7 +56,19 @@ public partial class SessionWindow : Window
         TypeBadgeText.Text = connection.TypeInitials;
         UserBox.Text = connection.UserName;
         DomainBox.Text = connection.Domain;
-        PrefillPasswordFromEnvironment();
+        connection.RefreshCredentialState();
+        UpdatePasswordFields();
+        if (connection.HasStoredPassword)
+        {
+            // Direct Windows logon: skip the card and connect as soon as the RDP client is ready.
+            connectWhenReady = true;
+            ConnectCard.IsVisible = false;
+            StatusText.Text = "Connecting with the saved password…";
+        }
+        else
+        {
+            PrefillPasswordFromEnvironment();
+        }
 
         frameTimer = new DispatcherTimer { Interval = FrameCaptureInterval };
         frameTimer.Tick += (_, _) => CaptureFrameToMemory();
@@ -69,6 +90,11 @@ public partial class SessionWindow : Window
             Log("RDP client ready.");
             clientEvents = RdpView.GetClient<IMsRdpClient>().Subscribe();
             clientEvents.Disconnected += OnDisconnected;
+            if (connectWhenReady)
+            {
+                connectWhenReady = false;
+                Connect();
+            }
         };
         RdpView.StatusChanged += (_, e) => SetStatus(e.Message);
         RdpView.LoginCompleted += OnLoginCompleted;
@@ -103,6 +129,10 @@ public partial class SessionWindow : Window
     public PixelSize LastRemoteDesktopSize { get; private set; }
     public string? LastThumbnailPath { get; private set; }
     public string LastStatus => StatusText.Text ?? string.Empty;
+    public bool IsConnectCardVisible => ConnectCard.IsVisible;
+    public string CardMessageText => CardMessage.IsVisible ? CardMessage.Text ?? "" : "";
+    /// <summary>The last connect used the password from the Credential Manager.</summary>
+    public bool UsedStoredPassword => usedStoredPassword;
 
     public void Connect()
     {
@@ -118,6 +148,27 @@ public partial class SessionWindow : Window
             ShowCardMessage("The RDP client is not ready yet. Try again in a moment.");
             return;
         }
+
+        // A typed password wins; an empty box means "use the saved one".
+        string typed = PasswordBox.Text ?? "";
+        string password = typed;
+        usedStoredPassword = false;
+        if (typed.Length == 0 && Connection.HasStoredPassword)
+        {
+            try
+            {
+                password = CredentialStore.Read(Connection.Id) ?? "";
+                usedStoredPassword = password.Length > 0;
+            }
+            catch (Win32Exception ex)
+            {
+                ShowCardMessage($"Gespeichertes Passwort konnte nicht gelesen werden: {ex.Message}");
+                ShowCard();
+                return;
+            }
+        }
+
+        passwordToSave = typed.Length > 0 && SavePasswordBox.IsChecked == true ? typed : null;
 
         (int width, int height, RdpDisplayMode mode) = Connection.DisplayMode switch
         {
@@ -146,7 +197,7 @@ public partial class SessionWindow : Window
             var settings = new RdpConnectionSettings(
                 HostName: host,
                 UserName: UserBox.Text?.Trim() ?? "",
-                Password: PasswordBox.Text ?? "",
+                Password: password,
                 Domain: DomainBox.Text?.Trim() ?? "",
                 DesktopWidth: width,
                 DesktopHeight: height);
@@ -156,6 +207,7 @@ public partial class SessionWindow : Window
         catch (Exception ex)
         {
             IsSessionActive = false;
+            passwordToSave = null;
             SetStatus($"Connect failed: {ex.Message}");
             ShowCard();
             return;
@@ -225,7 +277,28 @@ public partial class SessionWindow : Window
         FocusItem.IsEnabled = true;
         frameTimer.Start();
         RdpView.FocusSession();
+        SavePendingPassword();
         SessionLoggedIn?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void SavePendingPassword()
+    {
+        if (passwordToSave is not { } password)
+            return;
+
+        passwordToSave = null;
+        try
+        {
+            CredentialStore.Write(Connection.Id, password);
+            Log("Password saved to the Windows Credential Manager.");
+        }
+        catch (Win32Exception ex)
+        {
+            SetStatus($"Passwort konnte nicht gespeichert werden: {ex.Message}");
+        }
+
+        Connection.RefreshCredentialState();
+        UpdatePasswordFields();
     }
 
     private void OnDisconnected(int reason)
@@ -233,8 +306,10 @@ public partial class SessionWindow : Window
         if (!IsSessionActive)
             return;
 
+        bool rejectedStoredPassword = !IsLoggedIn && usedStoredPassword && LogonFailureReasons.Contains(reason);
         IsSessionActive = false;
         IsLoggedIn = false;
+        passwordToSave = null;
         LastDisconnectReason = reason;
         frameTimer.Stop();
         SetStatus($"Disconnected: {DescribeDisconnect(reason)}");
@@ -250,9 +325,30 @@ public partial class SessionWindow : Window
         SnapshotItem.IsEnabled = false;
         FocusItem.IsEnabled = false;
         ConnectButton.Content = "Reconnect";
-        ShowCardMessage(LastStatus);
-        ShowCard();
+        if (rejectedStoredPassword)
+        {
+            ShowStoredPasswordRejected();
+        }
+        else
+        {
+            ShowCardMessage(LastStatus);
+            ShowCard();
+        }
+
         SessionDisconnected?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>The server refused the saved password: ask for it again and offer to replace the saved one.</summary>
+    internal void ShowStoredPasswordRejected()
+    {
+        SavePasswordBox.IsChecked = true;
+        ShowCardMessage($"Das gespeicherte Passwort wurde abgelehnt. Bitte neu eingeben; mit „Passwort speichern“ wird es ersetzt.\n{LastStatus}");
+        ShowCard();
+    }
+
+    private void UpdatePasswordFields()
+    {
+        PasswordBox.PlaceholderText = Connection.HasStoredPassword ? "Password (empty = use saved one)" : "Password";
     }
 
     private string DescribeDisconnect(int reason)

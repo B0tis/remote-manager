@@ -38,8 +38,11 @@
           <StackPanel Margin="14,10,14,12" Spacing="3">
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-              <ui:FASymbolIcon Grid.Column="1" Symbol="StarFilled" FontSize="14"
-                               Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                <ui:FASymbolIcon Symbol="Permissions" FontSize="13" Opacity="0.7"
+                                 IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="Passwort gespeichert" />
+                <ui:FASymbolIcon Symbol="StarFilled" FontSize="14" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
+              </StackPanel>
             </Grid>
             <TextBlock Text="{Binding HostLabel}" Opacity="0.75" FontSize="13" TextTrimming="CharacterEllipsis" />
             <TextBlock Text="{Binding Description}" Opacity="0.55" FontSize="12" TextTrimming="CharacterEllipsis" />
@@ -70,6 +73,8 @@
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
           <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
           <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
+          <ui:FASymbolIcon Symbol="Permissions" FontSize="12" Opacity="0.7"
+                           IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="Passwort gespeichert" />
         </StackPanel>
         <Border Grid.Column="2" Classes="pill" Background="{Binding TypeBrush}" HorizontalAlignment="Left" VerticalAlignment="Center">
           <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
@@ -174,6 +179,10 @@
           <TextBlock Text="No connections match." HorizontalAlignment="Center" Opacity="0.6" />
         </StackPanel>
       </Panel>
+
+      <!-- Short confirmations (copy password); closes itself after a few seconds. -->
+      <ui:FAInfoBar x:Name="Toast" Grid.Row="1" IsOpen="False" IsClosable="True" MaxWidth="460"
+                    HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,24" />
     </Grid>
   </ui:FANavigationView>
 </Window>
