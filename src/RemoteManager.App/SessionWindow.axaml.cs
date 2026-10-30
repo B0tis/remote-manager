@@ -1,18 +1,18 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Devolutions.MsRdpEx.Avalonia;
-using FluentAvalonia.UI.Controls;
 using MSTSCLib;
 
 namespace RemoteManager.App;
 
 /// <summary>
-/// One tab: a small connection form plus an embedded <see cref="RdpClientView"/>.
+/// A top-level window with exactly one embedded <see cref="RdpClientView"/>.
+/// Closing the window disposes the session (and its native window).
 /// </summary>
-public partial class SessionView : UserControl, IDisposable
+public partial class SessionWindow : Window
 {
     // A periodic in-memory frame lets a server-initiated disconnect still produce a
     // thumbnail: by the time Disconnected fires, the control may already show nothing.
@@ -28,27 +28,41 @@ public partial class SessionView : UserControl, IDisposable
     // a disconnect. We subscribe to the raw OnDisconnected ourselves and keep our own state.
     private RdpClientEventSubscription? clientEvents;
 
-    public SessionView() : this("Session")
+    // Required by the XAML loader; the app always uses the Connection overload.
+    public SessionWindow() : this(new Connection { Name = "Session" })
     {
     }
 
-    public SessionView(string title)
+    public SessionWindow(Connection connection)
     {
         InitializeComponent();
-        Title = title;
-        Id = Guid.NewGuid().ToString("N")[..8];
+        Connection = connection;
+        Title = connection.Name;
+
+        NameText.Text = connection.Name;
+        HostText.Text = connection.HostLabel;
+        DescriptionText.Text = connection.Description;
+        DescriptionText.IsVisible = connection.Description.Length > 0;
+        TypeBadge.Background = connection.TypeBrush;
+        TypeBadgeText.Text = connection.TypeInitials;
+        UserBox.Text = connection.UserName;
+        DomainBox.Text = connection.Domain;
+        PrefillPasswordFromEnvironment();
 
         frameTimer = new DispatcherTimer { Interval = FrameCaptureInterval };
         frameTimer.Tick += (_, _) => CaptureFrameToMemory();
 
-        PrefillFromEnvironment();
-
         ConnectButton.Click += (_, _) => Connect();
         DisconnectButton.Click += (_, _) => Disconnect();
-        SnapshotButton.Click += (_, _) => SaveSnapshot("manual");
         FullScreenButton.Click += (_, _) => RdpView.FullScreen = true;
-        InWindowDialogButton.Click += OnInWindowDialogClick;
-        WindowDialogButton.Click += OnWindowDialogClick;
+        SnapshotItem.Click += (_, _) => SaveSnapshot("manual");
+        FocusItem.Click += (_, _) => RdpView.FocusSession();
+        Opened += (_, _) => (UserBox.Text?.Length > 0 ? PasswordBox : UserBox).Focus();
+        Activated += (_, _) =>
+        {
+            if (IsLoggedIn)
+                Dispatcher.UIThread.Post(() => RdpView.FocusSession(), DispatcherPriority.Background);
+        };
 
         RdpView.ClientReady += (_, _) =>
         {
@@ -67,16 +81,17 @@ public partial class SessionView : UserControl, IDisposable
         };
     }
 
-    public string Id { get; }
-    public string Title { get; private set; }
-    public event EventHandler? TitleChanged;
+    public Connection Connection { get; }
 
-    /// <summary>Raised for every status line (connection events, errors, spike diagnostics). Never contains secrets.</summary>
+    /// <summary>Raised for every status line (connection events, errors, diagnostics). Never contains secrets.</summary>
     public event EventHandler<string>? StatusLogged;
     public event EventHandler? SessionLoggedIn;
     public event EventHandler? SessionDisconnected;
+    /// <summary>A snapshot PNG was written to <see cref="Connection.ThumbnailPath"/>.</summary>
+    public event EventHandler? SnapshotSaved;
 
     public RdpClientView Rdp => RdpView;
+    public Button MenuButton => MoreButton;
 
     /// <summary>Between Connect and the disconnect event (our own state, see clientEvents).</summary>
     public bool IsSessionActive { get; private set; }
@@ -89,31 +104,22 @@ public partial class SessionView : UserControl, IDisposable
     public string? LastThumbnailPath { get; private set; }
     public string LastStatus => StatusText.Text ?? string.Empty;
 
-    public string Host { get => HostBox.Text ?? ""; set => HostBox.Text = value; }
-
-    /// <summary>Called by the window when this tab becomes the visible one.</summary>
-    public void OnActivated()
-    {
-        if (IsLoggedIn)
-            Dispatcher.UIThread.Post(() => RdpView.FocusSession(), DispatcherPriority.Background);
-    }
-
     public void Connect()
     {
-        string host = HostBox.Text?.Trim() ?? "";
+        string host = Connection.Host.Trim();
         if (host.Length == 0)
         {
-            SetStatus("Host is required.");
+            ShowCardMessage("This connection has no host.");
             return;
         }
 
         if (!RdpView.IsClientReady)
         {
-            SetStatus("RDP client is not ready yet.");
+            ShowCardMessage("The RDP client is not ready yet. Try again in a moment.");
             return;
         }
 
-        (int width, int height, RdpDisplayMode mode) = DisplayBox.SelectedIndex switch
+        (int width, int height, RdpDisplayMode mode) = Connection.DisplayMode switch
         {
             1 => (0, 0, RdpDisplayMode.SmartSizing),
             2 => (1920, 1080, RdpDisplayMode.SmartSizing),
@@ -121,7 +127,7 @@ public partial class SessionView : UserControl, IDisposable
             _ => (0, 0, RdpDisplayMode.FitToWindow),
         };
 
-        RdpView.UseRemoteKeyboardShortcuts = KeyboardHookBox.IsChecked == true;
+        RdpView.UseRemoteKeyboardShortcuts = Connection.WinKeysToSession;
         RdpView.DisplayMode = mode;
 
         // Show the surface and lay it out first: the initial session size comes from the viewport.
@@ -133,7 +139,9 @@ public partial class SessionView : UserControl, IDisposable
         {
             // Server authentication: warn on certificate problems instead of silently connecting.
             // RdpClientView.Connect leaves AuthenticationLevel untouched, so set it on the client first.
-            RdpView.GetClient<MSTSCLib.IMsRdpClient10>().AdvancedSettings9.AuthenticationLevel = 2;
+            RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.AuthenticationLevel = 2;
+            if (Connection.Port is > 0 and not 3389)
+                RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.RDPPort = Connection.Port;
 
             var settings = new RdpConnectionSettings(
                 HostName: host,
@@ -149,7 +157,7 @@ public partial class SessionView : UserControl, IDisposable
         {
             IsSessionActive = false;
             SetStatus($"Connect failed: {ex.Message}");
-            ShowThumbnail();
+            ShowCard();
             return;
         }
         finally
@@ -158,8 +166,7 @@ public partial class SessionView : UserControl, IDisposable
             PasswordBox.Text = "";
         }
 
-        SetTitle(host);
-        ConnectButton.IsEnabled = false;
+        SetStatusDot(Color.FromRgb(0xF5, 0x9E, 0x0B));
         DisconnectButton.IsEnabled = true;
     }
 
@@ -191,16 +198,17 @@ public partial class SessionView : UserControl, IDisposable
             return null;
         }
 
-        string path = Path.Combine(AppPaths.Thumbnails, $"{Id}.png");
+        string path = Connection.ThumbnailPath;
         frame.SavePng(path);
         LastThumbnailPath = path;
         Log($"Snapshot ({reason}) saved: {path} ({frame.Width}x{frame.Height}, method {frame.Method}).");
+        SnapshotSaved?.Invoke(this, EventArgs.Empty);
         return path;
     }
 
     private void CaptureFrameToMemory()
     {
-        if (!IsLoggedIn || !IsEffectivelyVisible)
+        if (!IsLoggedIn || WindowState == WindowState.Minimized)
             return;
 
         SessionFrame? frame = SessionCapture.Capture(RdpView.HostWindowHandle);
@@ -211,8 +219,10 @@ public partial class SessionView : UserControl, IDisposable
     private void OnLoginCompleted(object? sender, EventArgs e)
     {
         IsLoggedIn = true;
-        SnapshotButton.IsEnabled = true;
+        SetStatusDot(Color.FromRgb(0x22, 0xC5, 0x5E));
         FullScreenButton.IsEnabled = true;
+        SnapshotItem.IsEnabled = true;
+        FocusItem.IsEnabled = true;
         frameTimer.Start();
         RdpView.FocusSession();
         SessionLoggedIn?.Invoke(this, EventArgs.Empty);
@@ -234,11 +244,14 @@ public partial class SessionView : UserControl, IDisposable
         if (lastGoodFrame is not null && LastThumbnailPath is null)
             SaveSnapshot("server-disconnect");
 
-        ConnectButton.IsEnabled = true;
+        SetStatusDot(Color.FromRgb(0x9C, 0xA3, 0xAF));
         DisconnectButton.IsEnabled = false;
-        SnapshotButton.IsEnabled = false;
         FullScreenButton.IsEnabled = false;
-        ShowThumbnail();
+        SnapshotItem.IsEnabled = false;
+        FocusItem.IsEnabled = false;
+        ConnectButton.Content = "Reconnect";
+        ShowCardMessage(LastStatus);
+        ShowCard();
         SessionDisconnected?.Invoke(this, EventArgs.Empty);
     }
 
@@ -263,106 +276,41 @@ public partial class SessionView : UserControl, IDisposable
     {
         LastThumbnailPath = null;
         ThumbnailImage.IsVisible = false;
-        PlaceholderText.IsVisible = false;
+        ConnectCard.IsVisible = false;
+        CardMessage.IsVisible = false;
         RdpView.IsVisible = true;
     }
 
-    private void ShowThumbnail()
+    private void ShowCard()
     {
-        // Hide the native surface so the (Avalonia-drawn) thumbnail or placeholder is not covered by it.
+        // Hide the native surface so the (Avalonia-drawn) card and thumbnail are not covered by it.
         RdpView.IsVisible = false;
-        if (LastThumbnailPath is null || !File.Exists(LastThumbnailPath))
+        if (LastThumbnailPath is not null && File.Exists(LastThumbnailPath))
         {
-            PlaceholderText.Text = $"Disconnected. {LastStatus}";
-            PlaceholderText.IsVisible = true;
-            return;
+            using FileStream stream = File.OpenRead(LastThumbnailPath);
+            ThumbnailImage.Source = new Bitmap(stream);
+            ThumbnailImage.IsVisible = true;
         }
 
-        ThumbnailImage.Source = new Bitmap(LastThumbnailPath);
-        ThumbnailImage.IsVisible = true;
+        ConnectCard.IsVisible = true;
+        PasswordBox.Focus();
     }
 
-    private async void OnInWindowDialogClick(object? sender, RoutedEventArgs e) =>
-        await ShowInWindowDialog(useAirspaceWorkaround: true).Closed;
-
-    /// <summary>
-    /// FAContentDialog renders in the window's overlay layer, i.e. below the RDP child HWND.
-    /// The workaround from the plan hides the native view (showing its snapshot instead)
-    /// while the dialog is open.
-    /// </summary>
-    public (FAContentDialog Dialog, Task Closed) ShowInWindowDialog(bool useAirspaceWorkaround)
+    private void ShowCardMessage(string message)
     {
-        bool hideSurface = useAirspaceWorkaround && RdpView.IsVisible;
-        if (hideSurface)
-        {
-            if (IsLoggedIn)
-                SaveSnapshot("dialog");
-            RdpView.IsVisible = false;
-            if (LastThumbnailPath is not null)
-            {
-                ThumbnailImage.Source = new Bitmap(LastThumbnailPath);
-                ThumbnailImage.IsVisible = true;
-            }
-        }
-
-        var dialog = new FAContentDialog
-        {
-            Title = "In-window dialog",
-            Content = hideSurface
-                ? "The session surface is hidden (snapshot shown instead) so this dialog is visible."
-                : "Shown without the airspace workaround.",
-            CloseButtonText = "Close",
-        };
-
-        async Task ShowAndRestore()
-        {
-            await dialog.ShowAsync();
-            if (hideSurface)
-            {
-                ThumbnailImage.IsVisible = false;
-                RdpView.IsVisible = true;
-            }
-        }
-
-        return (dialog, ShowAndRestore());
+        CardMessage.Text = message;
+        CardMessage.IsVisible = message.Length > 0;
     }
 
-    private async void OnWindowDialogClick(object? sender, RoutedEventArgs e)
+    private void PrefillPasswordFromEnvironment()
     {
-        if (TopLevel.GetTopLevel(this) is not Window owner)
-            return;
-
-        var dialog = new Window
-        {
-            Title = "Dialog in its own window",
-            Width = 380,
-            Height = 160,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Content = new TextBlock
-            {
-                Margin = new Thickness(16),
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                Text = "A separate top-level window is always above the RDP child HWND.",
-            },
-        };
-        await dialog.ShowDialog(owner);
+        // Local testing convenience only (see docs/spike-results.md); the value is never logged.
+        string? host = Environment.GetEnvironmentVariable("RM_SPIKE_HOST");
+        if (!string.IsNullOrWhiteSpace(host) && string.Equals(host, Connection.Host, StringComparison.OrdinalIgnoreCase))
+            PasswordBox.Text = Environment.GetEnvironmentVariable("RM_SPIKE_PASSWORD") ?? "";
     }
 
-    private void PrefillFromEnvironment()
-    {
-        // Local testing convenience only; values are never logged. See docs/spike-results.md.
-        HostBox.Text = Environment.GetEnvironmentVariable("RM_SPIKE_HOST") ?? "";
-        UserBox.Text = Environment.GetEnvironmentVariable("RM_SPIKE_USER") ?? "";
-        DomainBox.Text = Environment.GetEnvironmentVariable("RM_SPIKE_DOMAIN") ?? "";
-        PasswordBox.Text = Environment.GetEnvironmentVariable("RM_SPIKE_PASSWORD") ?? "";
-    }
-
-    private void SetTitle(string title)
-    {
-        Title = title;
-        TitleChanged?.Invoke(this, EventArgs.Empty);
-    }
+    private void SetStatusDot(Color color) => StatusDot.Fill = new SolidColorBrush(color);
 
     private void SetStatus(string message)
     {
@@ -372,7 +320,25 @@ public partial class SessionView : UserControl, IDisposable
 
     private void Log(string message) => StatusLogged?.Invoke(this, message);
 
-    public void Dispose()
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        // Keep the last picture of a live session as the tile preview before the surface goes away.
+        if (IsLoggedIn)
+            SaveSnapshot("close");
+        base.OnClosing(e);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        DisposeSession();
+        base.OnClosed(e);
+    }
+
+    /// <summary>
+    /// MsRdpEx deliberately keeps detached views alive (for docking), so the view must be disposed
+    /// explicitly; this destroys its HWND.
+    /// </summary>
+    private void DisposeSession()
     {
         if (disposed)
             return;
