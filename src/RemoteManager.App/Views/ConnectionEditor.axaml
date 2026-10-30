@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Views.ConnectionEditor"
+             Width="460">
+  <StackPanel Spacing="12">
+    <Grid ColumnDefinitions="*,12,150">
+      <TextBox x:Name="NameBox" PlaceholderText="{x:Static res:Strings.Field_Name}" />
+      <!-- Filled from the connection handler registry. -->
+      <ComboBox x:Name="TypeBox" Grid.Column="2" HorizontalAlignment="Stretch" />
+    </Grid>
+    <Grid ColumnDefinitions="*,12,90">
+      <TextBox x:Name="HostBox" />
+      <TextBox x:Name="PortBox" Grid.Column="2" />
+    </Grid>
+    <TextBox x:Name="DescriptionBox" PlaceholderText="{x:Static res:Strings.Field_Description}" />
+    <Grid ColumnDefinitions="*,12,*">
+      <AutoCompleteBox x:Name="GroupBox" PlaceholderText="{x:Static res:Strings.Field_Group}" FilterMode="Contains" MinimumPrefixLength="0" />
+      <TextBox x:Name="TagsBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_Tags}" />
+    </Grid>
+
+    <TextBlock Text="{x:Static res:Strings.Editor_Logon}" FontWeight="SemiBold" Margin="0,6,0,0" />
+    <Grid x:Name="UserRow" ColumnDefinitions="*,12,*">
+      <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Field_User}" />
+      <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_DomainOptional}" />
+    </Grid>
+    <TextBlock x:Name="InheritedHint" Opacity="0.55" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
+
+    <!-- The stored password is never read back into this dialog: the box only takes a new one. -->
+    <StackPanel Spacing="6">
+      <Grid ColumnDefinitions="*,12,Auto">
+        <TextBox x:Name="PasswordBox" PasswordChar="●" PlaceholderText="{x:Static res:Strings.Field_Password}" Classes="revealPasswordButton" />
+        <CheckBox x:Name="SavePasswordBox" Grid.Column="2" Content="{x:Static res:Strings.Password_Save}" />
+      </Grid>
+      <Grid x:Name="StoredRow" ColumnDefinitions="Auto,*,Auto" IsVisible="False">
+        <ui:FASymbolIcon x:Name="StoredIcon" Symbol="Permissions" FontSize="14" Margin="2,0,8,0"
+                         Foreground="{DynamicResource SystemFillColorSuccessBrush}" />
+        <TextBlock x:Name="StoredText" Grid.Column="1" VerticalAlignment="Center" FontSize="12" Text="{x:Static res:Strings.Password_Stored}" />
+        <Button x:Name="RemovePasswordButton" Grid.Column="2" Classes="toolbar" Padding="8,2" FontSize="12" Content="{x:Static res:Strings.Action_Remove}" />
+      </Grid>
+      <TextBlock x:Name="PasswordHint" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
+    </StackPanel>
+
+    <!-- Type-specific options: the handler's ISettingsEditor. -->
+    <ContentControl x:Name="SettingsHost" />
+
+    <TextBox x:Name="NotesBox" PlaceholderText="{x:Static res:Strings.Field_Notes}" AcceptsReturn="True" TextWrapping="Wrap"
+             MinHeight="60" MaxHeight="140" />
+    <CheckBox x:Name="FavoriteBox" Content="{x:Static res:Strings.Field_Favorite}" />
+    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource SystemFillColorCriticalBrush}" IsVisible="False" TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>

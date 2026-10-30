@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Everything below the UI: model, SQLite store, credentials, status checks, import/export. No Avalonia here. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Numbered schema migrations, applied in order by SqliteMigrator. -->
+    <EmbeddedResource Include="Storage\Migrations\*.sql" LogicalName="RemoteManager.Core.Migrations.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="RemoteManager.Core.Tests" />
+  </ItemGroup>
+</Project>

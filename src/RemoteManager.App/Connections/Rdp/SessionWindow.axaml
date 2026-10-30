@@ -2,7 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:rdp="using:Devolutions.MsRdpEx.Avalonia"
-        x:Class="RemoteManager.App.SessionWindow"
+        xmlns:res="using:RemoteManager.App.Resources"
+        x:Class="RemoteManager.App.Connections.Rdp.SessionWindow"
         Width="1280" Height="800" MinWidth="640" MinHeight="420"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
@@ -14,19 +15,19 @@
       <Grid ColumnDefinitions="Auto,*,Auto">
         <Ellipse x:Name="StatusDot" Width="8" Height="8" VerticalAlignment="Center" Fill="#9CA3AF" />
         <TextBlock x:Name="StatusText" Grid.Column="1" Margin="10,0" VerticalAlignment="Center"
-                   Opacity="0.8" Text="Not connected" TextTrimming="CharacterEllipsis" />
+                   Opacity="0.8" Text="{x:Static res:Strings.Session_NotConnected}" TextTrimming="CharacterEllipsis" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
-          <Button x:Name="DisconnectButton" Classes="toolbar" IsEnabled="False" Content="Disconnect" />
-          <Button x:Name="FullScreenButton" Classes="toolbar" IsEnabled="False" ToolTip.Tip="Fullscreen (Ctrl+Alt+Break to leave)">
+          <Button x:Name="DisconnectButton" Classes="toolbar" IsEnabled="False" Content="{x:Static res:Strings.Session_Disconnect}" />
+          <Button x:Name="FullScreenButton" Classes="toolbar" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Session_FullScreenTip}">
             <ui:FASymbolIcon Symbol="FullScreenMaximize" FontSize="16" />
           </Button>
           <!-- Menus and flyouts are native popup windows (OverlayPopups stays off), so they draw above the session. -->
-          <Button x:Name="MoreButton" Classes="toolbar" ToolTip.Tip="More">
+          <Button x:Name="MoreButton" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Session_More}">
             <ui:FASymbolIcon Symbol="More" FontSize="16" />
             <Button.Flyout>
               <MenuFlyout Placement="BottomEdgeAlignedRight">
-                <MenuItem x:Name="SnapshotItem" Header="Save snapshot as preview" IsEnabled="False" />
-                <MenuItem x:Name="FocusItem" Header="Focus session" IsEnabled="False" />
+                <MenuItem x:Name="SnapshotItem" Header="{x:Static res:Strings.Session_SaveSnapshot}" IsEnabled="False" />
+                <MenuItem x:Name="FocusItem" Header="{x:Static res:Strings.Session_Focus}" IsEnabled="False" />
               </MenuFlyout>
             </Button.Flyout>
           </Button>
@@ -56,20 +57,19 @@
           </StackPanel>
           <TextBlock x:Name="DescriptionText" Opacity="0.7" TextWrapping="Wrap" />
           <Grid ColumnDefinitions="*,10,*">
-            <TextBox x:Name="UserBox" PlaceholderText="User" />
-            <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="Domain (optional)" />
+            <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Field_User}" />
+            <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_DomainOptional}" />
           </Grid>
           <!-- The password only lives in this TextBox until Connect; it is cleared afterwards and never logged.
                With "Passwort speichern" it is kept in memory until logon succeeds, then written to the Credential Manager. -->
-          <TextBox x:Name="PasswordBox" PasswordChar="●" PlaceholderText="Password" Classes="revealPasswordButton" />
-          <CheckBox x:Name="SavePasswordBox" Content="Passwort speichern"
-                    ToolTip.Tip="Nach erfolgreicher Anmeldung im Windows Credential Manager speichern" />
+          <TextBox x:Name="PasswordBox" PasswordChar="●" PlaceholderText="{x:Static res:Strings.Field_Password}" Classes="revealPasswordButton" />
+          <CheckBox x:Name="SavePasswordBox" Content="{x:Static res:Strings.Password_Save}"
+                    ToolTip.Tip="{x:Static res:Strings.Session_SavePasswordTip}" />
           <TextBlock x:Name="CardMessage" TextWrapping="Wrap" IsVisible="False"
                      Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
           <Button x:Name="ConnectButton" Classes="accent" HorizontalAlignment="Stretch" Height="36"
-                  Content="Connect" IsDefault="True" />
-          <TextBlock Opacity="0.5" FontSize="12" TextWrapping="Wrap"
-                     Text="NLA is always on. Win keys go to the session while it has focus." />
+                  Content="{x:Static res:Strings.Action_Connect}" IsDefault="True" />
+          <TextBlock Opacity="0.5" FontSize="12" TextWrapping="Wrap" Text="{x:Static res:Strings.Session_Footer}" />
         </StackPanel>
       </Border>
 

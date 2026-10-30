@@ -1,6 +1,7 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
@@ -9,8 +10,21 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using Microsoft.Data.Sqlite;
+using RemoteManager.App.Connections;
+using RemoteManager.App.Connections.Rdp;
+using RemoteManager.App.Resources;
+using RemoteManager.App.Services;
+using RemoteManager.App.Views;
+using RemoteManager.Core;
+using RemoteManager.Core.Credentials;
+using RemoteManager.Core.Library;
+using RemoteManager.Core.Model;
+using RemoteManager.Core.Model.Settings;
+using RemoteManager.Core.Status;
+using RemoteManager.Core.Storage;
 
-namespace RemoteManager.App;
+namespace RemoteManager.App.Diagnostics;
 
 /// <summary>
 /// Automated checks (<c>--selftest</c>). Writes a log plus probe screenshots to
@@ -18,6 +32,7 @@ namespace RemoteManager.App;
 /// Checks that need a real RDP server only run when RM_SPIKE_HOST is set (RM_SPIKE_USER /
 /// RM_SPIKE_DOMAIN fill the connection; RM_SPIKE_PASSWORD is stored as a temporary credential so the
 /// window logs on by itself; never logged). Credential checks use "RemoteManager:selftest-*" only.
+/// Database checks run on a temporary folder; the real database is only read.
 /// </summary>
 internal static class SelfTest
 {
@@ -52,8 +67,15 @@ internal static class SelfTest
             Log($"Screen {screen.DisplayName}: bounds {screen.Bounds}, scaling {screen.Scaling}, primary {screen.IsPrimary}");
 
         // --- Overview: store, tile view, list view ------------------------------------------------
-        Check($"Overview lists the stored connections ({window.Connections.Count}, store {ConnectionStore.FilePath})",
-            window.Connections.Count > 0 && window.VisibleConnections.Count == window.Connections.Count);
+        AppHost app = AppHost.Current;
+        Log($"Store {app.StoreReport.DatabasePath}: schema {SqliteMigrator.LatestVersion}, migrated from json {app.StoreReport.MigratedFromJson}, seeded {app.StoreReport.Seeded}");
+        Check($"Overview lists the stored connections ({window.Connections.Count})",
+            window.Connections.Count == app.Library.Connections.Count && window.VisibleConnections.Count == window.Connections.Count);
+        Check("Every connection type has a handler",
+            Enum.GetValues<ConnectionType>().All(app.Handlers.Supports) && window.Connections.All(c => c.Handler.Type == c.Model.Type));
+
+        await RunDatabaseChecksAsync(app);
+        await RunStatusCheckerChecksAsync(app);
         window.Activate();
         await Settle(2500); // let the status checks finish
         SaveScreenProbe(window, "overview-tiles.png");
@@ -65,9 +87,9 @@ internal static class SelfTest
         await Settle(300);
 
         // The edit dialog is an in-window FAContentDialog; that is fine here because the overview never hosts a session.
-        Connection edited = window.Connections[0];
+        ConnectionItem edited = window.Connections[0];
         string nameBefore = edited.Name;
-        Task<bool> editing = ConnectionEditor.ShowAsync(edited, isNew: false, ["Homelab"]);
+        Task<bool> editing = ConnectionEditor.ShowAsync(edited.Model, isNew: false);
         await Settle(800);
         SaveScreenProbe(window, "edit-dialog.png");
         ConnectionEditor.OpenDialog?.Hide();
@@ -77,10 +99,10 @@ internal static class SelfTest
 
         // --- Two session windows, each with its own RDP client -------------------------------------
         // Temporary connections; they are not added to the store.
-        var a = new Connection { Name = "Selftest A", Host = "127.0.0.1", Description = "Loopback: refused by the RDP client", UserName = "selftest" };
-        var b = new Connection { Name = "Selftest B", Host = "rm-selftest-unreachable.invalid", Description = "DNS failure" };
-        SessionWindow first = window.OpenSession(a)!;
-        SessionWindow second = window.OpenSession(b)!;
+        ConnectionItem a = window.CreateItem(new Connection { Name = "Selftest A", Host = "127.0.0.1", Description = "Loopback: refused by the RDP client", UserName = "selftest" });
+        ConnectionItem b = window.CreateItem(new Connection { Name = "Selftest B", Host = "rm-selftest-unreachable.invalid", Description = "DNS failure" });
+        var first = (SessionWindow)window.OpenSession(a)!;
+        var second = (SessionWindow)window.OpenSession(b)!;
         foreach (SessionWindow s in new[] { first, second })
             s.StatusLogged += (_, message) => Log($"  [{s.Title}] {message}");
 
@@ -108,7 +130,7 @@ internal static class SelfTest
             await CheckFailedConnect(s, label);
         if (Environment.GetEnvironmentVariable("RM_SPIKE_UNREACHABLE") is { Length: > 0 } custom)
         {
-            SessionWindow s = window.OpenSession(new Connection { Name = "Selftest custom", Host = custom })!;
+            var s = (SessionWindow)window.OpenSession(window.CreateItem(new Connection { Name = "Selftest custom", Host = custom }))!;
             await WaitFor(() => s.Rdp.IsClientReady, TimeSpan.FromSeconds(20));
             await CheckFailedConnect(s, "RM_SPIKE_UNREACHABLE");
             s.Close();
@@ -140,7 +162,7 @@ internal static class SelfTest
     }
 
     /// <summary>
-    /// Credential Manager round trip, edit dialog, connections.json, session auto-connect, and the
+    /// Credential Manager round trip, edit dialog, database, session auto-connect, and the
     /// copy-password flow. Only uses "RemoteManager:selftest-*" targets and dummy values, and never
     /// touches the credentials of real connections. Values are never logged.
     /// </summary>
@@ -148,29 +170,29 @@ internal static class SelfTest
     {
         string[] ids = ["selftest-roundtrip", "selftest-rdp", "selftest-anydesk"];
         foreach (string id in ids)
-            CredentialStore.Delete(id); // leftovers of an aborted run
+            WindowsCredentialSource.Delete(id); // leftovers of an aborted run
 
         // --- Round trip ---------------------------------------------------------------------------
         string secret = $"Rm-{Guid.NewGuid():N}-äß€";
-        CredentialStore.Write(ids[0], secret);
-        bool written = CredentialStore.Exists(ids[0]) && CredentialStore.Read(ids[0]) == secret;
-        CredentialStore.Write(ids[0], secret + "2");
-        bool replaced = CredentialStore.Read(ids[0]) == secret + "2";
-        bool deleted = CredentialStore.Delete(ids[0]) && !CredentialStore.Exists(ids[0]) && CredentialStore.Read(ids[0]) is null
-            && !CredentialStore.Delete(ids[0]);
-        Check($"Credential Manager round trip ({CredentialStore.TargetFor(ids[0])}): write {written}, replace {replaced}, delete {deleted}",
+        WindowsCredentialSource.Write(ids[0], secret);
+        bool written = WindowsCredentialSource.Exists(ids[0]) && WindowsCredentialSource.Read(ids[0]) == secret;
+        WindowsCredentialSource.Write(ids[0], secret + "2");
+        bool replaced = WindowsCredentialSource.Read(ids[0]) == secret + "2";
+        bool deleted = WindowsCredentialSource.Delete(ids[0]) && !WindowsCredentialSource.Exists(ids[0]) && WindowsCredentialSource.Read(ids[0]) is null
+            && !WindowsCredentialSource.Delete(ids[0]);
+        Check($"Credential Manager round trip ({WindowsCredentialSource.TargetFor(ids[0])}): write {written}, replace {replaced}, delete {deleted}",
             written && replaced && deleted);
 
-        var rdp = new Connection
+        ConnectionItem rdp = window.CreateItem(new Connection
         {
-            Id = ids[1], Name = "Selftest RDP", Host = "127.0.0.1", UserName = "selftest", Group = "Selftest",
+            Id = ids[1], Name = "Selftest RDP", Host = "127.0.0.1", UserName = "selftest",
             Description = "Stored password, loopback (refused)",
-        };
-        var tool = new Connection
+        });
+        ConnectionItem tool = window.CreateItem(new Connection
         {
-            Id = ids[2], Name = "Selftest AnyDesk", Type = ConnectionType.AnyDesk, Host = "123 456 789", Port = 0,
-            Group = "Selftest", Description = "Stored password, copy flow", Tags = ["selftest"],
-        };
+            Id = ids[2], Name = "Selftest AnyDesk", Type = ConnectionType.AnyDesk, Host = "123 456 789",
+            Description = "Stored password, copy flow", Tags = ["selftest"],
+        });
         window.ShowUnsaved(rdp, true);
         window.ShowUnsaved(tool, true);
         IClipboard clipboard = window.Clipboard!;
@@ -181,39 +203,40 @@ internal static class SelfTest
             await RunSessionCredentialChecksAsync(window, rdp);
             await RunCopyPasswordChecksAsync(window, tool, clipboard);
 
-            // Deleting a connection deletes its credential. The tool connection leaves the list first,
-            // so the save inside RemoveConnection writes the user's connections unchanged.
+            // Deleting a connection deletes its credential (neither test connection is in the library).
             window.ShowUnsaved(tool, false);
-            window.RemoveConnection(rdp);
-            Check("Deleting a connection deletes its stored password", !CredentialStore.Exists(rdp.Id));
+            await window.RemoveConnectionAsync(rdp);
+            Check("Deleting a connection deletes its stored password", !WindowsCredentialSource.Exists(rdp.Id) && rdp.Model.Credential is null);
         }
         finally
         {
             window.ShowUnsaved(rdp, false);
             window.ShowUnsaved(tool, false);
             foreach (string id in ids)
-                CredentialStore.Delete(id);
+                WindowsCredentialSource.Delete(id);
             if (userClipboard is not null)
                 await clipboard.SetTextAsync(userClipboard);
         }
     }
 
-    private static async Task RunEditorCredentialChecksAsync(MainWindow window, Connection rdp, string secret)
+    private static async Task RunEditorCredentialChecksAsync(MainWindow window, ConnectionItem rdp, string secret)
     {
-        Task<bool> editing = ConnectionEditor.ShowAsync(rdp, isNew: false, ["Selftest"]);
+        Task<bool> editing = ConnectionEditor.ShowAsync(rdp.Model, isNew: false);
         await Settle(800);
         ConnectionEditor editor = ConnectionEditor.OpenEditor!;
         editor.Password.Text = secret;
         await Settle(300);
         SaveRenderProbe(window, "edit-dialog-password.png");
         Check("Typing a password turns on \"Passwort speichern\"", editor.SavePassword.IsChecked == true);
-        bool committed = editor.TryCommit(rdp);
+        bool committed = await editor.TryCommitAsync(rdp.Model);
         ConnectionEditor.OpenDialog?.Hide();
         await editing;
+        rdp.RefreshCredentialState();
         Check("Saving the edit dialog writes the password to the Credential Manager",
-            committed && CredentialStore.Read(rdp.Id) == secret && rdp.HasStoredPassword);
+            committed && WindowsCredentialSource.Read(rdp.Id) == secret && rdp.HasStoredPassword
+            && rdp.Model.Credential == new CredentialRef(WindowsCredentialSource.SourceId, rdp.Id));
 
-        editing = ConnectionEditor.ShowAsync(rdp, isNew: false, ["Selftest"]);
+        editing = ConnectionEditor.ShowAsync(rdp.Model, isNew: false);
         await Settle(800);
         editor = ConnectionEditor.OpenEditor!;
         SaveRenderProbe(window, "edit-dialog-stored.png");
@@ -222,27 +245,22 @@ internal static class SelfTest
         editor.RemovePassword.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await Settle(300);
         SaveRenderProbe(window, "edit-dialog-remove.png");
-        committed = editor.TryCommit(rdp);
+        committed = await editor.TryCommitAsync(rdp.Model);
         ConnectionEditor.OpenDialog?.Hide();
         await editing;
-        Check("\"Entfernen\" plus Save deletes the credential", committed && !CredentialStore.Exists(rdp.Id) && !rdp.HasStoredPassword);
-
-        // The JSON store never carries the password, neither for this connection nor for real ones.
-        CredentialStore.Write(rdp.Id, secret);
         rdp.RefreshCredentialState();
-        string json = ConnectionStore.Serialize(window.Connections);
-        string onDisk = File.Exists(ConnectionStore.FilePath) ? await File.ReadAllTextAsync(ConnectionStore.FilePath) : "";
-        var passwordKey = new Regex("\"[A-Za-z]*(Password|Secret)[A-Za-z]*\"\\s*:", RegexOptions.IgnoreCase);
-        bool realLeak = window.Connections.Where(c => c.HasStoredPassword && c != rdp)
-            .Any(c => CredentialStore.Read(c.Id) is { Length: > 0 } p && (onDisk.Contains(p) || json.Contains(p)));
-        Check("connections.json has no password field and contains no stored password",
-            !json.Contains(secret) && !passwordKey.IsMatch(json) && !passwordKey.IsMatch(onDisk) && !realLeak);
+        Check("\"Entfernen\" plus Save deletes the credential",
+            committed && !WindowsCredentialSource.Exists(rdp.Id) && !rdp.HasStoredPassword && rdp.Model.Credential is null);
+
+        // Stored again for the session checks that follow.
+        await AppHost.Current.Credentials.SaveOwnSecretAsync(rdp.Model, secret);
+        rdp.RefreshCredentialState();
     }
 
-    private static async Task RunSessionCredentialChecksAsync(MainWindow window, Connection rdp)
+    private static async Task RunSessionCredentialChecksAsync(MainWindow window, ConnectionItem rdp)
     {
         bool disconnected = false;
-        SessionWindow s = window.OpenSession(rdp)!;
+        var s = (SessionWindow)window.OpenSession(rdp)!;
         s.StatusLogged += (_, message) => Log($"  [{s.Title}] {message}");
         s.SessionDisconnected += (_, _) => disconnected = true;
         bool cardHidden = !s.IsConnectCardVisible;
@@ -260,10 +278,10 @@ internal static class SelfTest
         await Settle(300);
     }
 
-    private static async Task RunCopyPasswordChecksAsync(MainWindow window, Connection tool, IClipboard clipboard)
+    private static async Task RunCopyPasswordChecksAsync(MainWindow window, ConnectionItem tool, IClipboard clipboard)
     {
         string secret = $"Rm-{Guid.NewGuid():N}";
-        CredentialStore.Write(tool.Id, secret);
+        await AppHost.Current.Credentials.SaveOwnSecretAsync(tool.Model, secret);
         tool.RefreshCredentialState();
         window.SetListView(false);
         window.Tiles.SelectedItem = tool;
@@ -273,16 +291,16 @@ internal static class SelfTest
         ContextMenu menu = window.Tiles.ContextMenu!;
         menu.Open(window.Tiles);
         await Settle(500);
-        bool menuItem = menu.IsOpen && menu.Items.OfType<MenuItem>().Any(i => i.Header as string == "Passwort kopieren" && i.IsVisible);
+        bool menuItem = menu.IsOpen && menu.Items.OfType<MenuItem>().Any(i => i.Header as string == Strings.Action_CopyPassword && i.IsVisible);
         menu.Close();
         Check("Context menu offers \"Passwort kopieren\" for a connection with a stored password", menuItem);
 
         // Connect on a remote-tool entry: the dialog offers the same copy button.
         window.OpenSession(tool);
         await Settle(800);
-        bool dialogButton = window.RemoteToolDialog?.PrimaryButtonText == "Passwort kopieren";
+        bool dialogButton = PlannedConnectionDialog.Current?.PrimaryButtonText == Strings.Action_CopyPassword;
         SaveRenderProbe(window, "copy-password-dialog.png");
-        window.RemoteToolDialog?.Hide();
+        PlannedConnectionDialog.Current?.Hide();
         await Settle(300);
         Check("Remote-tool dialog offers \"Passwort kopieren\"", dialogButton);
 
@@ -292,7 +310,7 @@ internal static class SelfTest
         SaveRenderProbe(window, "copy-password-toast.png");
         bool copied = await clipboard.TryGetTextAsync() == secret;
         Check($"Copy puts the password on the clipboard and shows \"{window.ToastBar.Message}\"",
-            copied && window.ToastBar.IsOpen && window.ToastBar.Message == "Kopiert, wird in 30 s geleert");
+            copied && window.ToastBar.IsOpen && window.ToastBar.Message == string.Format(CultureInfo.CurrentCulture, Strings.Password_Copied, 30));
 
         TimeSpan clearAfter = TimeSpan.FromSeconds(2);
         await window.CopyPasswordAsync(tool, clearAfter);
@@ -317,40 +335,44 @@ internal static class SelfTest
         bool raised = await WaitFor(() => disconnected, TimeSpan.FromSeconds(120));
         s.SessionDisconnected -= OnDisconnected;
         await Settle(200);
-        Check($"Failed connect to {s.Connection.Host} ({label}) raises Disconnected ({sw.Elapsed.TotalSeconds:F1}s, status \"{s.LastStatus}\")",
+        Check($"Failed connect to {s.Connection.Model.Host} ({label}) raises Disconnected ({sw.Elapsed.TotalSeconds:F1}s, status \"{s.LastStatus}\")",
             raised && s.Rdp.IsClientReady && !s.IsSessionActive && !s.Rdp.IsVisible);
     }
 
     private static async Task RunLiveSessionChecksAsync(MainWindow window)
     {
-        var connection = new Connection
+        ConnectionItem connection = window.CreateItem(new Connection
         {
             Id = "selftest-live",
             Name = "Selftest live",
             Host = Environment.GetEnvironmentVariable("RM_SPIKE_HOST")!,
             UserName = Environment.GetEnvironmentVariable("RM_SPIKE_USER") ?? "",
             Domain = Environment.GetEnvironmentVariable("RM_SPIKE_DOMAIN") ?? "",
-        };
+        });
 
         // With RM_SPIKE_PASSWORD the password goes through the Credential Manager, so the window
         // connects on its own (direct Windows logon); the credential is removed again afterwards.
         string? password = Environment.GetEnvironmentVariable("RM_SPIKE_PASSWORD");
         bool stored = !string.IsNullOrEmpty(password);
         if (stored)
-            CredentialStore.Write(connection.Id, password!);
+        {
+            await AppHost.Current.Credentials.SaveOwnSecretAsync(connection.Model, password!);
+            connection.RefreshCredentialState();
+        }
+
         try
         {
             await RunLiveSessionAsync(window, connection, stored);
         }
         finally
         {
-            CredentialStore.Delete(connection.Id);
+            WindowsCredentialSource.Delete(connection.Id);
         }
     }
 
-    private static async Task RunLiveSessionAsync(MainWindow window, Connection connection, bool stored)
+    private static async Task RunLiveSessionAsync(MainWindow window, ConnectionItem connection, bool stored)
     {
-        SessionWindow live = window.OpenSession(connection)!;
+        var live = (SessionWindow)window.OpenSession(connection)!;
         live.StatusLogged += (_, message) => Log($"  [{live.Title}] {message}");
         await WaitFor(() => live.Rdp.IsClientReady, TimeSpan.FromSeconds(20));
         if (!stored)
@@ -399,7 +421,147 @@ internal static class SelfTest
         Check($"User disconnect leaves a thumbnail ({live.LastThumbnailPath})",
             gone && live.LastThumbnailPath is not null && File.Exists(live.LastThumbnailPath));
         live.Close();
-        File.Delete(connection.ThumbnailPath);
+        File.Delete(connection.Model.ResolvedPreviewPath);
+    }
+
+    /// <summary>
+    /// SQLite store on a temporary folder: one-time migration from a connections.json, round trip of
+    /// every field, and no password in the database file. Then the real database: no secret column and
+    /// none of the stored passwords in the file. Only "RemoteManager:selftest-*" credentials are written.
+    /// </summary>
+    private static async Task RunDatabaseChecksAsync(AppHost app)
+    {
+        string folder = Path.Combine(Path.GetTempPath(), $"rm-selftest-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(folder);
+        const string credentialId = "selftest-db-1";
+        string secret = $"Rm-{Guid.NewGuid():N}-äß€";
+        try
+        {
+            string json = Path.Combine(folder, DataStore.LegacyJsonFileName);
+            await File.WriteAllTextAsync(json, $$"""
+                [
+                  { "Id": "{{credentialId}}", "Name": "dc01", "Type": "Rdp", "Host": "10.0.0.10", "Port": 3389, "Description": "Domain controller",
+                    "Group": "Kunde A", "Tags": ["prod", "ad"], "UserName": "admin", "Domain": "CORP", "DisplayMode": 2,
+                    "WinKeysToSession": true, "LastConnectedAt": "2026-10-30T19:00:00Z", "IsFavorite": true },
+                  { "Id": "selftest-db-2", "Name": "Kasse 2", "Type": "AnyDesk", "Host": "987 654 321", "Port": 0, "Description": "",
+                    "Group": "Laden", "Tags": ["kasse"], "UserName": "", "Domain": "", "DisplayMode": 0, "WinKeysToSession": true,
+                    "LastConnectedAt": null, "IsFavorite": false }
+                ]
+                """);
+            WindowsCredentialSource.Write(credentialId, secret);
+
+            var windows = new WindowsCredentialSource();
+            (ConnectionLibrary library, DataStoreReport report) = await DataStore.OpenAsync(folder, windows);
+            Connection? dc01 = library.FindConnection(credentialId);
+            Check($"Database: connections.json migrated once ({report.MigratedFromJson} connections, backup {Path.GetFileName(report.JsonBackupPath)})",
+                report.MigratedFromJson == 2 && !File.Exists(json) && File.Exists(json + ".bak") && library.Connections.Count == 2
+                && dc01 is { Name: "dc01", Host: "10.0.0.10", UserName: "admin", Domain: "CORP", IsFavorite: true }
+                && dc01.Tags.SequenceEqual(["prod", "ad"]) && library.PathOf(dc01.GroupId) == "Kunde A"
+                && dc01.Credential == new CredentialRef(WindowsCredentialSource.SourceId, credentialId)
+                && dc01.SettingsAs<RdpSettings>() is { Display: RdpDisplayMode.FixedResolution, DesktopWidth: 1920 });
+
+            // Round trip: change every kind of field, reopen from disk, compare.
+            ConnectionGroup site = library.EnsureGroupPath("Kunde A / Standort 1")!;
+            dc01!.GroupId = site.Id;
+            dc01.Notes = "Wartung Sa 20 Uhr";
+            dc01.Tags = ["prod", "ad", "dc"];
+            dc01.Settings = dc01.SettingsAs<RdpSettings>() with { GatewayHost = "gw.example.com", Redirections = new RdpRedirections { Drives = true } };
+            library.Update(dc01);
+            var reopened = new ConnectionLibrary(new SqliteConnectionStore(report.DatabasePath));
+            Connection? again = reopened.FindConnection(credentialId);
+            (ConnectionLibrary second, DataStoreReport secondReport) = await DataStore.OpenAsync(folder, windows);
+            Check("Database: round trip keeps group path, notes, tags, settings, and credential reference; no second migration",
+                again is not null && reopened.PathOf(again.GroupId) == "Kunde A / Standort 1" && again.Notes == dc01.Notes
+                && again.Tags.SequenceEqual(dc01.Tags) && again.Settings == dc01.Settings && again.Credential == dc01.Credential
+                && secondReport.MigratedFromJson == 0 && second.Connections.Count == 2);
+
+            Check("Database: the password is in the Credential Manager and not in the database file",
+                WindowsCredentialSource.Read(credentialId) == secret && !FileContains(report.DatabasePath, secret) && !HasSecretColumn(report.DatabasePath));
+
+            // The real database: same rules, checked against every password stored for its connections.
+            string real = app.StoreReport.DatabasePath;
+            int stored = 0;
+            bool leak = false;
+            foreach (Connection c in app.Library.Connections.Where(c => c.Credential is not null))
+            {
+                if (await app.Credentials.ReadAsync(c.Credential) is { Length: > 0 } password)
+                {
+                    stored++;
+                    leak |= FileContains(real, password);
+                }
+            }
+
+            Check($"Real database has no secret column and none of its {stored} stored passwords", !HasSecretColumn(real) && !leak);
+        }
+        finally
+        {
+            WindowsCredentialSource.Delete(credentialId);
+            SqliteConnection.ClearAllPools();
+            try
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+            catch (IOException ex)
+            {
+                Log($"  could not delete {folder}: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>The background status checker: blocked or slow targets end as "Unbekannt" and never block the UI thread.</summary>
+    private static async Task RunStatusCheckerChecksAsync(AppHost app)
+    {
+        // 10.255.255.1 is not routed (the connect times out), .invalid never resolves.
+        Connection[] targets =
+        [
+            new() { Name = "blackhole", Host = "10.255.255.1" },
+            new() { Name = "dns", Host = "rm-selftest-status.invalid" },
+            new() { Name = "teamviewer", Type = ConnectionType.TeamViewer, Host = "123" },
+        ];
+        var results = new Dictionary<Connection, OnlineStatus>();
+        void OnChanged(object? sender, StatusChangedEventArgs e)
+        {
+            if (targets.Contains(e.Connection))
+                lock (results)
+                    results[e.Connection] = e.Status;
+        }
+
+        app.Status.StatusChanged += OnChanged;
+        try
+        {
+            var watch = Stopwatch.StartNew();
+            Task checking = app.Status.CheckAsync(targets);
+            TimeSpan started = watch.Elapsed;
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Input);
+            TimeSpan responsive = watch.Elapsed;
+            await checking;
+            Check($"Status check runs in the background (call returned after {started.TotalMilliseconds:F0} ms, UI answered after {responsive.TotalMilliseconds:F0} ms, done after {watch.Elapsed.TotalSeconds:F1} s)",
+                started < TimeSpan.FromMilliseconds(200) && responsive < TimeSpan.FromMilliseconds(500));
+            Check($"Timeout, DNS failure, and remote tools show as unknown ({string.Join(", ", results.Select(r => $"{r.Key.Name}={r.Value}"))})",
+                results.Count == targets.Length && results.Values.All(v => v == OnlineStatus.Unknown));
+        }
+        finally
+        {
+            app.Status.StatusChanged -= OnChanged;
+        }
+    }
+
+    private static bool FileContains(string path, string text)
+    {
+        byte[] bytes = File.ReadAllBytes(path);
+        return Encoding.UTF8.GetString(bytes).Contains(text, StringComparison.Ordinal)
+            || Encoding.Unicode.GetString(bytes).Contains(text, StringComparison.Ordinal);
+    }
+
+    private static bool HasSecretColumn(string databasePath)
+    {
+        using var db = new SqliteConnection($"Data Source={databasePath};Mode=ReadOnly;Pooling=False");
+        db.Open();
+        using SqliteCommand command = db.CreateCommand();
+        command.CommandText =
+            "SELECT COUNT(*) FROM sqlite_master m JOIN pragma_table_info(m.name) c " +
+            "WHERE m.type = 'table' AND (lower(c.name) LIKE '%password%' OR lower(c.name) LIKE '%secret%')";
+        return Convert.ToInt64(command.ExecuteScalar(), CultureInfo.InvariantCulture) > 0;
     }
 
     private static bool CapturedBlank(SessionWindow window) =>

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -6,14 +7,18 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Devolutions.MsRdpEx.Avalonia;
 using MSTSCLib;
+using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
+using RemoteManager.Core.Model;
+using RemoteManager.Core.Model.Settings;
 
-namespace RemoteManager.App;
+namespace RemoteManager.App.Connections.Rdp;
 
 /// <summary>
 /// A top-level window with exactly one embedded <see cref="RdpClientView"/>.
 /// Closing the window disposes the session (and its native window).
 /// </summary>
-public partial class SessionWindow : Window
+public partial class SessionWindow : Window, ISessionWindow
 {
     // A periodic in-memory frame lets a server-initiated disconnect still produce a
     // thumbnail: by the time Disconnected fires, the control may already show nothing.
@@ -37,12 +42,12 @@ public partial class SessionWindow : Window
     // a disconnect. We subscribe to the raw OnDisconnected ourselves and keep our own state.
     private RdpClientEventSubscription? clientEvents;
 
-    // Required by the XAML loader; the app always uses the Connection overload.
-    public SessionWindow() : this(new Connection { Name = "Session" })
+    // Required by the XAML loader; the app always uses the ConnectionItem overload.
+    public SessionWindow() : this(new ConnectionItem(new Connection { Name = "Session" }, AppHost.Current))
     {
     }
 
-    public SessionWindow(Connection connection)
+    public SessionWindow(ConnectionItem connection)
     {
         InitializeComponent();
         Connection = connection;
@@ -54,8 +59,10 @@ public partial class SessionWindow : Window
         DescriptionText.IsVisible = connection.Description.Length > 0;
         TypeBadge.Background = connection.TypeBrush;
         TypeBadgeText.Text = connection.TypeInitials;
-        UserBox.Text = connection.UserName;
-        DomainBox.Text = connection.Domain;
+        // Own credentials, or those inherited from the group.
+        Core.Credentials.EffectiveCredential credentials = connection.Credentials;
+        UserBox.Text = credentials.UserName;
+        DomainBox.Text = credentials.Domain;
         connection.RefreshCredentialState();
         UpdatePasswordFields();
         if (connection.HasStoredPassword)
@@ -63,7 +70,7 @@ public partial class SessionWindow : Window
             // Direct Windows logon: skip the card and connect as soon as the RDP client is ready.
             connectWhenReady = true;
             ConnectCard.IsVisible = false;
-            StatusText.Text = "Connecting with the saved password…";
+            StatusText.Text = Strings.Session_ConnectingStored;
         }
         else
         {
@@ -107,14 +114,16 @@ public partial class SessionWindow : Window
         };
     }
 
-    public Connection Connection { get; }
+    public ConnectionItem Connection { get; }
 
     /// <summary>Raised for every status line (connection events, errors, diagnostics). Never contains secrets.</summary>
     public event EventHandler<string>? StatusLogged;
     public event EventHandler? SessionLoggedIn;
     public event EventHandler? SessionDisconnected;
-    /// <summary>A snapshot PNG was written to <see cref="Connection.ThumbnailPath"/>.</summary>
+    /// <summary>A snapshot PNG was written to the connection's preview path.</summary>
     public event EventHandler? SnapshotSaved;
+    /// <summary>A typed password was stored after a successful logon; the connection's credential reference changed.</summary>
+    public event EventHandler? PasswordSaved;
 
     public RdpClientView Rdp => RdpView;
     public Button MenuButton => MoreButton;
@@ -134,22 +143,25 @@ public partial class SessionWindow : Window
     /// <summary>The last connect used the password from the Credential Manager.</summary>
     public bool UsedStoredPassword => usedStoredPassword;
 
-    public void Connect()
+    /// <summary>Starts connecting (see <see cref="ConnectAsync"/>).</summary>
+    public void Connect() => _ = ConnectAsync();
+
+    public async Task ConnectAsync()
     {
-        string host = Connection.Host.Trim();
+        string host = Connection.Model.Host.Trim();
         if (host.Length == 0)
         {
-            ShowCardMessage("This connection has no host.");
+            ShowCardMessage(Strings.Session_NoHost);
             return;
         }
 
         if (!RdpView.IsClientReady)
         {
-            ShowCardMessage("The RDP client is not ready yet. Try again in a moment.");
+            ShowCardMessage(Strings.Session_ClientNotReady);
             return;
         }
 
-        // A typed password wins; an empty box means "use the saved one".
+        // A typed password wins; an empty box means "use the saved one" (own or inherited from the group).
         string typed = PasswordBox.Text ?? "";
         string password = typed;
         usedStoredPassword = false;
@@ -157,12 +169,12 @@ public partial class SessionWindow : Window
         {
             try
             {
-                password = CredentialStore.Read(Connection.Id) ?? "";
+                password = await AppHost.Current.Credentials.ReadAsync(Connection.Credentials.Secret) ?? "";
                 usedStoredPassword = password.Length > 0;
             }
             catch (Win32Exception ex)
             {
-                ShowCardMessage($"Gespeichertes Passwort konnte nicht gelesen werden: {ex.Message}");
+                ShowCardMessage(string.Format(CultureInfo.CurrentCulture, Strings.Password_ReadFailed, ex.Message));
                 ShowCard();
                 return;
             }
@@ -170,15 +182,15 @@ public partial class SessionWindow : Window
 
         passwordToSave = typed.Length > 0 && SavePasswordBox.IsChecked == true ? typed : null;
 
-        (int width, int height, RdpDisplayMode mode) = Connection.DisplayMode switch
+        RdpSettings settings = Connection.Model.SettingsAs<RdpSettings>();
+        (int width, int height, Devolutions.MsRdpEx.Avalonia.RdpDisplayMode mode) = settings.Display switch
         {
-            1 => (0, 0, RdpDisplayMode.SmartSizing),
-            2 => (1920, 1080, RdpDisplayMode.SmartSizing),
-            3 => (1280, 720, RdpDisplayMode.SmartSizing),
-            _ => (0, 0, RdpDisplayMode.FitToWindow),
+            Core.Model.Settings.RdpDisplayMode.SmartSizing => (0, 0, Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.SmartSizing),
+            Core.Model.Settings.RdpDisplayMode.FixedResolution => (settings.DesktopWidth, settings.DesktopHeight, Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.SmartSizing),
+            _ => (0, 0, Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.FitToWindow),
         };
 
-        RdpView.UseRemoteKeyboardShortcuts = Connection.WinKeysToSession;
+        RdpView.UseRemoteKeyboardShortcuts = settings.Keyboard == RdpKeyboardMode.Session;
         RdpView.DisplayMode = mode;
 
         // Show the surface and lay it out first: the initial session size comes from the viewport.
@@ -190,11 +202,11 @@ public partial class SessionWindow : Window
         {
             // Server authentication: warn on certificate problems instead of silently connecting.
             // RdpClientView.Connect leaves AuthenticationLevel untouched, so set it on the client first.
-            RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.AuthenticationLevel = 2;
-            if (Connection.Port is > 0 and not 3389)
-                RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.RDPPort = Connection.Port;
+            RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.AuthenticationLevel = (uint)Math.Clamp(settings.AuthenticationLevel, 0, 2);
+            if (Connection.Model.EffectivePort != DefaultPorts.For(ConnectionType.Rdp))
+                RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.RDPPort = Connection.Model.EffectivePort;
 
-            var settings = new RdpConnectionSettings(
+            var connectionSettings = new RdpConnectionSettings(
                 HostName: host,
                 UserName: UserBox.Text?.Trim() ?? "",
                 Password: password,
@@ -202,13 +214,13 @@ public partial class SessionWindow : Window
                 DesktopWidth: width,
                 DesktopHeight: height);
 
-            RdpView.Connect(settings);
+            RdpView.Connect(connectionSettings);
         }
         catch (Exception ex)
         {
             IsSessionActive = false;
             passwordToSave = null;
-            SetStatus($"Connect failed: {ex.Message}");
+            SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Session_ConnectFailed, ex.Message));
             ShowCard();
             return;
         }
@@ -250,7 +262,7 @@ public partial class SessionWindow : Window
             return null;
         }
 
-        string path = Connection.ThumbnailPath;
+        string path = Connection.Model.ResolvedPreviewPath;
         frame.SavePng(path);
         LastThumbnailPath = path;
         Log($"Snapshot ({reason}) saved: {path} ({frame.Width}x{frame.Height}, method {frame.Method}).");
@@ -287,14 +299,25 @@ public partial class SessionWindow : Window
             return;
 
         passwordToSave = null;
+        Connection model = Connection.Model;
         try
         {
-            CredentialStore.Write(Connection.Id, password);
+            // An own password needs the user it belongs to; without one the connection would stop
+            // inheriting the group's user and log on with none.
+            if (model.UserName.Length == 0)
+            {
+                model.UserName = UserBox.Text?.Trim() ?? "";
+                model.Domain = DomainBox.Text?.Trim() ?? "";
+            }
+
+            // The Credential Manager source completes synchronously.
+            AppHost.Current.Credentials.SaveOwnSecretAsync(model, password).AsTask().GetAwaiter().GetResult();
             Log("Password saved to the Windows Credential Manager.");
+            PasswordSaved?.Invoke(this, EventArgs.Empty);
         }
         catch (Win32Exception ex)
         {
-            SetStatus($"Passwort konnte nicht gespeichert werden: {ex.Message}");
+            SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Password_SaveFailed, ex.Message));
         }
 
         Connection.RefreshCredentialState();
@@ -312,7 +335,7 @@ public partial class SessionWindow : Window
         passwordToSave = null;
         LastDisconnectReason = reason;
         frameTimer.Stop();
-        SetStatus($"Disconnected: {DescribeDisconnect(reason)}");
+        SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Session_Disconnected, DescribeDisconnect(reason)));
 
         // Server-side or network disconnect: the live surface may already be blank,
         // SaveSnapshot falls back to the last periodic frame.
@@ -324,7 +347,7 @@ public partial class SessionWindow : Window
         FullScreenButton.IsEnabled = false;
         SnapshotItem.IsEnabled = false;
         FocusItem.IsEnabled = false;
-        ConnectButton.Content = "Reconnect";
+        ConnectButton.Content = Strings.Session_Reconnect;
         if (rejectedStoredPassword)
         {
             ShowStoredPasswordRejected();
@@ -342,29 +365,30 @@ public partial class SessionWindow : Window
     internal void ShowStoredPasswordRejected()
     {
         SavePasswordBox.IsChecked = true;
-        ShowCardMessage($"Das gespeicherte Passwort wurde abgelehnt. Bitte neu eingeben; mit „Passwort speichern“ wird es ersetzt.\n{LastStatus}");
+        ShowCardMessage(string.Format(CultureInfo.CurrentCulture, Strings.Session_StoredPasswordRejected, LastStatus));
         ShowCard();
     }
 
     private void UpdatePasswordFields()
     {
-        PasswordBox.PlaceholderText = Connection.HasStoredPassword ? "Password (empty = use saved one)" : "Password";
+        PasswordBox.PlaceholderText = Connection.HasStoredPassword ? Strings.Session_PasswordPlaceholderStored : Strings.Field_Password;
     }
 
     private string DescribeDisconnect(int reason)
     {
         if (reason < 0)
-            return "reported by RdpClientView";
+            return Strings.Session_DisconnectReportedByView;
 
         try
         {
             var client = RdpView.GetClient<IMsRdpClient10>();
             string? text = client.GetErrorDescription((uint)reason, (uint)client.ExtendedDisconnectReason);
-            return string.IsNullOrWhiteSpace(text) ? $"reason {reason}" : $"{text.Trim()} (reason {reason})";
+            string code = string.Format(CultureInfo.CurrentCulture, Strings.Session_DisconnectReason, reason);
+            return string.IsNullOrWhiteSpace(text) ? code : $"{text.Trim()} ({code})";
         }
         catch (Exception)
         {
-            return $"reason {reason}";
+            return string.Format(CultureInfo.CurrentCulture, Strings.Session_DisconnectReason, reason);
         }
     }
 
@@ -402,7 +426,7 @@ public partial class SessionWindow : Window
     {
         // Local testing convenience only (see docs/spike-results.md); the value is never logged.
         string? host = Environment.GetEnvironmentVariable("RM_SPIKE_HOST");
-        if (!string.IsNullOrWhiteSpace(host) && string.Equals(host, Connection.Host, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(host) && string.Equals(host, Connection.Model.Host, StringComparison.OrdinalIgnoreCase))
             PasswordBox.Text = Environment.GetEnvironmentVariable("RM_SPIKE_PASSWORD") ?? "";
     }
 

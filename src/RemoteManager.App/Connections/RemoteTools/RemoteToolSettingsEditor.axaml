@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Connections.RemoteTools.RemoteToolSettingsEditor">
+  <StackPanel Spacing="12">
+    <Grid ColumnDefinitions="*,12,*">
+      <TextBox x:Name="AliasBox" PlaceholderText="{x:Static res:Strings.RemoteTool_AliasPlaceholder}" />
+      <ComboBox x:Name="ModeBox" Grid.Column="2" HorizontalAlignment="Stretch" SelectedIndex="0">
+        <ComboBoxItem Content="{x:Static res:Strings.RemoteTool_Mode_Control}" />
+        <ComboBoxItem Content="{x:Static res:Strings.RemoteTool_Mode_FileTransfer}" />
+        <ComboBoxItem Content="{x:Static res:Strings.RemoteTool_Mode_Vpn}" />
+      </ComboBox>
+    </Grid>
+    <TextBox x:Name="ArgumentsBox" PlaceholderText="{x:Static res:Strings.RemoteTool_ArgumentsPlaceholder}" />
+    <TextBlock Opacity="0.55" FontSize="12" TextWrapping="Wrap" Text="{x:Static res:Strings.RemoteTool_Hint}" />
+  </StackPanel>
+</UserControl>

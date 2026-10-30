@@ -1,8 +1,9 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
-        xmlns:app="using:RemoteManager.App"
-        x:Class="RemoteManager.App.MainWindow"
+        xmlns:app="using:RemoteManager.App.Views"
+        xmlns:res="using:RemoteManager.App.Resources"
+        x:Class="RemoteManager.App.Views.MainWindow"
         Title="Remote-Manager"
         Width="1320" Height="840" MinWidth="760" MinHeight="480"
         WindowStartupLocation="CenterScreen"
@@ -10,7 +11,7 @@
         Background="Transparent">
   <Window.Resources>
     <!-- Tile: preview or type icon, status, type badge, name, host, description, tags. -->
-    <DataTemplate x:Key="TileTemplate" x:DataType="app:Connection">
+    <DataTemplate x:Key="TileTemplate" x:DataType="app:ConnectionItem">
       <Border Width="264" CornerRadius="8" ClipToBounds="True" BorderThickness="1"
               Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
               BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
@@ -24,7 +25,7 @@
             </Border>
             <Image Source="{Binding Preview}" Stretch="UniformToFill" IsVisible="{Binding HasPreview}" />
             <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
-                    ToolTip.Tip="RDP: TCP check of the RDP port. Remote tools: status via their APIs in Phase 2.">
+                    ToolTip.Tip="{Binding StatusHint}">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding StatusLabel}" FontSize="11" Foreground="White" />
@@ -40,7 +41,7 @@
               <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
                 <ui:FASymbolIcon Symbol="Permissions" FontSize="13" Opacity="0.7"
-                                 IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="Passwort gespeichert" />
+                                 IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
                 <ui:FASymbolIcon Symbol="StarFilled" FontSize="14" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
               </StackPanel>
             </Grid>
@@ -67,14 +68,14 @@
     </DataTemplate>
 
     <!-- List row; the column widths match the header in the list view. -->
-    <DataTemplate x:Key="RowTemplate" x:DataType="app:Connection">
+    <DataTemplate x:Key="RowTemplate" x:DataType="app:ConnectionItem">
       <Grid ColumnDefinitions="24,190,100,150,110,170,*,120" Height="40" Background="Transparent">
         <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" ToolTip.Tip="{Binding StatusLabel}" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
           <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
           <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
           <ui:FASymbolIcon Symbol="Permissions" FontSize="12" Opacity="0.7"
-                           IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="Passwort gespeichert" />
+                           IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
         </StackPanel>
         <Border Grid.Column="2" Classes="pill" Background="{Binding TypeBrush}" HorizontalAlignment="Left" VerticalAlignment="Center">
           <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
@@ -108,11 +109,11 @@
       <!-- Header: title, search, view toggle, actions -->
       <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,16">
         <StackPanel VerticalAlignment="Center">
-          <TextBlock x:Name="PageTitle" Text="All connections" FontSize="28" FontWeight="SemiBold" />
+          <TextBlock x:Name="PageTitle" Text="{x:Static res:Strings.Nav_All}" FontSize="28" FontWeight="SemiBold" />
           <TextBlock x:Name="PageSubtitle" Opacity="0.6" />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-          <TextBox x:Name="SearchBox" Width="260" PlaceholderText="Search name, host, tag, description"
+          <TextBox x:Name="SearchBox" Width="260" PlaceholderText="{x:Static res:Strings.Search_Placeholder}"
                    Classes="clearButton">
             <TextBox.InnerLeftContent>
               <ui:FASymbolIcon Symbol="Find" FontSize="14" Margin="10,0,0,0" Opacity="0.6" />
@@ -120,27 +121,27 @@
           </TextBox>
           <Border Classes="segmented">
             <StackPanel Orientation="Horizontal">
-              <ToggleButton x:Name="TileToggle" Classes="segment" IsChecked="True" ToolTip.Tip="Tiles (Ctrl+1)">
+              <ToggleButton x:Name="TileToggle" Classes="segment" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.View_TilesTip}">
                 <ui:FASymbolIcon Symbol="ViewAll" FontSize="16" />
               </ToggleButton>
-              <ToggleButton x:Name="ListToggle" Classes="segment" ToolTip.Tip="List (Ctrl+2)">
+              <ToggleButton x:Name="ListToggle" Classes="segment" ToolTip.Tip="{x:Static res:Strings.View_ListTip}">
                 <ui:FASymbolIcon Symbol="List" FontSize="16" />
               </ToggleButton>
             </StackPanel>
           </Border>
-          <Button x:Name="RefreshButton" ToolTip.Tip="Refresh online status" Padding="9">
+          <Button x:Name="RefreshButton" ToolTip.Tip="{x:Static res:Strings.Status_RefreshTip}" Padding="9">
             <ui:FASymbolIcon Symbol="Refresh" FontSize="16" />
           </Button>
           <Button x:Name="ConnectButton" IsEnabled="False" Padding="12,7">
             <StackPanel Orientation="Horizontal" Spacing="8">
               <ui:FASymbolIcon Symbol="Play" FontSize="14" />
-              <TextBlock Text="Connect" />
+              <TextBlock Text="{x:Static res:Strings.Action_Connect}" />
             </StackPanel>
           </Button>
           <Button x:Name="AddButton" Classes="accent" Padding="12,7">
             <StackPanel Orientation="Horizontal" Spacing="8">
               <ui:FASymbolIcon Symbol="Add" FontSize="14" />
-              <TextBlock Text="New connection" />
+              <TextBlock Text="{x:Static res:Strings.Action_New}" />
             </StackPanel>
           </Button>
         </StackPanel>
@@ -160,13 +161,13 @@
           <Border Padding="12,0" Height="34" BorderThickness="0,0,0,1"
                   BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
             <Grid ColumnDefinitions="24,190,100,150,110,170,*,120" Opacity="0.6">
-              <TextBlock Grid.Column="1" Text="Name" VerticalAlignment="Center" FontSize="12" />
-              <TextBlock Grid.Column="2" Text="Type" VerticalAlignment="Center" FontSize="12" />
-              <TextBlock Grid.Column="3" Text="Host / ID" VerticalAlignment="Center" FontSize="12" />
-              <TextBlock Grid.Column="4" Text="Group" VerticalAlignment="Center" FontSize="12" />
-              <TextBlock Grid.Column="5" Text="Tags" VerticalAlignment="Center" FontSize="12" />
-              <TextBlock Grid.Column="6" Text="Description" VerticalAlignment="Center" FontSize="12" />
-              <TextBlock Grid.Column="7" Text="Last connected" VerticalAlignment="Center" FontSize="12" />
+              <TextBlock Grid.Column="1" Text="{x:Static res:Strings.Column_Name}" VerticalAlignment="Center" FontSize="12" />
+              <TextBlock Grid.Column="2" Text="{x:Static res:Strings.Column_Type}" VerticalAlignment="Center" FontSize="12" />
+              <TextBlock Grid.Column="3" Text="{x:Static res:Strings.Column_Host}" VerticalAlignment="Center" FontSize="12" />
+              <TextBlock Grid.Column="4" Text="{x:Static res:Strings.Column_Group}" VerticalAlignment="Center" FontSize="12" />
+              <TextBlock Grid.Column="5" Text="{x:Static res:Strings.Column_Tags}" VerticalAlignment="Center" FontSize="12" />
+              <TextBlock Grid.Column="6" Text="{x:Static res:Strings.Column_Description}" VerticalAlignment="Center" FontSize="12" />
+              <TextBlock Grid.Column="7" Text="{x:Static res:Strings.Column_LastConnected}" VerticalAlignment="Center" FontSize="12" />
             </Grid>
           </Border>
           <ListBox x:Name="RowList" Grid.Row="1" Classes="rows" Background="Transparent"
@@ -176,7 +177,7 @@
         <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Spacing="8" IsVisible="False">
           <ui:FASymbolIcon Symbol="Find" FontSize="40" Opacity="0.4" />
-          <TextBlock Text="No connections match." HorizontalAlignment="Center" Opacity="0.6" />
+          <TextBlock Text="{x:Static res:Strings.Empty_NoMatch}" HorizontalAlignment="Center" Opacity="0.6" />
         </StackPanel>
       </Panel>
 

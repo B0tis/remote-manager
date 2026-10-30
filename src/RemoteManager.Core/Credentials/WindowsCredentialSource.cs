@@ -1,37 +1,54 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace RemoteManager.App;
+namespace RemoteManager.Core.Credentials;
 
 /// <summary>
-/// Connection passwords in the Windows Credential Manager (generic credential, persisted per
-/// machine for this user, target "RemoteManager:&lt;connection id&gt;"). The secret is DPAPI-protected
-/// by Windows; it never goes into connections.json, logs, or snapshots.
-/// Deliberately one small class: whether a password manager becomes a second source is still open.
+/// Secrets in the Windows Credential Manager (generic credential, persisted per machine for this
+/// user, target "RemoteManager:&lt;key&gt;"; the key of a connection's own password is its id).
+/// Windows protects the blob with DPAPI; it never goes into the database, logs, or snapshots.
 /// </summary>
-internal static class CredentialStore
+public sealed class WindowsCredentialSource : ICredentialSource
 {
+    public const string SourceId = "wincred";
+
     private const int CredTypeGeneric = 1;
     private const int CredPersistLocalMachine = 2;
     private const int ErrorNotFound = 1168;
 
-    public static string TargetFor(string connectionId) => $"RemoteManager:{connectionId}";
+    public string Id => SourceId;
+    public bool IsWritable => true;
+    public bool IsAvailable => OperatingSystem.IsWindows();
 
-    /// <summary>Creates or replaces the password of a connection.</summary>
-    public static void Write(string connectionId, string password)
+    public static string TargetFor(string key) => $"RemoteManager:{key}";
+
+    public ValueTask<string?> ReadAsync(string key, CancellationToken cancellationToken = default) => ValueTask.FromResult(Read(key));
+
+    public ValueTask<bool> ExistsAsync(string key, CancellationToken cancellationToken = default) => ValueTask.FromResult(Exists(key));
+
+    public ValueTask WriteAsync(string key, string secret, CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrEmpty(password);
-        nint blob = Marshal.StringToCoTaskMemUni(password);
+        Write(key, secret);
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask<bool> DeleteAsync(string key, CancellationToken cancellationToken = default) => ValueTask.FromResult(Delete(key));
+
+    /// <summary>Creates or replaces a secret.</summary>
+    public static void Write(string key, string secret)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(secret);
+        nint blob = Marshal.StringToCoTaskMemUni(secret);
         try
         {
             var credential = new Credential
             {
                 Type = CredTypeGeneric,
-                TargetName = TargetFor(connectionId),
-                CredentialBlobSize = password.Length * sizeof(char),
+                TargetName = TargetFor(key),
+                CredentialBlobSize = secret.Length * sizeof(char),
                 CredentialBlob = blob,
                 Persist = CredPersistLocalMachine,
-                // The user name lives in connections.json; keeping it out of here avoids a stale copy.
+                // The user name lives in the database; keeping it out of here avoids a stale copy.
                 UserName = "",
             };
             if (!CredWrite(ref credential, 0))
@@ -39,15 +56,15 @@ internal static class CredentialStore
         }
         finally
         {
-            ZeroMemory(blob, password.Length * sizeof(char));
+            ZeroMemory(blob, secret.Length * sizeof(char));
             Marshal.FreeCoTaskMem(blob);
         }
     }
 
-    /// <summary>The stored password, or null when the connection has none.</summary>
-    public static string? Read(string connectionId)
+    /// <summary>The stored secret, or null when there is none.</summary>
+    public static string? Read(string key)
     {
-        if (!CredRead(TargetFor(connectionId), CredTypeGeneric, 0, out nint pointer))
+        if (!CredRead(TargetFor(key), CredTypeGeneric, 0, out nint pointer))
             return Marshal.GetLastWin32Error() == ErrorNotFound ? null : throw new Win32Exception(Marshal.GetLastWin32Error());
 
         try
@@ -63,18 +80,18 @@ internal static class CredentialStore
         }
     }
 
-    public static bool Exists(string connectionId)
+    public static bool Exists(string key)
     {
-        if (!CredRead(TargetFor(connectionId), CredTypeGeneric, 0, out nint pointer))
+        if (!CredRead(TargetFor(key), CredTypeGeneric, 0, out nint pointer))
             return false;
         CredFree(pointer);
         return true;
     }
 
-    /// <summary>Removes the password. Returns false when there was none.</summary>
-    public static bool Delete(string connectionId)
+    /// <summary>Removes a secret. Returns false when there was none.</summary>
+    public static bool Delete(string key)
     {
-        if (CredDelete(TargetFor(connectionId), CredTypeGeneric, 0))
+        if (CredDelete(TargetFor(key), CredTypeGeneric, 0))
             return true;
         return Marshal.GetLastWin32Error() == ErrorNotFound ? false : throw new Win32Exception(Marshal.GetLastWin32Error());
     }

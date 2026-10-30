@@ -23,3 +23,7 @@ jobs:
 
       - name: Build
         run: dotnet build RemoteManager.slnx --configuration Release --no-restore
+
+      # global.json opts dotnet test into Microsoft.Testing.Platform (xunit.v3).
+      - name: Test
+        run: dotnet test --solution RemoteManager.slnx --configuration Release --no-build

@@ -1,7 +1,7 @@
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 
-namespace RemoteManager.App;
+namespace RemoteManager.App.Services;
 
 /// <summary>
 /// Puts a password on the clipboard and clears it again after a delay, but only if the clipboard

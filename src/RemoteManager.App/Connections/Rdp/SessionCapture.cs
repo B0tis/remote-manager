@@ -3,22 +3,7 @@ using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 
-namespace RemoteManager.App;
-
-internal static class AppPaths
-{
-    public static string Root { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RemoteManager");
-
-    public static string Thumbnails => Ensure(Path.Combine(Root, "thumbnails"));
-    public static string Spike => Ensure(Path.Combine(Root, "spike"));
-
-    private static string Ensure(string path)
-    {
-        Directory.CreateDirectory(path);
-        return path;
-    }
-}
+namespace RemoteManager.App.Connections.Rdp;
 
 /// <summary>A captured BGRA frame of an RDP session.</summary>
 internal sealed class SessionFrame(byte[] pixels, int width, int height, string method)

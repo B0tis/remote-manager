@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Connections.Rdp.RdpSettingsEditor">
+  <!-- Display and keyboard; gateway, redirections, and the other RdpSettings get their fields with the RDP start parameters. -->
+  <StackPanel Spacing="12">
+    <ComboBox x:Name="DisplayBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+      <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_Fit}" />
+      <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_SmartSizing}" />
+      <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_1920}" />
+      <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_1280}" />
+    </ComboBox>
+    <CheckBox x:Name="WinKeysBox" Content="{x:Static res:Strings.Rdp_WinKeys}" IsChecked="True" />
+  </StackPanel>
+</UserControl>
