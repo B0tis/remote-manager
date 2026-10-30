@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="RemoteManager.App.App"
              RequestedThemeVariant="Default">
   <Application.Styles>
@@ -52,6 +53,85 @@
       <Setter Property="Padding" Value="12,0" />
       <Setter Property="Margin" Value="0,1" />
       <Setter Property="CornerRadius" Value="4" />
+    </Style>
+
+    <!-- Overview: group headers, favorite star on tiles, sortable list columns, drop markers. -->
+    <Style Selector="Border.count">
+      <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Padding" Value="7,1" />
+    </Style>
+    <Style Selector="Border.previewShade">
+      <Setter Property="Background">
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Offset="0" Color="#66000000" />
+          <GradientStop Offset="0.45" Color="#00000000" />
+        </LinearGradientBrush>
+      </Setter>
+    </Style>
+    <Style Selector="Button.star">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="4" />
+    </Style>
+    <Style Selector="ListBoxItem ui|FASymbolIcon.starOutline">
+      <Setter Property="Opacity" Value="0" />
+    </Style>
+    <Style Selector="ListBoxItem:pointerover ui|FASymbolIcon.starOutline">
+      <Setter Property="Opacity" Value="0.6" />
+    </Style>
+    <Style Selector="Button.column">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0,0,8,0" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Opacity" Value="0.65" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="VerticalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.column.sorted">
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="ListBox.tiles ListBoxItem.header">
+      <Setter Property="Margin" Value="0,4,14,10" />
+    </Style>
+    <Style Selector="ListBox.rows ListBoxItem.header">
+      <Setter Property="Margin" Value="0,8,0,2" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="Border.groupHeader">
+      <Setter Property="Height" Value="38" />
+    </Style>
+    <Style Selector="ListBoxItem.dropInto">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="ListBox.tiles ListBoxItem.dropBefore">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="3,0,0,0" />
+    </Style>
+    <Style Selector="ListBox.tiles ListBoxItem.dropAfter">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,3,0" />
+    </Style>
+    <Style Selector="ListBox.rows ListBoxItem.dropBefore">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="0,2,0,0" />
+    </Style>
+    <Style Selector="ListBox.rows ListBoxItem.dropAfter">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,2" />
+    </Style>
+    <!-- Narrow list (detail panel open): group and tag columns give way to the rest. -->
+    <Style Selector="Grid.compact :is(Control).wide">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="ListBox.launcher ListBoxItem">
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="CornerRadius" Value="6" />
     </Style>
   </Application.Styles>
 </Application>

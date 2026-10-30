@@ -4,6 +4,7 @@ using RemoteManager.App.Connections;
 using RemoteManager.Core;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Extensibility;
+using RemoteManager.Core.History;
 using RemoteManager.Core.ImportExport;
 using RemoteManager.Core.Library;
 using RemoteManager.Core.Model;
@@ -30,6 +31,7 @@ public sealed class AppHost : IDisposable
         Importers = PluginCatalog.Create<IImporter>(extensionAssemblies);
         Exporters = PluginCatalog.Create<IExporter>(extensionAssemblies);
         Status = new StatusChecker(ProbeFor);
+        History = new ConnectionHistory(report.DatabasePath);
     }
 
     public static AppHost Current => current ?? throw new InvalidOperationException("AppHost.Start has not run.");
@@ -41,6 +43,7 @@ public sealed class AppHost : IDisposable
     public IReadOnlyList<IImporter> Importers { get; }
     public IReadOnlyList<IExporter> Exporters { get; }
     public StatusChecker Status { get; }
+    public ConnectionHistory History { get; }
 
     /// <summary>Opens the database in <see cref="AppPaths.Root"/> (migrating connections.json once) and wires the services.</summary>
     public static AppHost Start()

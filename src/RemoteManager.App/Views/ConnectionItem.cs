@@ -6,6 +6,7 @@ using RemoteManager.App.Connections;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Model;
+using RemoteManager.Core.Search;
 using RemoteManager.Core.Status;
 
 namespace RemoteManager.App.Views;
@@ -51,6 +52,7 @@ public sealed class ConnectionItem : INotifyPropertyChanged
         set
         {
             status = value;
+            StatusCheckedAt = DateTime.Now;
             Changed(string.Empty);
         }
     }
@@ -83,6 +85,17 @@ public sealed class ConnectionItem : INotifyPropertyChanged
     public string TypeInitials => Handler.Initials;
     public IBrush TypeBrush => new SolidColorBrush(Handler.AccentColor);
     public string StatusHint => Handler.StatusHint;
+
+    /// <summary>Local time of the last status result, null before the first check.</summary>
+    public DateTime? StatusCheckedAt { get; private set; }
+
+    /// <summary>Tooltip of the status dot: how the status is found out and when it was last checked.</summary>
+    public string StatusTip => StatusCheckedAt is { } at
+        ? $"{StatusLabel} · {StatusHint}\n{string.Format(CultureInfo.CurrentCulture, Strings.Status_CheckedAt, at.ToString("T", CultureInfo.CurrentCulture))}"
+        : $"{StatusLabel} · {StatusHint}";
+
+    /// <summary>Tile footer: group and last connection.</summary>
+    public string FooterLabel => $"{GroupLabel} · {LastConnectedLabel}";
 
     public string HostLabel => Handler.HasPort && Model.Port > 0 && Model.Port != DefaultPorts.For(Model.Type)
         ? $"{Model.Host}:{Model.Port}"
@@ -133,6 +146,13 @@ public sealed class ConnectionItem : INotifyPropertyChanged
         using FileStream stream = File.OpenRead(path);
         Preview = new Bitmap(stream);
     }
+
+    /// <summary>What the quick launcher searches, weighted: name first, then host and tags.</summary>
+    public IEnumerable<SearchField> SearchFields =>
+    [
+        new(Name, 4), new(Model.Host, 3), .. Model.Tags.Select(t => new SearchField(t, 2)),
+        new(GroupPath, 2), new(Description, 1), new(TypeLabel, 1),
+    ];
 
     public bool Matches(string search) =>
         Name.Contains(search, StringComparison.OrdinalIgnoreCase)
