@@ -101,10 +101,33 @@ The main window, editor, and status checks only talk to `ConnectionHandlerRegist
   window tracks it, reuses it on the next open, and closes it with the app) or null after an external launch.
   `IConnectionHost` gives access to copy-password, toasts, `MarkConnected`, and `Save`.
 
-Today: `Rdp/RdpHandler` (embedded `SessionWindow`), `RemoteTools/*` (TeamViewer, AnyDesk, RustDesk; launch in
-Phase 2), `Ssh/*` and `Vnc/*` (Phase 3). The not-yet-built ones show `PlannedConnectionDialog`. To build one
+Today: `Rdp/RdpHandler` (embedded `SessionWindow`), `RemoteTools/*` (TeamViewer, AnyDesk, RustDesk; launched
+externally, see below), `Ssh/*` and `Vnc/*` (Phase 3). The not-yet-built ones show `PlannedConnectionDialog`. To build one
 out, replace its `Open` and add a settings editor; a brand-new type also needs a `ConnectionType` value and
 its settings record in `ConnectionSettings.TypeFor`.
+
+## Remote tools (`Core/RemoteTools`, `App/Connections/RemoteTools`)
+
+- `RemoteToolCommandLine` builds the call per tool from `RemoteToolSettings` (pure, unit-tested): TeamViewer
+  `-i ID [-p] [-m fileTransfer|vpn] [-q] [-a]`, AnyDesk `ID [--file-transfer] [--full-screen] [--plain]
+  [--with-password]`, RustDesk `--connect|--file-transfer|--port-forward ID [--password]`, then the free
+  arguments (`{id}` placeholder, split like a command line). IDs are validated (never start with `-`); free
+  arguments with a password switch are rejected. `Preview` masks the password.
+- Password route: AnyDesk stdin (never on the command line); TeamViewer/RustDesk the clipboard (cleared after
+  30 s); their command line only with `CredentialOnCommandLine`, which shows a warning in the editor and a toast
+  at launch. `RemoteToolLauncher` starts through `ProcessStartInfo.ArgumentList`, never a shell.
+- `RemoteToolLocator`: path from `app_settings` (`tools.path.<Type>`) if the file exists, else registry (App
+  Paths, uninstall entries) and Program Files. Missing tool: `MissingToolDialog` with "Pfad festlegen" and the
+  download page. Paths, the TeamViewer token, and the AnyDesk import live in `RemoteToolsDialog` (header button).
+- TeamViewer Web API: `TeamViewerApiClient` (`/devices`, `/groups`, bearer script token from the Credential
+  Manager key `teamviewer-api-token`). `TeamViewerSync` matches by device id, then remote ID; it updates alias
+  (and the name while it equals the old alias) and never notes, tags, description, group, or password. New
+  devices go to "Neu aus TeamViewer / <group>"; devices gone from the account are marked `RemovedAtSource`.
+  Online status: `CachedRemoteStatusProbe` reads `TeamViewerAccount.StatusCache` and refreshes it at most
+  every 90 s while a token is stored. Sync markers are fields of `RemoteToolSettings`, so no migration.
+- AnyDesk: `AnyDeskCsvImporter` (`IImporter`) reads the my.anydesk I client export by header; the dialog drops
+  IDs that already exist and puts the rest in "Import aus AnyDesk".
+- `IFileTransferHandler`: handlers that implement it get "Dateiübertragung" in the context menu.
 
 ## UI text
 

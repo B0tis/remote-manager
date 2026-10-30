@@ -210,9 +210,6 @@
   <data name="Planned_Phase3" xml:space="preserve">
     <value>Dieser Verbindungstyp lässt sich schon anlegen und ordnen; Verbinden kommt in Phase 3.</value>
   </data>
-  <data name="Planned_RemoteTool" xml:space="preserve">
-    <value>{0}-Sitzungen laufen im eigenen Fenster des Tools. Der Start aus Remote-Manager kommt in Phase 2.</value>
-  </data>
   <data name="Planned_Title" xml:space="preserve">
     <value>{0}: {1}</value>
   </data>
@@ -231,14 +228,74 @@
   <data name="Rdp_WinKeys" xml:space="preserve">
     <value>Windows-Tasten (Win, Alt+Tab) an die Sitzung senden</value>
   </data>
+  <data name="RemoteTool_Access_0" xml:space="preserve">
+    <value>Zugriff: Vollzugriff (-a 0)</value>
+  </data>
+  <data name="RemoteTool_Access_1" xml:space="preserve">
+    <value>Zugriff: Alles bestätigen (-a 1)</value>
+  </data>
+  <data name="RemoteTool_Access_2" xml:space="preserve">
+    <value>Zugriff: Ansehen und zeigen (-a 2)</value>
+  </data>
+  <data name="RemoteTool_Access_3" xml:space="preserve">
+    <value>Zugriff: Benutzerdefiniert (-a 3)</value>
+  </data>
+  <data name="RemoteTool_Access_9" xml:space="preserve">
+    <value>Zugriff: Standardeinstellung (-a 9)</value>
+  </data>
+  <data name="RemoteTool_Access_None" xml:space="preserve">
+    <value>Zugriff: Standard (nicht übergeben)</value>
+  </data>
+  <data name="RemoteTool_Action_FileTransfer" xml:space="preserve">
+    <value>Dateiübertragung</value>
+  </data>
   <data name="RemoteTool_AliasPlaceholder" xml:space="preserve">
     <value>Alias (optional)</value>
   </data>
   <data name="RemoteTool_ArgumentsPlaceholder" xml:space="preserve">
-    <value>Zusätzliche Startparameter</value>
+    <value>Zusätzliche Startparameter ({id} = Remote-ID)</value>
+  </data>
+  <data name="RemoteTool_Csv_Error" xml:space="preserve">
+    <value>Die CSV-Datei konnte nicht gelesen werden: {0}</value>
+  </data>
+  <data name="RemoteTool_Csv_Group" xml:space="preserve">
+    <value>Import aus AnyDesk</value>
+  </data>
+  <data name="RemoteTool_Csv_Hint" xml:space="preserve">
+    <value>Clients-Liste aus my.anydesk I als CSV exportieren und hier einlesen. Einmal-Import ohne Abgleich und ohne Passwörter; schon vorhandene AnyDesk-IDs werden übersprungen.</value>
+  </data>
+  <data name="RemoteTool_Csv_Import" xml:space="preserve">
+    <value>AnyDesk-CSV importieren …</value>
+  </data>
+  <data name="RemoteTool_Csv_Result" xml:space="preserve">
+    <value>{0} importiert, {1} schon vorhanden, {2} Zeilen übersprungen.</value>
+  </data>
+  <data name="RemoteTool_Csv_Title" xml:space="preserve">
+    <value>AnyDesk-Import (CSV)</value>
+  </data>
+  <data name="RemoteTool_Error_SecretInArguments" xml:space="preserve">
+    <value>Die zusätzlichen Startparameter enthalten „{0}“. Passwörter gehören ins Passwortfeld, nicht in die Startparameter.</value>
+  </data>
+  <data name="RemoteTool_FullScreen" xml:space="preserve">
+    <value>Vollbild (--full-screen)</value>
   </data>
   <data name="RemoteTool_Hint" xml:space="preserve">
-    <value>Zusätzliche Startparameter werden unverändert angehängt. Kein Passwort hier eintragen: es stünde in der Prozessliste.</value>
+    <value>Start ohne Shell; jeder Parameter wird einzeln übergeben. Kein Passwort in die Startparameter eintragen: es stünde in der Prozessliste.</value>
+  </data>
+  <data name="RemoteTool_InvalidId" xml:space="preserve">
+    <value>„{0}“ ist keine gültige Remote-ID.</value>
+  </data>
+  <data name="RemoteTool_Missing_Download" xml:space="preserve">
+    <value>Herunterladen</value>
+  </data>
+  <data name="RemoteTool_Missing_Message" xml:space="preserve">
+    <value>{0} ({1}) wurde auf diesem PC nicht gefunden. Installiere {0} oder lege den Pfad zur Programmdatei in den Remote-Tool-Einstellungen fest.</value>
+  </data>
+  <data name="RemoteTool_Missing_SetPath" xml:space="preserve">
+    <value>Pfad festlegen …</value>
+  </data>
+  <data name="RemoteTool_Missing_Title" xml:space="preserve">
+    <value>{0} nicht gefunden</value>
   </data>
   <data name="RemoteTool_Mode_Control" xml:space="preserve">
     <value>Fernsteuerung</value>
@@ -246,8 +303,144 @@
   <data name="RemoteTool_Mode_FileTransfer" xml:space="preserve">
     <value>Dateiübertragung</value>
   </data>
+  <data name="RemoteTool_Mode_PortForward" xml:space="preserve">
+    <value>Port-Weiterleitung</value>
+  </data>
   <data name="RemoteTool_Mode_Vpn" xml:space="preserve">
     <value>VPN</value>
+  </data>
+  <data name="RemoteTool_PasswordHint" xml:space="preserve">
+    <value>Gespeichert im Windows Credential Manager. AnyDesk bekommt es über stdin, TeamViewer und RustDesk über die Zwischenablage (nach 30 s geleert).</value>
+  </data>
+  <data name="RemoteTool_PasswordInfo_AnyDesk" xml:space="preserve">
+    <value>Das gespeicherte Passwort geht über stdin an AnyDesk (--with-password) und taucht nicht in der Prozessliste auf.</value>
+  </data>
+  <data name="RemoteTool_PasswordInfo_Clipboard" xml:space="preserve">
+    <value>Ohne diese Option legt Remote-Manager das gespeicherte Passwort beim Verbinden in die Zwischenablage (nach 30 s geleert); Easy Access braucht gar keins.</value>
+  </data>
+  <data name="RemoteTool_PasswordOnLine_RustDesk" xml:space="preserve">
+    <value>Passwort auf der Kommandozeile übergeben (--password)</value>
+  </data>
+  <data name="RemoteTool_PasswordOnLine_TeamViewer" xml:space="preserve">
+    <value>Passwort auf der Kommandozeile übergeben (-p)</value>
+  </data>
+  <data name="RemoteTool_PasswordWarning_Message" xml:space="preserve">
+    <value>Jedes Programm auf diesem PC kann die Kommandozeile von {0} lesen, also auch das Passwort. Besser Easy Access oder die Zwischenablage nutzen.</value>
+  </data>
+  <data name="RemoteTool_PasswordWarning_Title" xml:space="preserve">
+    <value>Passwort sichtbar in der Prozessliste</value>
+  </data>
+  <data name="RemoteTool_Paths_Auto" xml:space="preserve">
+    <value>Automatisch erkennen</value>
+  </data>
+  <data name="RemoteTool_Paths_Browse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="RemoteTool_Paths_ConfiguredMissing" xml:space="preserve">
+    <value>Eingestellter Pfad fehlt: {0}</value>
+  </data>
+  <data name="RemoteTool_Paths_Detected" xml:space="preserve">
+    <value>Automatisch: {0}</value>
+  </data>
+  <data name="RemoteTool_Paths_Hint" xml:space="preserve">
+    <value>Leer lassen für die automatische Erkennung (Registry, Programme-Ordner). Ein eingetragener Pfad hat Vorrang.</value>
+  </data>
+  <data name="RemoteTool_Paths_Invalid" xml:space="preserve">
+    <value>Keine vorhandene .exe-Datei: {0}</value>
+  </data>
+  <data name="RemoteTool_Paths_Missing" xml:space="preserve">
+    <value>{0} wurde nicht gefunden.</value>
+  </data>
+  <data name="RemoteTool_Paths_Title" xml:space="preserve">
+    <value>Programmpfade</value>
+  </data>
+  <data name="RemoteTool_Paths_UsingDetected" xml:space="preserve">
+    <value>Gefunden: {0}</value>
+  </data>
+  <data name="RemoteTool_Paths_UsingSetting" xml:space="preserve">
+    <value>Eingestellt: {0}</value>
+  </data>
+  <data name="RemoteTool_Plain" xml:space="preserve">
+    <value>Ohne Rahmen und Menü (--plain)</value>
+  </data>
+  <data name="RemoteTool_Preview" xml:space="preserve">
+    <value>Vorschau des Aufrufs</value>
+  </data>
+  <data name="RemoteTool_PreviewId" xml:space="preserve">
+    <value>&lt;ID&gt;</value>
+  </data>
+  <data name="RemoteTool_Preview_Stdin" xml:space="preserve">
+    <value>{0}
+(Passwort {1} über stdin, nicht in der Prozessliste)</value>
+  </data>
+  <data name="RemoteTool_Quality_1" xml:space="preserve">
+    <value>Qualität: Automatisch (-q 1)</value>
+  </data>
+  <data name="RemoteTool_Quality_2" xml:space="preserve">
+    <value>Qualität: Optimiert (-q 2)</value>
+  </data>
+  <data name="RemoteTool_Quality_3" xml:space="preserve">
+    <value>Qualität: Geschwindigkeit (-q 3)</value>
+  </data>
+  <data name="RemoteTool_Quality_4" xml:space="preserve">
+    <value>Qualität: Benutzerdefiniert (-q 4)</value>
+  </data>
+  <data name="RemoteTool_Quality_5" xml:space="preserve">
+    <value>Qualität: Standardeinstellung (-q 5)</value>
+  </data>
+  <data name="RemoteTool_Quality_None" xml:space="preserve">
+    <value>Qualität: Standard (nicht übergeben)</value>
+  </data>
+  <data name="RemoteTool_Settings_Tip" xml:space="preserve">
+    <value>Remote-Tools: Pfade, TeamViewer-Abgleich, AnyDesk-Import</value>
+  </data>
+  <data name="RemoteTool_Settings_Title" xml:space="preserve">
+    <value>Remote-Tools</value>
+  </data>
+  <data name="RemoteTool_StartFailed" xml:space="preserve">
+    <value>Das Tool konnte nicht gestartet werden: {0}</value>
+  </data>
+  <data name="RemoteTool_StartOptions" xml:space="preserve">
+    <value>Startparameter</value>
+  </data>
+  <data name="RemoteTool_Sync_Error_Forbidden" xml:space="preserve">
+    <value>TeamViewer verweigert den Zugriff (403). Der Token braucht Leserechte für „Computer &amp; Kontakte“; die Web API gibt es ab der Business-Lizenz.</value>
+  </data>
+  <data name="RemoteTool_Sync_Error_Other" xml:space="preserve">
+    <value>Abgleich fehlgeschlagen: {0}</value>
+  </data>
+  <data name="RemoteTool_Sync_Error_Unauthorized" xml:space="preserve">
+    <value>TeamViewer lehnt den Token ab (401). Bitte einen gültigen Script-Token speichern.</value>
+  </data>
+  <data name="RemoteTool_Sync_Hint" xml:space="preserve">
+    <value>Script-Token aus der TeamViewer Management Console (Profil › Apps), nur mit Leserechten für „Computer &amp; Kontakte“. Er liegt im Windows Credential Manager. Der Abgleich ändert Alias und Online-Status; Notizen, Tags, Gruppe und Passwort bleiben lokal.</value>
+  </data>
+  <data name="RemoteTool_Sync_NewGroup" xml:space="preserve">
+    <value>Neu aus TeamViewer</value>
+  </data>
+  <data name="RemoteTool_Sync_NoToken" xml:space="preserve">
+    <value>Kein Token gespeichert</value>
+  </data>
+  <data name="RemoteTool_Sync_Now" xml:space="preserve">
+    <value>Jetzt abgleichen</value>
+  </data>
+  <data name="RemoteTool_Sync_Result" xml:space="preserve">
+    <value>{0} neu, {1} aktualisiert, {2} unverändert, {3} nicht mehr im Konto (markiert, nicht gelöscht).</value>
+  </data>
+  <data name="RemoteTool_Sync_SaveToken" xml:space="preserve">
+    <value>Token speichern</value>
+  </data>
+  <data name="RemoteTool_Sync_Title" xml:space="preserve">
+    <value>TeamViewer Web API</value>
+  </data>
+  <data name="RemoteTool_Sync_TokenPlaceholder" xml:space="preserve">
+    <value>Script-Token einfügen</value>
+  </data>
+  <data name="RemoteTool_Sync_TokenStored" xml:space="preserve">
+    <value>Token im Credential Manager gespeichert</value>
+  </data>
+  <data name="RemoteTool_Warning_PasswordOnCommandLine" xml:space="preserve">
+    <value>{0} wurde mit dem Passwort auf der Kommandozeile gestartet: es steht in der Prozessliste.</value>
   </data>
   <data name="Search_Placeholder" xml:space="preserve">
     <value>Name, Host, Tag, Beschreibung suchen</value>
@@ -311,10 +504,13 @@
     <value>Status per TCP-Prüfung des RDP-Ports im Hintergrund. Keine Antwort = unbekannt, abgelehnt = offline.</value>
   </data>
   <data name="Status_Hint_RemoteTool" xml:space="preserve">
-    <value>Online-Status kommt mit den Tool-APIs in Phase 2.</value>
+    <value>Kein Online-Status: AnyDesk und RustDesk bieten ihn ohne Lizenz-API nicht an.</value>
   </data>
   <data name="Status_Hint_TcpPort" xml:space="preserve">
     <value>Status per TCP-Prüfung des Ports im Hintergrund. Keine Antwort = unbekannt, abgelehnt = offline.</value>
+  </data>
+  <data name="Status_Hint_TeamViewer" xml:space="preserve">
+    <value>Online-Status aus der TeamViewer Web API (Token in den Remote-Tool-Einstellungen). Ohne Token unbekannt.</value>
   </data>
   <data name="Status_Offline" xml:space="preserve">
     <value>Offline</value>

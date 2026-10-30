@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections;
+using RemoteManager.App.Connections.RemoteTools;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Services;
 using RemoteManager.Core.Model;
@@ -61,6 +62,8 @@ public partial class MainWindow : Window, IConnectionHost
         RefreshButton.Click += (_, _) => RefreshStatus();
         ConnectButton.Click += (_, _) => OpenSelected();
         AddButton.Click += (_, _) => AddConnection();
+        RemoteToolsButton.Click += async (_, _) => await RemoteToolsDialog.ShowAsync();
+        RemoteToolsDialog.LibraryChanged += OnLibraryChangedOutside;
         toastTimer.Tick += (_, _) =>
         {
             toastTimer.Stop();
@@ -326,6 +329,17 @@ public partial class MainWindow : Window, IConnectionHost
 
     private void UpdateEmptyState() => EmptyState.IsVisible = visible.Count == 0;
 
+    /// <summary>A sync or import added or changed connections in the library: add items for new ones, refresh the rest.</summary>
+    private void OnLibraryChangedOutside(object? sender, EventArgs e)
+    {
+        foreach (Connection connection in app.Library.Connections.Where(c => items.All(i => i.Model != c)))
+            items.Add(CreateItem(connection));
+        foreach (ConnectionItem item in items)
+            item.Changed();
+        BuildNavigation();
+        RefreshStatus();
+    }
+
     private void OnStatusChanged(object? sender, StatusChangedEventArgs e) =>
         Dispatcher.UIThread.Post(() =>
         {
@@ -437,15 +451,22 @@ public partial class MainWindow : Window, IConnectionHost
         var edit = new MenuItem { Header = Strings.Action_Edit, Icon = new FASymbolIcon { Symbol = FASymbol.Edit } };
         var favorite = new MenuItem { Icon = new FASymbolIcon { Symbol = FASymbol.Star } };
         var copyPassword = new MenuItem { Header = Strings.Action_CopyPassword, Icon = new FASymbolIcon { Symbol = FASymbol.Permissions } };
+        var fileTransfer = new MenuItem { Header = Strings.RemoteTool_Action_FileTransfer, Icon = new FASymbolIcon { Symbol = FASymbol.OpenFile } };
         var duplicate = new MenuItem { Header = Strings.Action_Duplicate, Icon = new FASymbolIcon { Symbol = FASymbol.Copy } };
         var delete = new MenuItem { Header = Strings.Action_DeleteEllipsis, Icon = new FASymbolIcon { Symbol = FASymbol.Delete } };
-        var menu = new ContextMenu { ItemsSource = new object[] { connect, copyPassword, edit, favorite, duplicate, new Separator(), delete } };
+        var menu = new ContextMenu { ItemsSource = new object[] { connect, fileTransfer, copyPassword, edit, favorite, duplicate, new Separator(), delete } };
 
         menu.Opening += (_, e) =>
         {
             e.Cancel = Selected is null;
             favorite.Header = Selected?.IsFavorite == true ? Strings.Action_Unfavorite : Strings.Action_Favorite;
             copyPassword.IsVisible = Selected?.HasStoredPassword == true;
+            fileTransfer.IsVisible = Selected?.Handler is IFileTransferHandler;
+        };
+        fileTransfer.Click += (_, _) =>
+        {
+            if (Selected is { Handler: IFileTransferHandler handler } c)
+                handler.OpenFileTransfer(c, this);
         };
         copyPassword.Click += async (_, _) =>
         {
@@ -523,6 +544,7 @@ public partial class MainWindow : Window, IConnectionHost
     {
         statusTimer.Stop();
         app.Status.StatusChanged -= OnStatusChanged;
+        RemoteToolsDialog.LibraryChanged -= OnLibraryChangedOutside;
         // Session windows are independent top-levels; closing the overview ends the app, so close them too.
         foreach (Window window in sessionWindows.ToList())
             window.Close();

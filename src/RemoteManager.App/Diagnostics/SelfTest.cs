@@ -10,9 +10,11 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using FluentAvalonia.UI.Controls;
 using Microsoft.Data.Sqlite;
 using RemoteManager.App.Connections;
 using RemoteManager.App.Connections.Rdp;
+using RemoteManager.App.Connections.RemoteTools;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Services;
 using RemoteManager.App.Views;
@@ -34,7 +36,7 @@ namespace RemoteManager.App.Diagnostics;
 /// window logs on by itself; never logged). Credential checks use "RemoteManager:selftest-*" only.
 /// Database checks run on a temporary folder; the real database is only read.
 /// </summary>
-internal static class SelfTest
+internal static partial class SelfTest
 {
     private static readonly List<string> Lines = [];
     private static int failures;
@@ -96,6 +98,7 @@ internal static class SelfTest
         Check("Edit dialog opens and Cancel leaves the connection unchanged", !await editing && edited.Name == nameBefore);
 
         await RunCredentialChecksAsync(window);
+        await RunRemoteToolChecksAsync(window);
 
         // --- Two session windows, each with its own RDP client -------------------------------------
         // Temporary connections; they are not added to the store.
@@ -295,14 +298,25 @@ internal static class SelfTest
         menu.Close();
         Check("Context menu offers \"Passwort kopieren\" for a connection with a stored password", menuItem);
 
-        // Connect on a remote-tool entry: the dialog offers the same copy button.
-        window.OpenSession(tool);
-        await Settle(800);
-        bool dialogButton = PlannedConnectionDialog.Current?.PrimaryButtonText == Strings.Action_CopyPassword;
-        SaveRenderProbe(window, "copy-password-dialog.png");
-        PlannedConnectionDialog.Current?.Hide();
-        await Settle(300);
-        Check("Remote-tool dialog offers \"Passwort kopieren\"", dialogButton);
+        // Connect on a remote-tool entry when the tool is not installed (detection switched off, so a
+        // real AnyDesk on this machine is never started): a clear message with path setting and download.
+        RemoteToolLauncher.LocatorOverride = FakeLocator(null);
+        try
+        {
+            window.OpenSession(tool);
+            await Settle(800);
+            FAContentDialog? missing = MissingToolDialog.Current;
+            bool clear = missing is not null && missing.Title as string == string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Missing_Title, "AnyDesk")
+                && missing.PrimaryButtonText == Strings.RemoteTool_Missing_SetPath && missing.SecondaryButtonText == Strings.RemoteTool_Missing_Download;
+            SaveRenderProbe(window, "remote-tool-missing.png");
+            missing?.Hide();
+            await Settle(300);
+            Check("Missing tool shows \"AnyDesk nicht gefunden\" with \"Pfad festlegen\" and \"Herunterladen\"", clear);
+        }
+        finally
+        {
+            RemoteToolLauncher.LocatorOverride = null;
+        }
 
         // Default delay first (for the probe), then a short one to see the clear happen.
         await window.CopyPasswordAsync(tool);

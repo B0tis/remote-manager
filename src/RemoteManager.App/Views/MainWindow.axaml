@@ -129,6 +129,9 @@
               </ToggleButton>
             </StackPanel>
           </Border>
+          <Button x:Name="RemoteToolsButton" ToolTip.Tip="{x:Static res:Strings.RemoteTool_Settings_Tip}" Padding="9">
+            <ui:FASymbolIcon Symbol="Settings" FontSize="16" />
+          </Button>
           <Button x:Name="RefreshButton" ToolTip.Tip="{x:Static res:Strings.Status_RefreshTip}" Padding="9">
             <ui:FASymbolIcon Symbol="Refresh" FontSize="16" />
           </Button>
