@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Everything below the UI: model, SQLite store, credentials, status checks, import/export. No Avalonia here. -->
+  <!-- Everything below the UI: model, SQLite store, credentials, status checks, import/export, SSH. No Avalonia here. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+    <PackageReference Include="SSH.NET" Version="2026.0.0" />
   </ItemGroup>
 
   <ItemGroup>
