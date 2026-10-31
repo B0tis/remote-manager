@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Text;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
 using RemoteManager.Core.RemoteTools;
+using RemoteManager.Core.Resources;
 
 namespace RemoteManager.Core.ImportExport;
 
@@ -77,19 +79,19 @@ public sealed class AnyDeskCsvImporter : IImporter
             string target = remoteId.Length > 0 ? remoteId : aliasText;
             if (target.Length == 0)
             {
-                result.Warnings.Add($"Line {i + 1}: no ID and no alias, skipped.");
+                result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.AnyDesk_NoTarget, i + 1));
                 continue;
             }
 
             if (!RemoteToolCommandLine.IsValidId(ConnectionType.AnyDesk, target))
             {
-                result.Warnings.Add($"Line {i + 1}: \"{target}\" is not an AnyDesk ID or alias, skipped.");
+                result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.AnyDesk_NotAnId, i + 1, target));
                 continue;
             }
 
             if (!seen.Add(target))
             {
-                result.Warnings.Add($"Line {i + 1}: {target} appears twice, skipped.");
+                result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.AnyDesk_Duplicate, i + 1, target));
                 continue;
             }
 

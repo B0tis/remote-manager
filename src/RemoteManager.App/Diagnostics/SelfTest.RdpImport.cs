@@ -310,7 +310,7 @@ internal static partial class SelfTest
             Check($"RDCMan import adds 2 connections and 2 groups ({rdcman?.AddedConnections}, {rdcman?.AddedGroups})",
                 rdcman is { AddedConnections: 2, AddedGroups: 2 } && window.Connections.Count == before + 2);
 
-            Task summaryShown = ImportExportCommands.ShowSummaryAsync(rdcman! with { Warnings = ["Beispiel: smart group \"Alle Drucker\" skipped (its rules have no equivalent)."] });
+            Task summaryShown = ImportExportCommands.ShowSummaryAsync(rdcman! with { Warnings = ["Beispiel: Intelligente Gruppe „Alle Drucker“ übersprungen (ihre Regeln haben hier keine Entsprechung)."] });
             await Settle(600);
             SaveRenderProbe(window, "import-summary.png");
             ImportExportCommands.OpenSummary?.Hide();

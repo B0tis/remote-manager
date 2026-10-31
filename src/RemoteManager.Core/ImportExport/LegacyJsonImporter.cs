@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
+using RemoteManager.Core.Resources;
 
 namespace RemoteManager.Core.ImportExport;
 
@@ -37,7 +39,7 @@ public sealed class LegacyJsonImporter : IImporter
         {
             if (string.IsNullOrWhiteSpace(old.Id) || string.IsNullOrWhiteSpace(old.Name))
             {
-                result.Warnings.Add($"Skipped an entry without id or name ({old.Host}).");
+                result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Legacy_NoIdOrName, old.Host));
                 continue;
             }
 

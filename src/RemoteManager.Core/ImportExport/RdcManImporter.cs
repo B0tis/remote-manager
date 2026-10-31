@@ -4,6 +4,7 @@ using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
 using RemoteManager.Core.Rdp;
+using RemoteManager.Core.Resources;
 
 namespace RemoteManager.Core.ImportExport;
 
@@ -72,7 +73,7 @@ public sealed class RdcManImporter : IImporter
                         ReadServer(child, group.Id, order++);
                         break;
                     case "smartGroup":
-                        result.Warnings.Add($"Smart group \"{Text(child, "name")}\" skipped (its rules have no equivalent).");
+                        result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.RdcMan_SmartGroup, Text(child, "name")));
                         break;
                 }
             }
@@ -83,7 +84,7 @@ public sealed class RdcManImporter : IImporter
             string host = Text(server, "name");
             if (host.Length == 0)
             {
-                result.Warnings.Add($"{Path.GetFileName(path)}: server without a name skipped.");
+                result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.RdcMan_ServerWithoutName, Path.GetFileName(path)));
                 return;
             }
 
@@ -203,7 +204,7 @@ public sealed class RdcManImporter : IImporter
                     .FirstOrDefault(p => string.Equals(Value(p, "profileName"), profile, StringComparison.OrdinalIgnoreCase));
                 if (found is null)
                 {
-                    result.Warnings.Add($"{label}: credential profile \"{profile}\" is not in the file (stored in RDCMan's settings), logon not taken over.");
+                    result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.RdcMan_ProfileMissing, label, profile));
                     return null;
                 }
 
@@ -222,7 +223,7 @@ public sealed class RdcManImporter : IImporter
                     ? stored.Value
                     : Dpapi.TryUnprotectBase64(stored.Value);
                 if (password is null)
-                    result.Warnings.Add($"{label}: the password was saved by another Windows user or PC and could not be decrypted; please enter it again.");
+                    result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.RdcMan_PasswordOfOtherUser, label));
             }
 
             return user.Length == 0 && password is null ? null : (user, domain, password);

@@ -1,6 +1,8 @@
+using System.Globalization;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Library;
 using RemoteManager.Core.Model;
+using RemoteManager.Core.Resources;
 
 namespace RemoteManager.Core.ImportExport;
 
@@ -62,7 +64,7 @@ public sealed class ImportService(ConnectionLibrary library, CredentialService c
                 }
                 else if (result.GroupSecrets.Remove(group.Id))
                 {
-                    warnings.Add($"Group \"{existing.Name}\" already has a logon; the imported one was not applied.");
+                    warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Import_GroupLogonKept, existing.Name));
                 }
             }
             else
@@ -83,7 +85,7 @@ public sealed class ImportService(ConnectionLibrary library, CredentialService c
         }
 
         foreach (ConnectionGroup orphan in pending)
-            warnings.Add($"Group \"{orphan.Name}\" has a parent cycle and was skipped.");
+            warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Import_GroupCycle, orphan.Name));
 
         int added = 0, replaced = 0, skipped = 0;
         var imported = new List<Connection>();
@@ -175,7 +177,7 @@ public sealed class ImportService(ConnectionLibrary library, CredentialService c
         }
         catch (System.ComponentModel.Win32Exception ex)
         {
-            warnings.Add($"{label}: password could not be stored ({ex.Message}).");
+            warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Import_PasswordNotStored, label, ex.Message));
             return false;
         }
     }

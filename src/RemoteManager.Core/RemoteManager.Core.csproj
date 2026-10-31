@@ -17,6 +17,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Import warnings (German). The ImportStrings class is generated at build time, like the app's Strings. -->
+    <EmbeddedResource Update="Resources\ImportStrings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)ImportStrings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>RemoteManager.Core.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>ImportStrings</StronglyTypedClassName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="RemoteManager.Core.Tests" />
   </ItemGroup>
 </Project>

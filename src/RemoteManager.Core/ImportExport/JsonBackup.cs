@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
+using RemoteManager.Core.Resources;
 
 namespace RemoteManager.Core.ImportExport;
 
@@ -87,7 +89,7 @@ public static class JsonBackup
                 continue;
             if (!Enum.TryParse(Text(c, "type"), out ConnectionType type))
             {
-                result.Warnings.Add($"{Text(c, "name")}: unknown type {Text(c, "type")}, skipped.");
+                result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Backup_UnknownType, Text(c, "name"), Text(c, "type")));
                 continue;
             }
 

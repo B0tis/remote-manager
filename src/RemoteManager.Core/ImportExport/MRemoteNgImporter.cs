@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
 using RemoteManager.Core.Rdp;
+using RemoteManager.Core.Resources;
 
 namespace RemoteManager.Core.ImportExport;
 
@@ -56,7 +57,7 @@ public sealed partial class MRemoteNgImporter : IImporter
 
         ReadChildren(root, parentId: null, context);
         if (!defaultPassword && context.SkippedPasswords > 0)
-            result.Warnings.Add($"{context.SkippedPasswords} passwords are protected by a custom mRemoteNG master password and were not taken over.");
+            result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.MRemoteNg_CustomMasterPassword, context.SkippedPasswords));
         return result;
     }
 
@@ -105,14 +106,14 @@ public sealed partial class MRemoteNgImporter : IImporter
         };
         if (type is not { } t)
         {
-            context.Result.Warnings.Add($"{name}: protocol {protocol} is not supported, skipped.");
+            context.Result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Import_UnsupportedProtocol, name, protocol));
             return;
         }
 
         string host = Attr(node, "Hostname");
         if (host.Length == 0)
         {
-            context.Result.Warnings.Add($"{name}: no host name, skipped.");
+            context.Result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Import_NoHost, name));
             return;
         }
 
@@ -224,7 +225,7 @@ public sealed partial class MRemoteNgImporter : IImporter
 
             string? plain = MRemoteNgCrypto.Decrypt(encrypted, MRemoteNgCrypto.DefaultPassword, gcm, iterations);
             if (plain is null)
-                result.Warnings.Add($"{label}: the password could not be decrypted and was not taken over.");
+                result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.MRemoteNg_PasswordNotDecrypted, label));
             return plain is { Length: > 0 } ? plain : null;
         }
     }

@@ -5,6 +5,7 @@ using Microsoft.Data.Sqlite;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
 using RemoteManager.Core.Rdp;
+using RemoteManager.Core.Resources;
 
 namespace RemoteManager.Core.ImportExport;
 
@@ -55,7 +56,7 @@ public sealed class OneRemoteImporter : IImporter
         }
 
         if (passwords > 0)
-            result.Warnings.Add($"{passwords} passwords are encrypted with 1Remote's own key and were not taken over; enter them once in the editor or at the first connect.");
+            result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.OneRemote_EncryptedPasswords, passwords));
         return result;
     }
 
@@ -72,14 +73,14 @@ public sealed class OneRemoteImporter : IImporter
         };
         if (type is not { } t)
         {
-            result.Warnings.Add($"{name}: protocol {protocol} is not supported, skipped.");
+            result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Import_UnsupportedProtocol, name, protocol));
             return null;
         }
 
         string host = Str(e, "Address");
         if (host.Length == 0)
         {
-            result.Warnings.Add($"{name}: no address, skipped.");
+            result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.Import_NoAddress, name));
             return null;
         }
 

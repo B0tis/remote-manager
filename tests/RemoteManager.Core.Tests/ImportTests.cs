@@ -95,7 +95,7 @@ public sealed class ImportTests : IDisposable
         Assert.Equal(@"C:\Keys\web01.ppk", result.Connections[2].SettingsAs<SshSettings>().KeyPath);
         // The APP entry and the encrypted password are reported, not silently dropped.
         Assert.Contains(result.Warnings, w => w.Contains("APP", StringComparison.Ordinal));
-        Assert.Contains(result.Warnings, w => w.Contains("1 passwords", StringComparison.Ordinal));
+        Assert.Contains(result.Warnings, w => w.StartsWith("Bei 1 Verbindung(en)", StringComparison.Ordinal));
         Assert.Empty(result.Secrets);
     }
 
@@ -182,7 +182,7 @@ public sealed class ImportTests : IDisposable
         Assert.Equal(4, summary.AddedConnections);
         Assert.Equal(0, summary.StoredPasswords);
         Assert.Empty(source.Secrets);
-        Assert.Contains(summary.Warnings, w => w.Contains("custom mRemoteNG master password", StringComparison.Ordinal));
+        Assert.Contains(summary.Warnings, w => w.Contains("eigenen mRemoteNG-Masterpasswort", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public sealed class ImportTests : IDisposable
         Assert.Equal(new RdpRedirections { Clipboard = false, Drives = true, Printers = true, SmartCards = true, Audio = RdpAudioMode.None }, s.Redirections);
         Assert.Equal((@"C:\Tools\start.cmd", @"C:\Tools"), (s.StartProgram, s.WorkingDirectory));
         Assert.Empty(source.Secrets);
-        Assert.Contains(summary.Warnings, w => w.Contains("encrypted password", StringComparison.Ordinal));
+        Assert.Contains(summary.Warnings, w => w.Contains("verschlüsselte Passwort", StringComparison.Ordinal));
     }
 
     [Fact]

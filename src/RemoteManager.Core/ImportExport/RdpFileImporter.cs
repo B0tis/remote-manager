@@ -1,5 +1,7 @@
+using System.Globalization;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Rdp;
+using RemoteManager.Core.Resources;
 
 namespace RemoteManager.Core.ImportExport;
 
@@ -24,12 +26,12 @@ public sealed class RdpFileImporter : IImporter
         Connection connection = RdpFileMapping.ToConnection(file, Path.GetFileNameWithoutExtension(path));
         if (connection.Host.Length == 0)
         {
-            result.Warnings.Add($"{Path.GetFileName(path)}: no \"full address\", skipped.");
+            result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.RdpFile_NoAddress, Path.GetFileName(path)));
             return Task.FromResult(result);
         }
 
         if (file.Contains("password 51"))
-            result.Warnings.Add($"{connection.Name}: the encrypted password in the file was not taken over.");
+            result.Warnings.Add(string.Format(CultureInfo.CurrentCulture, ImportStrings.RdpFile_PasswordIgnored, connection.Name));
         result.Connections.Add(connection);
         return Task.FromResult(result);
     }
