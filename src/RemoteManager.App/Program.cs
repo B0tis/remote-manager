@@ -13,6 +13,10 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Self-test stand-in for an external remote tool (see FakeRemoteTool); no UI.
+        if (Environment.GetEnvironmentVariable(Diagnostics.FakeRemoteTool.Variable) is { Length: > 0 } report)
+            return Diagnostics.FakeRemoteTool.Run(report, args);
+
         AppOptions.Parse(args);
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }

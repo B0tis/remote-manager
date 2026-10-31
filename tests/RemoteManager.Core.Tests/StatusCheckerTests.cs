@@ -77,21 +77,16 @@ public sealed class StatusCheckerTests
         int? probeThread = null;
         var checker = new StatusChecker(_ => new DelegateProbe(() => probeThread = Environment.CurrentManagedThreadId));
 
-        // Start from a dedicated (non-pool) thread, like the UI thread: the test's own thread is a pool
-        // thread, and the probe may legitimately reuse it once the test awaits.
-        int callerThread = 0;
-        Task? check = null;
-        var caller = new Thread(() =>
-        {
-            callerThread = Environment.CurrentManagedThreadId;
-            check = checker.CheckAsync([new Connection { Host = "x" }], TestContext.Current.CancellationToken);
-        });
+        // Call from a dedicated (non-pool) thread, like the UI thread: the test's own thread is a pool
+        // thread, which the checker's Task.Run may legitimately reuse.
+        Task check = Task.CompletedTask;
+        var caller = new Thread(() => check = checker.CheckAsync([new Connection { Host = "x" }], TestContext.Current.CancellationToken));
         caller.Start();
         caller.Join();
-        await check!;
+        await check;
 
         Assert.NotNull(probeThread);
-        Assert.NotEqual(callerThread, probeThread);
+        Assert.NotEqual(caller.ManagedThreadId, probeThread);
     }
 
     [Fact]
