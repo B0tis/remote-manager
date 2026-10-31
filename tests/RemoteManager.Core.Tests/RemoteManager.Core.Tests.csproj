@@ -19,6 +19,8 @@
     <None Include="Samples\**" CopyToOutputDirectory="PreserveNewest" />
     <!-- KeePass test databases (see Fixtures/KeePass/make_fixtures.py); master password "RemoteManager-Test". -->
     <None Include="Fixtures\**\*.kdbx;Fixtures\**\*.keyx" CopyToOutputDirectory="PreserveNewest" />
+    <!-- A database written by the p1-foundation build (UpgradeTests). -->
+    <None Include="Fixtures\Upgrade\*.db" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
