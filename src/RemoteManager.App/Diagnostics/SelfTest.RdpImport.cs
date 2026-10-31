@@ -129,7 +129,7 @@ internal static partial class SelfTest
     /// <summary>The mstsc start writes an .rdp file without the password and a temporary TERMSRV entry.</summary>
     private static async Task RunExternalStartChecksAsync()
     {
-        const string id = "selftest-mstsc", host = "rm-selftest-mstsc.invalid";
+        string id = TestId("mstsc"), host = $"rm-selftest-mstsc-{RunId}.invalid";
         string secret = $"Rm-{Guid.NewGuid():N}";
         WindowsCredentialSource.Delete(id);
         TermsrvCredential.Delete(host);
@@ -169,7 +169,7 @@ internal static partial class SelfTest
     /// <summary>The editor shows the group logon a connection inherits, and edits it in place.</summary>
     private static async Task RunInheritanceEditorChecksAsync(MainWindow window)
     {
-        const string secretId = "selftest-group";
+        string secretId = TestId("group");
         AppHost app = AppHost.Current;
         WindowsCredentialSource.Delete(secretId);
         WindowsCredentialSource.Write(secretId, $"Rm-{Guid.NewGuid():N}");

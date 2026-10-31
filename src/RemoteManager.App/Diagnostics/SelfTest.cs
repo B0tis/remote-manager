@@ -33,7 +33,7 @@ namespace RemoteManager.App.Diagnostics;
 /// %LOCALAPPDATA%\RemoteManager\spike and exits with 0 when every executed check passed.
 /// Checks that need a real RDP server only run when RM_SPIKE_HOST is set (RM_SPIKE_USER /
 /// RM_SPIKE_DOMAIN fill the connection; RM_SPIKE_PASSWORD is stored as a temporary credential so the
-/// window logs on by itself; never logged). Credential checks use "RemoteManager:selftest-*" only.
+/// window logs on by itself; never logged). Credential checks use "RemoteManager:selftest-*-&lt;run&gt;" only (see SelfTest.Isolation.cs).
 /// Database checks run on a temporary folder; the real database is only read.
 /// </summary>
 internal static partial class SelfTest
@@ -176,9 +176,7 @@ internal static partial class SelfTest
     /// </summary>
     private static async Task RunCredentialChecksAsync(MainWindow window)
     {
-        string[] ids = ["selftest-roundtrip", "selftest-rdp", "selftest-anydesk"];
-        foreach (string id in ids)
-            WindowsCredentialSource.Delete(id); // leftovers of an aborted run
+        string[] ids = [TestId("roundtrip"), TestId("rdp"), TestId("anydesk")];
 
         // --- Round trip ---------------------------------------------------------------------------
         string secret = $"Rm-{Guid.NewGuid():N}-äß€";
@@ -204,12 +202,11 @@ internal static partial class SelfTest
         window.ShowUnsaved(rdp, true);
         window.ShowUnsaved(tool, true);
         IClipboard clipboard = window.Clipboard!;
-        string? userClipboard = await clipboard.TryGetTextAsync();
         try
         {
             await RunEditorCredentialChecksAsync(window, rdp, secret);
             await RunSessionCredentialChecksAsync(window, rdp);
-            await RunCopyPasswordChecksAsync(window, tool, clipboard);
+            await WithClipboardAsync(clipboard, () => RunCopyPasswordChecksAsync(window, tool, clipboard));
 
             // Deleting a connection deletes its credential (neither test connection is in the library).
             window.ShowUnsaved(tool, false);
@@ -222,8 +219,6 @@ internal static partial class SelfTest
             window.ShowUnsaved(tool, false);
             foreach (string id in ids)
                 WindowsCredentialSource.Delete(id);
-            if (userClipboard is not null)
-                await clipboard.SetTextAsync(userClipboard);
         }
     }
 
@@ -327,21 +322,21 @@ internal static partial class SelfTest
         await window.CopyPasswordAsync(tool);
         await Settle(500);
         SaveRenderProbe(window, "copy-password-toast.png");
-        bool copied = await clipboard.TryGetTextAsync() == secret;
+        bool copied = await ReadClipboardAsync(clipboard, t => t == secret) == secret;
         Check($"Copy puts the password on the clipboard and shows \"{window.ToastBar.Message}\"",
             copied && window.ToastBar.IsOpen && window.ToastBar.Message == string.Format(CultureInfo.CurrentCulture, Strings.Password_Copied, 30));
 
         TimeSpan clearAfter = TimeSpan.FromSeconds(2);
         await window.CopyPasswordAsync(tool, clearAfter);
         await Task.Delay(clearAfter + TimeSpan.FromSeconds(1));
-        string? after = await clipboard.TryGetTextAsync();
+        string? after = await ReadClipboardAsync(clipboard, string.IsNullOrEmpty);
         Check("Clipboard is cleared after the delay", string.IsNullOrEmpty(after) && !SecretClipboard.HasPending);
 
         await window.CopyPasswordAsync(tool, clearAfter);
         await clipboard.SetTextAsync("remote-manager selftest: copied by the user");
         await Task.Delay(clearAfter + TimeSpan.FromSeconds(1));
         Check("Something copied afterwards stays on the clipboard",
-            await clipboard.TryGetTextAsync() == "remote-manager selftest: copied by the user");
+            await ReadClipboardAsync(clipboard, t => t == "remote-manager selftest: copied by the user") == "remote-manager selftest: copied by the user");
     }
 
     private static async Task CheckFailedConnect(SessionWindow s, string label)
@@ -362,7 +357,7 @@ internal static partial class SelfTest
     {
         ConnectionItem connection = window.CreateItem(new Connection
         {
-            Id = "selftest-live",
+            Id = TestId("live"),
             Name = "Selftest live",
             Host = Environment.GetEnvironmentVariable("RM_SPIKE_HOST")!,
             UserName = Environment.GetEnvironmentVariable("RM_SPIKE_USER") ?? "",
@@ -452,7 +447,7 @@ internal static partial class SelfTest
     {
         string folder = Path.Combine(Path.GetTempPath(), $"rm-selftest-{Guid.NewGuid():N}");
         Directory.CreateDirectory(folder);
-        const string credentialId = "selftest-db-1";
+        string credentialId = TestId("db-1");
         string secret = $"Rm-{Guid.NewGuid():N}-äß€";
         try
         {
@@ -462,7 +457,7 @@ internal static partial class SelfTest
                   { "Id": "{{credentialId}}", "Name": "dc01", "Type": "Rdp", "Host": "10.0.0.10", "Port": 3389, "Description": "Domain controller",
                     "Group": "Kunde A", "Tags": ["prod", "ad"], "UserName": "admin", "Domain": "CORP", "DisplayMode": 2,
                     "WinKeysToSession": true, "LastConnectedAt": "2026-10-30T19:00:00Z", "IsFavorite": true },
-                  { "Id": "selftest-db-2", "Name": "Kasse 2", "Type": "AnyDesk", "Host": "987 654 321", "Port": 0, "Description": "",
+                  { "Id": "{{TestId("db-2")}}", "Name": "Kasse 2", "Type": "AnyDesk", "Host": "987 654 321", "Port": 0, "Description": "",
                     "Group": "Laden", "Tags": ["kasse"], "UserName": "", "Domain": "", "DisplayMode": 0, "WinKeysToSession": true,
                     "LastConnectedAt": null, "IsFavorite": false }
                 ]

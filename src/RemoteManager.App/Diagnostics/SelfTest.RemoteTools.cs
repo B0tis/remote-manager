@@ -33,9 +33,7 @@ internal static partial class SelfTest
     {
         Log("--- Remote tools (Phase 2) ---");
         AppHost app = AppHost.Current;
-        string[] ids = ["selftest-tv-launch", "selftest-ad-launch", "selftest-teamviewer-token"];
-        foreach (string id in ids)
-            WindowsCredentialSource.Delete(id);
+        string[] ids = [TestId("tv-launch"), TestId("ad-launch"), TestId("teamviewer-token")];
 
         string secret = $"Rm-{Guid.NewGuid():N}";
         ConnectionItem tv = window.CreateItem(new Connection
@@ -54,14 +52,13 @@ internal static partial class SelfTest
         window.ShowUnsaved(ad, true);
 
         IClipboard clipboard = window.Clipboard!;
-        string? userClipboard = await clipboard.TryGetTextAsync();
         string report = Path.Combine(AppPaths.Spike, "fake-tool-report.txt");
         RemoteToolLauncher.LocatorOverride = FakeLocator(Environment.ProcessPath);
         Environment.SetEnvironmentVariable(FakeRemoteTool.Variable, report);
         try
         {
             await RunRemoteToolEditorChecksAsync(window, tv, ad);
-            await RunLaunchChecksAsync(window, tv, ad, secret, report, clipboard);
+            await WithClipboardAsync(clipboard, () => RunLaunchChecksAsync(window, tv, ad, secret, report, clipboard));
         }
         finally
         {
@@ -72,8 +69,6 @@ internal static partial class SelfTest
             foreach (string id in ids)
                 WindowsCredentialSource.Delete(id);
             File.Delete(report);
-            if (userClipboard is not null)
-                await clipboard.SetTextAsync(userClipboard);
         }
 
         await RunTeamViewerSyncChecksAsync(window, ids[2]);
@@ -139,7 +134,7 @@ internal static partial class SelfTest
         tv.Model.Settings = new RemoteToolSettings();
         (commandLine, _) = await LaunchFakeAsync(window, tv, null, report);
         Log($"  TeamViewer Win32_Process.CommandLine: {Mask(commandLine, secret)}");
-        bool onClipboard = await clipboard.TryGetTextAsync() == secret;
+        bool onClipboard = await ReadClipboardAsync(clipboard, t => t == secret) == secret;
         Check("TeamViewer default: \"-i 123456789\" without password, password on the clipboard",
             commandLine is not null && commandLine.EndsWith("-i 123456789", StringComparison.Ordinal) && !commandLine.Contains(secret, StringComparison.Ordinal) && onClipboard);
         await SecretClipboard.ClearPendingAsync();

@@ -143,7 +143,7 @@ internal static partial class SelfTest
     private static async Task RunSshLiveChecksAsync(MainWindow window)
     {
         AppHost app = AppHost.Current;
-        string[] ids = ["selftest-ssh-jump", "selftest-ssh-target", "selftest-ssh-rdp", "selftest-ssh-vnc"];
+        string[] ids = [TestId("ssh-jump"), TestId("ssh-target"), TestId("ssh-rdp"), TestId("ssh-vnc")];
         foreach (string id in ids)
             WindowsCredentialSource.Delete(id);
 

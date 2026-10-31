@@ -56,11 +56,10 @@ internal static partial class SelfTest
         string? lastDatabase = app.Library.GetSetting(PasswordSourcePanel.LastDatabaseSetting);
         string? opPath = onePassword.ExecutablePath;
         IClipboard clipboard = window.Clipboard!;
-        string? userClipboard = await clipboard.TryGetTextAsync();
         using var server = new FakeVncServer(vncSecret);
         ConnectionItem vnc = window.CreateItem(new Connection
         {
-            Id = "selftest-vnc", Name = "Selftest VNC", Type = ConnectionType.Vnc, Host = "127.0.0.1", Port = server.Port,
+            Id = TestId("vnc"), Name = "Selftest VNC", Type = ConnectionType.Vnc, Host = "127.0.0.1", Port = server.Port,
             Description = "Selbsttest-Server, Passwort aus KeePass", Tags = ["selftest"],
         });
         window.ShowUnsaved(vnc, true);
@@ -71,7 +70,7 @@ internal static partial class SelfTest
             await RunEmbeddedVncChecksAsync(window, vnc, server, master);
             await RunVncPasswordFailureChecksAsync(window, server);
             await RunOnePasswordChecksAsync(window, vnc, onePassword, folder, vncSecret);
-            await RunExternalViewerChecksAsync(window, vnc, folder, clipboard, vncSecret);
+            await WithClipboardAsync(clipboard, () => RunExternalViewerChecksAsync(window, vnc, folder, clipboard, vncSecret));
         }
         finally
         {
@@ -83,8 +82,6 @@ internal static partial class SelfTest
             keePass.LockAll();
             app.Library.SetSetting(PasswordSourcePanel.LastDatabaseSetting, lastDatabase);
             WindowsCredentialSource.Delete(vnc.Id);
-            if (userClipboard is not null)
-                await clipboard.SetTextAsync(userClipboard);
             try
             {
                 Directory.Delete(folder, recursive: true);
@@ -109,7 +106,7 @@ internal static partial class SelfTest
         AppHost app = AppHost.Current;
         var group = new ConnectionGroup { Name = $"Selbsttest Tresor {Guid.NewGuid():N}"[..26], UserName = "tresor" };
         app.Library.AddGroup(group);
-        var member = new Connection { Id = "selftest-vault-member", Name = "Selftest Tresor-Mitglied", Type = ConnectionType.Vnc, GroupId = group.Id };
+        var member = new Connection { Id = TestId("vault-member"), Name = "Selftest Tresor-Mitglied", Type = ConnectionType.Vnc, GroupId = group.Id };
         try
         {
             Task<(bool Saved, string? ParentId)> editing = GroupEditor.ShowAsync(group, isNew: false);
@@ -283,7 +280,7 @@ internal static partial class SelfTest
     {
         ConnectionItem bare = window.CreateItem(new Connection
         {
-            Id = "selftest-vnc-bare", Name = "Selftest VNC ohne Passwort", Type = ConnectionType.Vnc, Host = "127.0.0.1", Port = server.Port,
+            Id = TestId("vnc-bare"), Name = "Selftest VNC ohne Passwort", Type = ConnectionType.Vnc, Host = "127.0.0.1", Port = server.Port,
         });
         var session = (VncSessionWindow)window.OpenSession(bare)!;
         bool asked = await WaitFor(() => session.CardError is not null, TimeSpan.FromSeconds(15));
@@ -299,7 +296,7 @@ internal static partial class SelfTest
         session.Close();
         await Settle(300);
 
-        ConnectionItem closed = window.CreateItem(new Connection { Id = "selftest-vnc-closed", Name = "Selftest VNC geschlossen", Type = ConnectionType.Vnc, Host = "127.0.0.1", Port = 1 });
+        ConnectionItem closed = window.CreateItem(new Connection { Id = TestId("vnc-closed"), Name = "Selftest VNC geschlossen", Type = ConnectionType.Vnc, Host = "127.0.0.1", Port = 1 });
         var refused = (VncSessionWindow)window.OpenSession(closed)!;
         bool failed = await WaitFor(() => refused.CardError is not null, TimeSpan.FromSeconds(20));
         Check($"Closed port: connect failure on the card ({refused.CardError})",
@@ -366,7 +363,7 @@ internal static partial class SelfTest
         await WaitFor(() => window.ToastBar.IsOpen, TimeSpan.FromSeconds(10));
         await Settle(500);
         string args = started ? await File.ReadAllTextAsync(argsFile) : "";
-        string? onClipboard = await clipboard.TryGetTextAsync();
+        string? onClipboard = await ReadClipboardAsync(clipboard, t => t == secret);
         Check($"External viewer: started with \"{args.Trim()}\" and no password on its command line",
             opened is null && args.Contains($"-viewonly 127.0.0.1::{vnc.Model.Port}", StringComparison.Ordinal) && !args.Contains(secret, StringComparison.Ordinal));
         // The clipboard is shared with every other program (and parallel self-test runs).
@@ -390,7 +387,7 @@ internal static partial class SelfTest
         int port = int.TryParse(Environment.GetEnvironmentVariable("RM_VNC_PORT"), NumberStyles.Integer, CultureInfo.InvariantCulture, out int p) ? p : 0;
         ConnectionItem live = window.CreateItem(new Connection
         {
-            Id = "selftest-vnc-live", Name = "VNC-Testserver", Type = ConnectionType.Vnc, Host = host, Port = port,
+            Id = TestId("vnc-live"), Name = "VNC-Testserver", Type = ConnectionType.Vnc, Host = host, Port = port,
             Description = "Echter VNC-Server (RM_VNC_HOST)",
         });
         var session = (VncSessionWindow)window.OpenSession(live)!;
