@@ -11,6 +11,9 @@ RUN apk add --no-cache openssh openssh-sftp-server htop vim ncurses-terminfo-bas
         'AllowTcpForwarding yes' \
         'GatewayPorts no' \
         'Subsystem sftp internal-sftp' \
+        '# The tests fail logons and refuse host keys on purpose, all from one NAT address; OpenSSH 9.8+ would' \
+        '# otherwise start dropping that address ("penalty: connections without attempting authentication").' \
+        'PerSourcePenalties no' \
         > /etc/ssh/sshd_config.d/rmtest.conf \
     && sed -i 's|^Subsystem.*sftp-server.*||' /etc/ssh/sshd_config
 COPY entrypoint.sh /entrypoint.sh

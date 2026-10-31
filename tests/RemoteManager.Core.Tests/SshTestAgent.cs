@@ -20,7 +20,10 @@ internal sealed class SshTestAgent : IDisposable
     {
         this.keys = keys;
         PipeName = $"rm-test-agent-{Guid.NewGuid():N}";
-        loop = Task.Run(ServeAsync);
+        // The first instance exists before the constructor returns: OpenSshAgent.IsRunning looks for the pipe
+        // right away, and a loop that only starts it later loses that race when the machine is busy.
+        NamedPipeServerStream first = CreatePipe();
+        loop = Task.Run(() => ServeAsync(first));
     }
 
     public string PipeName { get; }
@@ -29,15 +32,19 @@ internal sealed class SshTestAgent : IDisposable
 
     public OpenSshAgent Client => new(PipeName);
 
-    private async Task ServeAsync()
+    private NamedPipeServerStream CreatePipe() => new(PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
+        PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+
+    private async Task ServeAsync(NamedPipeServerStream listening)
     {
         while (!stop.IsCancellationRequested)
         {
-            await using var pipe = new NamedPipeServerStream(PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
-                PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+            await using NamedPipeServerStream pipe = listening;
             try
             {
                 await pipe.WaitForConnectionAsync(stop.Token);
+                // The next client (the sign request follows the key list) finds an instance at once.
+                listening = CreatePipe();
                 byte[] header = new byte[4];
                 await pipe.ReadExactlyAsync(header, stop.Token);
                 byte[] body = new byte[BinaryPrimitives.ReadUInt32BigEndian(header)];
@@ -51,13 +58,19 @@ internal sealed class SshTestAgent : IDisposable
             }
             catch (OperationCanceledException)
             {
+                if (!ReferenceEquals(listening, pipe))
+                    await listening.DisposeAsync();
                 return;
             }
             catch (IOException)
             {
                 // Client went away; serve the next one.
+                if (ReferenceEquals(listening, pipe))
+                    listening = CreatePipe();
             }
         }
+
+        await listening.DisposeAsync();
     }
 
     private byte[] Handle(byte[] request)
