@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Views.AboutView"
+             Width="460">
+  <StackPanel Spacing="10">
+    <!-- Name and version (AppVersion: stamped by tools/release.ps1). -->
+    <StackPanel Orientation="Horizontal" Spacing="14">
+      <Border Width="48" Height="48" CornerRadius="10" Background="{DynamicResource AccentFillColorDefaultBrush}">
+        <TextBlock Text="RM" FontSize="18" FontWeight="SemiBold" Foreground="White"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+      </Border>
+      <StackPanel VerticalAlignment="Center" Spacing="2">
+        <TextBlock Text="Remote-Manager" FontSize="20" FontWeight="SemiBold" />
+        <TextBlock x:Name="VersionText" Opacity="0.75" />
+      </StackPanel>
+    </StackPanel>
+    <TextBlock x:Name="InstallText" Opacity="0.65" FontSize="12" TextWrapping="Wrap" />
+    <TextBlock x:Name="DataText" Opacity="0.65" FontSize="12" TextWrapping="Wrap" />
+
+    <!-- Update source and the token for a private GitHub repository. -->
+    <TextBlock Text="{x:Static res:Strings.About_UpdatesTitle}" FontWeight="SemiBold" Margin="0,10,0,0" />
+    <TextBlock Text="{x:Static res:Strings.About_SourceHint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+    <TextBox x:Name="SourceBox" />
+    <TextBlock x:Name="SourceMessage" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
+
+    <TextBlock Text="{x:Static res:Strings.About_TokenTitle}" FontWeight="SemiBold" Margin="0,6,0,0" />
+    <TextBlock Text="{x:Static res:Strings.About_TokenHint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+    <Grid ColumnDefinitions="*,8,Auto">
+      <TextBox x:Name="TokenBox" PasswordChar="●" Classes="revealPasswordButton" />
+      <Button x:Name="DeleteTokenButton" Grid.Column="2" Content="{x:Static res:Strings.Action_Remove}" />
+    </Grid>
+    <TextBlock x:Name="TokenState" FontSize="12" Opacity="0.7" />
+    <TextBlock x:Name="LastCheckText" FontSize="12" Opacity="0.7" />
+  </StackPanel>
+</UserControl>

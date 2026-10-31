@@ -2,6 +2,7 @@ using System.Text;
 using Avalonia.Controls;
 using MSTSCLib;
 using RemoteManager.App.Connections.Rdp;
+using RemoteManager.App.Resources;
 using RemoteManager.App.Views;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.ImportExport;
@@ -282,7 +283,8 @@ internal static partial class SelfTest
         {
             // The "more" menu with import and export.
             Check("The \"more\" button offers import and JSON backup",
-                window.More.Flyout is MenuFlyout { ItemsSource: object[] { Length: 2 } });
+                window.More.Flyout is MenuFlyout menu && menu.Items.OfType<MenuItem>().Select(i => i.Header).Take(2)
+                    .SequenceEqual([Strings.Action_Import, Strings.Action_ExportBackup]));
 
             Task importing = ImportExportCommands.ShowImportAsync(window);
             await Settle(800);

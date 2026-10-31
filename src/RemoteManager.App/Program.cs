@@ -13,9 +13,16 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        // Self-test stand-in for an external remote tool (see FakeRemoteTool); no UI.
+        // Self-test stand-in for an external remote tool (see FakeRemoteTool); no UI. Setup never sets this variable.
         if (Environment.GetEnvironmentVariable(Diagnostics.FakeRemoteTool.Variable) is { Length: > 0 } report)
             return Diagnostics.FakeRemoteTool.Run(report, args);
+
+        // Before anything else of the app: Setup and the updater start the exe with hook arguments and expect it
+        // to exit. No auto-apply at startup: an update is only applied from the app, after the database backup.
+        Velopack.VelopackApp.Build()
+            .SetAutoApplyOnStartup(false)
+            .OnRestarted(version => Updates.AppUpdates.RestartedToVersion = version.ToString())
+            .Run();
 
         AppOptions.Parse(args);
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

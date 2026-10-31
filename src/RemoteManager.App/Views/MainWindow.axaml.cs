@@ -109,6 +109,7 @@ public partial class MainWindow : Window, IConnectionHost
         LauncherButton.Click += (_, _) => OpenLauncher();
 
         MoreButton.Flyout = ImportExportCommands.CreateMenu(this);
+        InitializeUpdates();
         RemoteToolsButton.Click += async (_, _) => await RemoteToolsDialog.ShowAsync();
         RemoteToolsDialog.LibraryChanged += OnLibraryChangedOutside;
         toastTimer.Tick += (_, _) =>

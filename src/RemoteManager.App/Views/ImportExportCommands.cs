@@ -27,7 +27,11 @@ internal static class ImportExportCommands
         var export = new MenuItem { Header = Strings.Action_ExportBackup, Icon = new FASymbolIcon { Symbol = FASymbol.Save } };
         import.Click += async (_, _) => await ShowImportAsync(window);
         export.Click += async (_, _) => await ExportAsync(window);
-        return new MenuFlyout { ItemsSource = new object[] { import, export } };
+        // Items, not ItemsSource: MainWindow.Updates.cs appends its entries.
+        var menu = new MenuFlyout();
+        menu.Items.Add(import);
+        menu.Items.Add(export);
+        return menu;
     }
 
     public static async Task ShowImportAsync(MainWindow window)
