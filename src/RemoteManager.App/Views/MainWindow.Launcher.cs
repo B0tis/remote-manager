@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections;
+using RemoteManager.App.Connections.RemoteTools;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Services;
 
@@ -47,7 +48,7 @@ public partial class MainWindow
     internal void LaunchFromLauncher(ConnectionItem connection)
     {
         OpenSession(connection);
-        if (PlannedConnectionDialog.Current is not null)
+        if (PlannedConnectionDialog.Current is not null || MissingToolDialog.Current is not null)
             BringToFront();
     }
 

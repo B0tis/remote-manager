@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using RemoteManager.App.Connections;
+using RemoteManager.App.Connections.RemoteTools;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Services;
 using RemoteManager.App.Views;
@@ -242,12 +243,23 @@ internal static partial class SelfTest
         Check("Quick launcher: exact, fuzzy (\"stgam\"), and tag search find the connection first", exact && fuzzy && byTag);
 
 
-        launcher.Launch(reveal: false);
-        await Settle(800);
-        bool launched = !launcher.IsVisible && PlannedConnectionDialog.Current is not null;
-        PlannedConnectionDialog.Current?.Hide();
+        // The first hit is a TeamViewer connection: with the tool "not installed" (so a real TeamViewer never
+        // starts) its handler answers with the missing-tool dialog on the overview.
+        RemoteToolLauncher.LocatorOverride = FakeLocator(null);
+        try
+        {
+            launcher.Launch(reveal: false);
+            await Settle(800);
+        }
+        finally
+        {
+            RemoteToolLauncher.LocatorOverride = null;
+        }
+
+        bool launched = !launcher.IsVisible && MissingToolDialog.Current is not null;
+        MissingToolDialog.Current?.Hide();
         await Settle(300);
-        Check("Quick launcher: Enter connects the first hit and closes the launcher", launched);
+        Check("Quick launcher: Enter connects the first hit and closes the launcher (the handler's dialog shows on the overview)", launched);
 
         // The global hotkey arrives as WM_HOTKEY on the main window.
         SendMessage(window.Hotkey!.WindowHandle, GlobalHotkey.WmHotkey, GlobalHotkey.HotkeyId, 0);
