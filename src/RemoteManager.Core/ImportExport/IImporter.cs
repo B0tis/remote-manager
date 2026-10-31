@@ -34,6 +34,9 @@ public sealed class ImportResult
     /// <summary>Passwords found in the source, by connection id. Store them, then drop the result.</summary>
     public Dictionary<string, string> Secrets { get; } = [];
 
+    /// <summary>Passwords of groups (inherited by their connections), by group id.</summary>
+    public Dictionary<string, string> GroupSecrets { get; } = [];
+
     /// <summary>Entries skipped or partly read, for the import summary (not translated: technical detail).</summary>
     public List<string> Warnings { get; } = [];
 }

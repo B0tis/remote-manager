@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives.PopupPositioning;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections;
 using RemoteManager.App.Resources;
@@ -44,6 +45,10 @@ public partial class ConnectionEditor : UserControl
             SavePasswordBox.IsChecked = false;
         };
         UserBox.TextChanged += (_, _) => UpdateInheritedHint();
+        GroupBox.TextChanged += (_, _) => UpdateInheritedHint();
+        SavePasswordBox.IsCheckedChanged += (_, _) => UpdateInheritedHint();
+        PasswordBox.TextChanged += (_, _) => UpdateInheritedHint();
+        GroupLogonButton.Click += (_, _) => ShowGroupLogon();
     }
 
     /// <summary>The dialog and its form while open (used by the self-test).</summary>
@@ -54,6 +59,14 @@ public partial class ConnectionEditor : UserControl
     public CheckBox SavePassword => SavePasswordBox;
     public Button RemovePassword => RemovePasswordButton;
     public bool IsStoredPasswordShown => StoredRow.IsVisible && SavePasswordBox.IsChecked == true;
+    public TextBlock InheritanceHint => InheritedHint;
+    public Button GroupLogon => GroupLogonButton;
+    public AutoCompleteBox Group => GroupBox;
+    public TextBox User => UserBox;
+    public ISettingsEditor? SettingsEditor => settingsEditor;
+
+    /// <summary>The group logon flyout while open (used by the self-test).</summary>
+    public GroupLogonPanel? OpenGroupLogon { get; private set; }
 
     /// <summary>Shows the dialog. Returns true when the user saved; <paramref name="connection"/> is then updated (not yet persisted).</summary>
     public static async Task<bool> ShowAsync(Connection connection, bool isNew)
@@ -186,21 +199,58 @@ public partial class ConnectionEditor : UserControl
         PasswordHint.Text = Handler.PasswordHint;
     }
 
-    /// <summary>Shows which group's logon applies while the connection has no user and no password of its own.</summary>
+    /// <summary>
+    /// Shows which group logon applies for the group typed right now: inherited while the connection has
+    /// no user and no password of its own, otherwise replaced by the own one.
+    /// </summary>
     private void UpdateInheritedHint()
     {
-        EffectiveCredential inherited = original is null
-            ? EffectiveCredential.None
-            : app.Credentials.Resolve(new Connection { GroupId = app.Library.FindGroup(original.GroupId)?.Id });
-        bool own = UserBox.Text?.Length > 0 || hasStoredPassword;
-        InheritedHint.IsVisible = !own && inherited.IsInherited;
-        if (InheritedHint.IsVisible)
-        {
-            string user = inherited.Domain.Length > 0 ? $"{inherited.Domain}\\{inherited.UserName}" : inherited.UserName;
-            InheritedHint.Text = string.Format(CultureInfo.CurrentCulture, Strings.Editor_InheritedLogon,
-                app.Library.PathOf(inherited.InheritedFrom!.Id), user.Length > 0 ? user : "-",
+        ConnectionGroup? group = FindGroup(GroupBox.Text);
+        GroupLogonButton.IsVisible = Handler.UsesUserName && group is not null;
+        EffectiveCredential inherited = app.Credentials.Resolve(new Connection { GroupId = group?.Id });
+        bool own = UserBox.Text?.Trim().Length > 0 || (SavePasswordBox.IsChecked == true && (hasStoredPassword || PasswordBox.Text?.Length > 0));
+        InheritedHint.IsVisible = Handler.UsesUserName && inherited.IsInherited;
+        if (!InheritedHint.IsVisible)
+            return;
+
+        string user = inherited.Domain.Length > 0 ? $"{inherited.Domain}\\{inherited.UserName}" : inherited.UserName;
+        string path = app.Library.PathOf(inherited.InheritedFrom!.Id);
+        InheritedHint.Text = own
+            ? string.Format(CultureInfo.CurrentCulture, Strings.Editor_OwnOverridesGroup, path, user.Length > 0 ? user : "-")
+            : string.Format(CultureInfo.CurrentCulture, Strings.Editor_InheritedLogon, path, user.Length > 0 ? user : "-",
                 inherited.HasSecret ? Strings.Editor_InheritedWithPassword : "");
+    }
+
+    /// <summary>Opens the logon of the chosen group in a flyout; saving it updates the hint at once.</summary>
+    private void ShowGroupLogon()
+    {
+        if (FindGroup(GroupBox.Text) is not { } group)
+            return;
+
+        var panel = new GroupLogonPanel(group);
+        var flyout = new Flyout { Content = panel, Placement = PlacementMode.BottomEdgeAlignedRight };
+        panel.Applied += (_, _) =>
+        {
+            flyout.Hide();
+            UpdateInheritedHint();
+        };
+        flyout.Closed += (_, _) => OpenGroupLogon = null;
+        OpenGroupLogon = panel;
+        flyout.ShowAt(GroupLogonButton);
+    }
+
+    /// <summary>The existing group at a typed path ("A / B"), or null; unlike EnsureGroupPath it creates nothing.</summary>
+    private ConnectionGroup? FindGroup(string? path)
+    {
+        ConnectionGroup? current = null;
+        foreach (string name in (path ?? "").Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            current = app.Library.ChildrenOf(current?.Id).FirstOrDefault(g => string.Equals(g.Name, name, StringComparison.CurrentCultureIgnoreCase));
+            if (current is null)
+                return null;
         }
+
+        return current;
     }
 
     private void UpdateTypeFields()

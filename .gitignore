@@ -483,4 +483,6 @@ $RECYCLE.BIN/
 
 # Remote-Manager: local spike artifacts (never commit)
 *.rdp
+# Import test samples (fake hosts and users, no secrets) are part of the tests.
+!tests/RemoteManager.Core.Tests/Samples/*.rdp
 spike-local.env

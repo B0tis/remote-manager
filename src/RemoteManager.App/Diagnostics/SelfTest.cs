@@ -97,6 +97,7 @@ internal static partial class SelfTest
 
         await RunOverviewChecksAsync(window);
         await RunCredentialChecksAsync(window);
+        await RunRdpImportChecksAsync(window);
 
         // --- Two session windows, each with its own RDP client -------------------------------------
         // Temporary connections; they are not added to the store.

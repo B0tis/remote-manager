@@ -106,6 +106,8 @@ public partial class MainWindow : Window, IConnectionHost
         AddButton.Click += (_, _) => AddConnection();
         NewGroupButton.Click += async (_, _) => await CreateGroupAsync(CurrentGroupId);
         LauncherButton.Click += (_, _) => OpenLauncher();
+
+        MoreButton.Flyout = ImportExportCommands.CreateMenu(this);
         toastTimer.Tick += (_, _) =>
         {
             toastTimer.Stop();
@@ -144,6 +146,8 @@ public partial class MainWindow : Window, IConnectionHost
     public ListBox Tiles => TileList;
     public ListBox Rows => RowList;
     public ConnectionDetailPanel DetailPanel => Details;
+
+    public Button More => MoreButton;
     public Task? StatusRefresh { get; private set; }
     public OverviewColumn? SortColumn => sortColumn;
     public bool SortDescending => sortDescending;
@@ -386,6 +390,25 @@ public partial class MainWindow : Window, IConnectionHost
         bool details = app.Library.GetSetting(DetailsSetting) != "0";
         DetailPane.IsVisible = details;
         DetailsToggle.IsChecked = details;
+    }
+
+    /// <summary>After an import: items for new connections, fresh labels for changed ones, sidebar and status.</summary>
+    public void SyncWithLibrary()
+    {
+        foreach (Connection connection in app.Library.Connections)
+        {
+            if (!items.Exists(i => i.Model == connection))
+                items.Add(CreateItem(connection));
+        }
+
+        foreach (ConnectionItem item in items)
+        {
+            item.RefreshCredentialState();
+            item.Changed();
+        }
+
+        BuildNavigation();
+        RefreshStatus();
     }
 
     private void BuildNavigation()

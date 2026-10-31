@@ -48,8 +48,17 @@
   <data name="Action_EditGroup" xml:space="preserve">
     <value>Gruppe bearbeiten …</value>
   </data>
+  <data name="Action_ExportBackup" xml:space="preserve">
+    <value>Sicherung exportieren (JSON) …</value>
+  </data>
   <data name="Action_Favorite" xml:space="preserve">
     <value>Zu Favoriten hinzufügen</value>
+  </data>
+  <data name="Action_Import" xml:space="preserve">
+    <value>Importieren …</value>
+  </data>
+  <data name="Action_More" xml:space="preserve">
+    <value>Weitere Aktionen</value>
   </data>
   <data name="Action_Move" xml:space="preserve">
     <value>Verschieben</value>
@@ -192,6 +201,9 @@
   <data name="Editor_Error_RemoteId" xml:space="preserve">
     <value>Bitte eine Remote-ID angeben.</value>
   </data>
+  <data name="Editor_GroupLogonButton" xml:space="preserve">
+    <value>Anmeldung der Gruppe …</value>
+  </data>
   <data name="Editor_HostPlaceholder" xml:space="preserve">
     <value>Host oder IP</value>
   </data>
@@ -203,6 +215,9 @@
   </data>
   <data name="Editor_Logon" xml:space="preserve">
     <value>Anmeldung</value>
+  </data>
+  <data name="Editor_OwnOverridesGroup" xml:space="preserve">
+    <value>Eigene Anmeldung: Sie ersetzt die der Gruppe „{0}“ ({1}).</value>
   </data>
   <data name="Editor_PasswordHint_CopyOnly" xml:space="preserve">
     <value>Gespeichert im Windows Credential Manager. „Passwort kopieren“ im Kontextmenü legt es für 30 s in die Zwischenablage.</value>
@@ -224,6 +239,21 @@
   </data>
   <data name="Empty_NoMatch" xml:space="preserve">
     <value>Keine passenden Verbindungen.</value>
+  </data>
+  <data name="Export_Done" xml:space="preserve">
+    <value>Sicherung gespeichert (ohne Passwörter): {0}</value>
+  </data>
+  <data name="Export_Failed" xml:space="preserve">
+    <value>Export fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Export_FileTypeName" xml:space="preserve">
+    <value>Remote-Manager-Sicherung</value>
+  </data>
+  <data name="Export_PickerTitle" xml:space="preserve">
+    <value>Sicherung speichern</value>
+  </data>
+  <data name="Export_ToastTitle" xml:space="preserve">
+    <value>Sicherung</value>
   </data>
   <data name="Field_Description" xml:space="preserve">
     <value>Beschreibung</value>
@@ -251,6 +281,9 @@
   </data>
   <data name="Field_User" xml:space="preserve">
     <value>Benutzer</value>
+  </data>
+  <data name="Group_None" xml:space="preserve">
+    <value>Keine Gruppe</value>
   </data>
   <data name="GroupDelete_Message" xml:space="preserve">
     <value>Untergruppen und Verbindungen wandern nach „{0}“. Ein gespeichertes Gruppenpasswort wird aus der Windows-Anmeldeinformationsverwaltung gelöscht.</value>
@@ -285,8 +318,23 @@
   <data name="GroupHeader_Summary" xml:space="preserve">
     <value>eingeklappt · {0} online, {1} offline</value>
   </data>
-  <data name="Group_None" xml:space="preserve">
-    <value>Keine Gruppe</value>
+  <data name="GroupLogon_Apply" xml:space="preserve">
+    <value>Übernehmen</value>
+  </data>
+  <data name="GroupLogon_Hint" xml:space="preserve">
+    <value>Gilt für alle Verbindungen dieser Gruppe und ihrer Untergruppen, die keine eigene Anmeldung haben.</value>
+  </data>
+  <data name="GroupLogon_NewGroup" xml:space="preserve">
+    <value>Die Gruppe „{0}“ wird beim Speichern angelegt; ihre Anmeldung lässt sich danach festlegen.</value>
+  </data>
+  <data name="GroupLogon_RemovePassword" xml:space="preserve">
+    <value>Gespeichertes Passwort entfernen</value>
+  </data>
+  <data name="GroupLogon_Saved" xml:space="preserve">
+    <value>Anmeldung der Gruppe „{0}“ gespeichert.</value>
+  </data>
+  <data name="GroupLogon_Title" xml:space="preserve">
+    <value>Anmeldung der Gruppe „{0}“</value>
   </data>
   <data name="History_Connected" xml:space="preserve">
     <value>Verbunden</value>
@@ -305,6 +353,48 @@
   </data>
   <data name="History_UnderAMinute" xml:space="preserve">
     <value>unter 1 min</value>
+  </data>
+  <data name="Import_Browse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="Import_Error_NoFile" xml:space="preserve">
+    <value>Bitte eine Datei auswählen.</value>
+  </data>
+  <data name="Import_Error_WrongFormat" xml:space="preserve">
+    <value>Die Datei passt nicht zum Format „{0}“.</value>
+  </data>
+  <data name="Import_Failed" xml:space="preserve">
+    <value>Import fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Import_File" xml:space="preserve">
+    <value>Datei</value>
+  </data>
+  <data name="Import_FilePlaceholder" xml:space="preserve">
+    <value>Keine Datei ausgewählt</value>
+  </data>
+  <data name="Import_Format" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Import_Hint" xml:space="preserve">
+    <value>Fundorte: 1Remote %APPDATA%\1Remote\1Remote.db oder der JSON-Export · mRemoteNG %APPDATA%\mRemoteNG\confCons.xml · RDCMan die .rdg-Datei. Gefundene Passwörter landen im Windows-Anmeldeinformationsspeicher, nie in der Datenbank.</value>
+  </data>
+  <data name="Import_Start" xml:space="preserve">
+    <value>Importieren</value>
+  </data>
+  <data name="Import_Summary" xml:space="preserve">
+    <value>{0} hinzugefügt · {1} ersetzt · {2} schon vorhanden (übersprungen) · {3} neue Gruppen · {4} Passwörter im Windows-Anmeldeinformationsspeicher</value>
+  </data>
+  <data name="Import_SummaryTitle" xml:space="preserve">
+    <value>Import abgeschlossen</value>
+  </data>
+  <data name="Import_TargetGroup" xml:space="preserve">
+    <value>In Gruppe importieren (optional, z. B. Import / RDCMan)</value>
+  </data>
+  <data name="Import_Title" xml:space="preserve">
+    <value>Verbindungen importieren</value>
+  </data>
+  <data name="Import_Warnings" xml:space="preserve">
+    <value>Hinweise ({0})</value>
   </data>
   <data name="Key_Ctrl" xml:space="preserve">
     <value>Strg</value>
@@ -405,20 +495,158 @@
   <data name="Planned_Title" xml:space="preserve">
     <value>{0}: {1}</value>
   </data>
-  <data name="Rdp_Display_1280" xml:space="preserve">
-    <value>1280 × 720 (skaliert)</value>
+  <data name="Rdp_Admin" xml:space="preserve">
+    <value>Mit der Admin-Sitzung verbinden (/admin)</value>
   </data>
-  <data name="Rdp_Display_1920" xml:space="preserve">
-    <value>1920 × 1080 (skaliert)</value>
+  <data name="Rdp_Audio" xml:space="preserve">
+    <value>Audiowiedergabe</value>
+  </data>
+  <data name="Rdp_Audio_Local" xml:space="preserve">
+    <value>Auf diesem Computer</value>
+  </data>
+  <data name="Rdp_Audio_None" xml:space="preserve">
+    <value>Nicht wiedergeben</value>
+  </data>
+  <data name="Rdp_Audio_Remote" xml:space="preserve">
+    <value>Auf dem Remotecomputer</value>
+  </data>
+  <data name="Rdp_AuthLevel" xml:space="preserve">
+    <value>Serverauthentifizierung</value>
+  </data>
+  <data name="Rdp_AuthLevel_Connect" xml:space="preserve">
+    <value>Immer verbinden, ohne Warnung</value>
+  </data>
+  <data name="Rdp_AuthLevel_Refuse" xml:space="preserve">
+    <value>Bei Zertifikatsproblemen nicht verbinden</value>
+  </data>
+  <data name="Rdp_AuthLevel_Warn" xml:space="preserve">
+    <value>Bei Zertifikatsproblemen warnen</value>
+  </data>
+  <data name="Rdp_CredentialMode" xml:space="preserve">
+    <value>Schutz der Anmeldedaten</value>
+  </data>
+  <data name="Rdp_CredentialMode_Normal" xml:space="preserve">
+    <value>Standard: Anmeldedaten an den Server übergeben</value>
+  </data>
+  <data name="Rdp_CredentialMode_RemoteGuard" xml:space="preserve">
+    <value>Remote Credential Guard</value>
+  </data>
+  <data name="Rdp_CredentialMode_RestrictedAdmin" xml:space="preserve">
+    <value>Eingeschränkter Administratormodus (Restricted Admin)</value>
   </data>
   <data name="Rdp_Display_Fit" xml:space="preserve">
     <value>An Fenster anpassen (dynamische Auflösung)</value>
   </data>
+  <data name="Rdp_Display_Fixed" xml:space="preserve">
+    <value>Feste Auflösung (skaliert)</value>
+  </data>
   <data name="Rdp_Display_SmartSizing" xml:space="preserve">
     <value>Smart Sizing (skaliert)</value>
   </data>
-  <data name="Rdp_WinKeys" xml:space="preserve">
-    <value>Windows-Tasten (Win, Alt+Tab) an die Sitzung senden</value>
+  <data name="Rdp_Error_GatewayHost" xml:space="preserve">
+    <value>Bitte den Gateway-Server angeben.</value>
+  </data>
+  <data name="Rdp_Error_Size" xml:space="preserve">
+    <value>Breite und Höhe der festen Auflösung: ganze Zahlen von {0} bis {1}.</value>
+  </data>
+  <data name="Rdp_External_Failed" xml:space="preserve">
+    <value>mstsc konnte nicht gestartet werden: {0}</value>
+  </data>
+  <data name="Rdp_External_Started" xml:space="preserve">
+    <value>Remotedesktopverbindung (mstsc) gestartet.</value>
+  </data>
+  <data name="Rdp_External_StartedWithPassword" xml:space="preserve">
+    <value>Remotedesktopverbindung (mstsc) gestartet. Die Anmeldung kommt aus dem Windows-Anmeldeinformationsspeicher.</value>
+  </data>
+  <data name="Rdp_Gateway_Always" xml:space="preserve">
+    <value>Gateway immer verwenden</value>
+  </data>
+  <data name="Rdp_Gateway_Detect" xml:space="preserve">
+    <value>Gateway automatisch erkennen (lokal umgehen)</value>
+  </data>
+  <data name="Rdp_Gateway_Host" xml:space="preserve">
+    <value>Gateway-Server</value>
+  </data>
+  <data name="Rdp_Gateway_None" xml:space="preserve">
+    <value>Kein Gateway</value>
+  </data>
+  <data name="Rdp_Gateway_SameLogon" xml:space="preserve">
+    <value>Anmeldedaten der Verbindung verwenden</value>
+  </data>
+  <data name="Rdp_Gateway_User" xml:space="preserve">
+    <value>Gateway-Benutzer (DOMÄNE\Name)</value>
+  </data>
+  <data name="Rdp_Height" xml:space="preserve">
+    <value>Höhe</value>
+  </data>
+  <data name="Rdp_Keyboard_FullScreen" xml:space="preserve">
+    <value>Tastenkombinationen nur im Vollbild an die Sitzung</value>
+  </data>
+  <data name="Rdp_Keyboard_Local" xml:space="preserve">
+    <value>Windows-Tastenkombinationen auf diesem Computer</value>
+  </data>
+  <data name="Rdp_Keyboard_Session" xml:space="preserve">
+    <value>Windows-Tastenkombinationen an die Sitzung</value>
+  </data>
+  <data name="Rdp_Multimon" xml:space="preserve">
+    <value>Alle Monitore verwenden (im Vollbild)</value>
+  </data>
+  <data name="Rdp_Nla" xml:space="preserve">
+    <value>Authentifizierung auf Netzwerkebene (NLA / CredSSP)</value>
+  </data>
+  <data name="Rdp_OpenExternally" xml:space="preserve">
+    <value>Mit mstsc öffnen (statt eingebettet)</value>
+  </data>
+  <data name="Rdp_OpenExternallyHint" xml:space="preserve">
+    <value>Startet die Windows-Remotedesktopverbindung mit einer erzeugten .rdp-Datei. Das gespeicherte Passwort steht nie in der Datei: Es liegt nur während der Sitzung als TERMSRV-Eintrag im Windows-Anmeldeinformationsspeicher.</value>
+  </data>
+  <data name="Rdp_Redirect_Clipboard" xml:space="preserve">
+    <value>Zwischenablage</value>
+  </data>
+  <data name="Rdp_Redirect_Drives" xml:space="preserve">
+    <value>Laufwerke</value>
+  </data>
+  <data name="Rdp_Redirect_Microphone" xml:space="preserve">
+    <value>Mikrofon</value>
+  </data>
+  <data name="Rdp_Redirect_Ports" xml:space="preserve">
+    <value>COM-Anschlüsse</value>
+  </data>
+  <data name="Rdp_Redirect_Printers" xml:space="preserve">
+    <value>Drucker</value>
+  </data>
+  <data name="Rdp_Redirect_SmartCards" xml:space="preserve">
+    <value>Smartcards</value>
+  </data>
+  <data name="Rdp_RemoteApp" xml:space="preserve">
+    <value>RemoteApp, z. B. ||excel (leer: ganzer Desktop)</value>
+  </data>
+  <data name="Rdp_RemoteAppHint" xml:space="preserve">
+    <value>Eine RemoteApp öffnet sich über mstsc in einem eigenen Fenster.</value>
+  </data>
+  <data name="Rdp_Section_Display" xml:space="preserve">
+    <value>Anzeige und Tastatur</value>
+  </data>
+  <data name="Rdp_Section_Gateway" xml:space="preserve">
+    <value>Remotedesktopgateway</value>
+  </data>
+  <data name="Rdp_Section_Program" xml:space="preserve">
+    <value>Programm</value>
+  </data>
+  <data name="Rdp_Section_Redirections" xml:space="preserve">
+    <value>Lokale Ressourcen</value>
+  </data>
+  <data name="Rdp_Section_Security" xml:space="preserve">
+    <value>Sicherheit und Anmeldung</value>
+  </data>
+  <data name="Rdp_StartProgram" xml:space="preserve">
+    <value>Startprogramm statt Desktop (optional)</value>
+  </data>
+  <data name="Rdp_Width" xml:space="preserve">
+    <value>Breite</value>
+  </data>
+  <data name="Rdp_WorkingDirectory" xml:space="preserve">
+    <value>Arbeitsverzeichnis (optional)</value>
   </data>
   <data name="RemoteTool_AliasPlaceholder" xml:space="preserve">
     <value>Alias (optional)</value>
@@ -453,14 +681,14 @@
   <data name="Session_Disconnect" xml:space="preserve">
     <value>Trennen</value>
   </data>
+  <data name="Session_Disconnected" xml:space="preserve">
+    <value>Getrennt: {0}</value>
+  </data>
   <data name="Session_DisconnectReason" xml:space="preserve">
     <value>Grund {0}</value>
   </data>
   <data name="Session_DisconnectReportedByView" xml:space="preserve">
     <value>von RdpClientView gemeldet</value>
-  </data>
-  <data name="Session_Disconnected" xml:space="preserve">
-    <value>Getrennt: {0}</value>
   </data>
   <data name="Session_Focus" xml:space="preserve">
     <value>Sitzung fokussieren</value>
