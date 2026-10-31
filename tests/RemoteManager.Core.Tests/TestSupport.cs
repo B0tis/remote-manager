@@ -27,13 +27,13 @@ internal sealed class TempFolder : IDisposable
     }
 }
 
-/// <summary>Credential source in memory; the tests never touch the real Credential Manager.</summary>
-internal sealed class MemoryCredentialSource(string id = "memory") : ICredentialSource
+/// <summary>Credential source in memory; the tests never touch the real Credential Manager. Read-only like a password manager with <paramref name="writable"/> false.</summary>
+internal sealed class MemoryCredentialSource(string id = "memory", bool writable = true) : ICredentialSource
 {
     public Dictionary<string, string> Secrets { get; } = [];
 
     public string Id { get; } = id;
-    public bool IsWritable => true;
+    public bool IsWritable => writable;
     public bool IsAvailable => true;
 
     public ValueTask<string?> ReadAsync(string key, CancellationToken cancellationToken = default) =>

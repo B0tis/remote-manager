@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:res="using:RemoteManager.App.Resources"
+             xmlns:cred="using:RemoteManager.App.Credentials"
              x:Class="RemoteManager.App.Views.GroupEditor"
              Width="440">
   <StackPanel Spacing="12">
@@ -19,8 +20,11 @@
       <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_DomainOptional}" />
     </Grid>
 
+    <!-- The group password: the app's own (Credential Manager), a KeePass entry, or a 1Password item. -->
+    <cred:PasswordSourcePanel x:Name="SourcePanel" />
+
     <!-- Like the connection editor: the stored password is never read back, the box only takes a new one. -->
-    <StackPanel Spacing="6">
+    <StackPanel x:Name="OwnPasswordPanel" Spacing="6">
       <Grid ColumnDefinitions="*,12,Auto">
         <TextBox x:Name="PasswordBox" PasswordChar="●" PlaceholderText="{x:Static res:Strings.Field_Password}" Classes="revealPasswordButton" />
         <CheckBox x:Name="SavePasswordBox" Grid.Column="2" Content="{x:Static res:Strings.Password_Save}" />

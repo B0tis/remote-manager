@@ -99,6 +99,19 @@ public sealed class CredentialService
         group.Credential = new CredentialRef(DefaultSource.Id, key);
     }
 
+    /// <summary>
+    /// Points the group at a secret in a read-only source (KeePass, 1Password); its connections inherit it like
+    /// a stored password. A password the app had stored for the group is deleted, so no stale copy stays behind.
+    /// </summary>
+    public async ValueTask UseGroupReferenceAsync(ConnectionGroup group, CredentialRef reference, CancellationToken cancellationToken = default)
+    {
+        if (SourceFor(reference) is not { IsWritable: false })
+            throw new ArgumentException($"{reference.Source} is not a read-only credential source.", nameof(reference));
+        await DefaultSource.DeleteAsync(GroupKey(group), cancellationToken).ConfigureAwait(false);
+        group.Credential = reference;
+    }
+
+    /// <summary>Deletes the group's own password from the default source and clears the reference (a password-manager reference is only dropped).</summary>
     public async ValueTask RemoveGroupSecretAsync(ConnectionGroup group, CancellationToken cancellationToken = default)
     {
         await DefaultSource.DeleteAsync(GroupKey(group), cancellationToken).ConfigureAwait(false);

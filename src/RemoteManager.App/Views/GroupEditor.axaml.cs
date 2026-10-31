@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
+using RemoteManager.App.Credentials;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.Library;
 using RemoteManager.Core.Model;
@@ -10,7 +11,7 @@ namespace RemoteManager.App.Views;
 
 /// <summary>
 /// Create or edit a group: name, parent, description, and the logon its connections inherit (user,
-/// domain, password in the Credential Manager). The caller adds or moves the group in the library.
+/// domain, and a password in the Credential Manager, KeePass, or 1Password). The caller adds or moves the group in the library.
 /// </summary>
 public partial class GroupEditor : UserControl
 {
@@ -33,6 +34,7 @@ public partial class GroupEditor : UserControl
             PasswordBox.Text = "";
             SavePasswordBox.IsChecked = false;
         };
+        SourcePanel.KindChanged += (_, _) => OwnPasswordPanel.IsVisible = !SourcePanel.IsExternal;
     }
 
     /// <summary>The dialog and its form while open (used by the self-test).</summary>
@@ -42,6 +44,8 @@ public partial class GroupEditor : UserControl
     public TextBox NameField => NameBox;
     public ComboBox ParentField => ParentBox;
     public TextBox UserField => UserBox;
+    public PasswordSourcePanel Source => SourcePanel;
+    public bool IsOwnPasswordShown => OwnPasswordPanel.IsVisible;
 
     /// <summary>The parent chosen in the dialog (null: top level).</summary>
     public string? SelectedParentId => ParentBox.SelectedIndex >= 0 ? parentIds[ParentBox.SelectedIndex] : null;
@@ -86,6 +90,7 @@ public partial class GroupEditor : UserControl
             name.Length == 0 ? Strings.Editor_Error_Name :
             name.Contains('/', StringComparison.Ordinal) ? Strings.GroupEditor_Error_Slash :
             app.Library.HasSiblingNamed(SelectedParentId, name, except: group) ? Strings.GroupEditor_Error_Duplicate :
+            SourcePanel.IsExternal ? SourcePanel.Validate() :
             SavePasswordBox.IsChecked == true && !hasStoredPassword && string.IsNullOrEmpty(PasswordBox.Text) ? Strings.Editor_Error_Password :
             null;
         ShowError(error);
@@ -95,7 +100,11 @@ public partial class GroupEditor : UserControl
         try
         {
             string password = PasswordBox.Text ?? "";
-            if (SavePasswordBox.IsChecked != true)
+            if (SourcePanel.BuildReference() is { } reference)
+            {
+                await app.Credentials.UseGroupReferenceAsync(group, reference);
+            }
+            else if (SavePasswordBox.IsChecked != true)
             {
                 if (group.Credential is not null)
                     await app.Credentials.RemoveGroupSecretAsync(group);
@@ -138,8 +147,10 @@ public partial class GroupEditor : UserControl
 
         ParentBox.ItemsSource = names;
         ParentBox.SelectedIndex = Math.Max(0, parentIds.IndexOf(group.ParentId));
-        hasStoredPassword = group.Credential is not null;
+        hasStoredPassword = group.Credential?.Source == app.Credentials.DefaultSource.Id;
         SavePasswordBox.IsChecked = hasStoredPassword;
+        SourcePanel.Load(group.Credential);
+        OwnPasswordPanel.IsVisible = !SourcePanel.IsExternal;
         UpdatePasswordState();
     }
 

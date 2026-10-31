@@ -108,6 +108,32 @@ public sealed class LibraryAndCredentialTests : IDisposable
     }
 
     [Fact]
+    public async Task GroupCanTakeItsPasswordFromAPasswordManager()
+    {
+        CancellationToken cancel = TestContext.Current.CancellationToken;
+        var vault = new MemoryCredentialSource("vault", writable: false) { Secrets = { ["entry"] = "from-vault" } };
+        var service = new CredentialService([source, vault], library);
+        ConnectionGroup group = library.EnsureGroupPath("Kunde A")!;
+        group.UserName = "admin";
+        await service.SaveGroupSecretAsync(group, "own", cancel);
+        var connection = new Connection { Name = "x", GroupId = library.EnsureGroupPath("Kunde A / Standort 1")!.Id };
+
+        // The vault replaces the app's own copy, which is deleted; the subgroup's connection inherits the vault entry.
+        await service.UseGroupReferenceAsync(group, new CredentialRef(vault.Id, "entry"), cancel);
+        Assert.Empty(source.Secrets);
+        EffectiveCredential effective = service.Resolve(connection);
+        Assert.Same(group, effective.InheritedFrom);
+        Assert.Equal("from-vault", await service.ReadAsync(effective.Secret, cancel));
+
+        // Removing drops the reference and never touches the read-only vault.
+        await service.RemoveGroupSecretAsync(group, cancel);
+        Assert.Null(group.Credential);
+        Assert.Equal("from-vault", vault.Secrets["entry"]);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.UseGroupReferenceAsync(group, new CredentialRef(source.Id, "k"), cancel).AsTask());
+    }
+
+    [Fact]
     public void NoGroupAndNoCredentialsResolvesToNone()
     {
         Assert.Same(EffectiveCredential.None, credentials.Resolve(new Connection { Name = "x" }));

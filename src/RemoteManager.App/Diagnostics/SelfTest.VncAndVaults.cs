@@ -67,6 +67,7 @@ internal static partial class SelfTest
         try
         {
             await RunKeePassEditorChecksAsync(window, vnc, database, master, vncSecret);
+            await RunGroupVaultChecksAsync(window, database, vncSecret);
             await RunEmbeddedVncChecksAsync(window, vnc, server, master);
             await RunVncPasswordFailureChecksAsync(window, server);
             await RunOnePasswordChecksAsync(window, vnc, onePassword, folder, vncSecret);
@@ -97,6 +98,58 @@ internal static partial class SelfTest
             await RunLiveVncSessionAsync(window, liveHost);
         else
             Log("SKIP live VNC session (RM_VNC_HOST not set).");
+    }
+
+    /// <summary>
+    /// A group can take its password from KeePass too (group editor and the editor's group-logon flyout); its
+    /// connections inherit the reference, and nothing goes to the Credential Manager. Runs while the database is unlocked.
+    /// </summary>
+    private static async Task RunGroupVaultChecksAsync(MainWindow window, string database, string secret)
+    {
+        AppHost app = AppHost.Current;
+        var group = new ConnectionGroup { Name = $"Selbsttest Tresor {Guid.NewGuid():N}"[..26], UserName = "tresor" };
+        app.Library.AddGroup(group);
+        var member = new Connection { Id = "selftest-vault-member", Name = "Selftest Tresor-Mitglied", Type = ConnectionType.Vnc, GroupId = group.Id };
+        try
+        {
+            Task<(bool Saved, string? ParentId)> editing = GroupEditor.ShowAsync(group, isNew: false);
+            await Settle(700);
+            GroupEditor editor = GroupEditor.OpenEditor!;
+            editor.Source.Source.SelectedIndex = (int)PasswordSourceKind.KeePass;
+            editor.Source.Database.Text = database;
+            editor.Source.KeyFile.Text = "";
+            editor.Source.Entry.Text = "Selbsttest/VNC/Testserver";
+            await Settle(200);
+            bool ownHidden = !editor.IsOwnPasswordShown;
+            SaveRenderProbe(window, "group-editor-keepass.png");
+            bool committed = await editor.TryCommitAsync(group);
+            GroupEditor.OpenDialog?.Hide();
+            await editing;
+            app.Library.UpdateGroup(group);
+
+            EffectiveCredential inherited = app.Credentials.Resolve(member);
+            string? read = await app.Credentials.ReadAsync(inherited.Secret);
+            Check("Group editor: KeePass as the group password hides the own password box and saves only a reference",
+                ownHidden && committed && group.Credential?.Source == KeePassCredentialSource.SourceId
+                && !group.Credential.Key.Contains(secret, StringComparison.Ordinal) && !WindowsCredentialSource.Exists($"group-{group.Id}"));
+            Check("A connection without its own logon inherits the group's KeePass entry",
+                inherited.InheritedFrom == group && inherited.UserName == "tresor" && read == secret);
+
+            // The flyout of the connection editor shows the same source and can switch back to the app's own password.
+            var panel = new GroupLogonPanel(group);
+            bool shownAgain = panel.Source.Kind == PasswordSourceKind.KeePass && panel.Source.Entry.Text == "Selbsttest/VNC/Testserver";
+            panel.Source.Source.SelectedIndex = (int)PasswordSourceKind.App;
+            panel.Password.Text = "gruppe-" + Guid.NewGuid().ToString("N")[..8];
+            bool applied = await panel.ApplyAsync();
+            Check("Group logon flyout: shows the KeePass reference and switches back to a Credential Manager password",
+                shownAgain && applied && group.Credential?.Source == WindowsCredentialSource.SourceId && WindowsCredentialSource.Exists($"group-{group.Id}"));
+        }
+        finally
+        {
+            GroupEditor.OpenDialog?.Hide();
+            WindowsCredentialSource.Delete($"group-{group.Id}");
+            app.Library.RemoveGroup(group);
+        }
     }
 
     private static async Task RunKeePassEditorChecksAsync(MainWindow window, ConnectionItem vnc, string database, string master, string secret)
