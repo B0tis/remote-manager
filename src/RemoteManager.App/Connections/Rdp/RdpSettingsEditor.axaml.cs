@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Model;
+using RemoteManager.App.Connections.Ssh;
 using RemoteManager.Core.Model.Settings;
 
 namespace RemoteManager.App.Connections.Rdp;
@@ -80,10 +81,11 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
         RemoteAppBox.Text = s.RemoteAppProgram;
         StartProgramBox.Text = s.StartProgram;
         WorkingDirectoryBox.Text = s.WorkingDirectory;
+        JumpHostPicker.Fill(JumpBox, s.JumpHostId);
 
         // Show a section open when it holds something other than the defaults.
         SecurityExpander.IsExpanded = !s.EnableNla || s.AuthenticationLevel != 2 || s.AdminSession || s.RestrictedAdmin || s.RemoteCredentialGuard;
-        GatewayExpander.IsExpanded = s.GatewayUsage != RdpGatewayUsage.None;
+        GatewayExpander.IsExpanded = s.GatewayUsage != RdpGatewayUsage.None || s.JumpHostId is { Length: > 0 };
         RedirectionExpander.IsExpanded = r != new RdpRedirections();
         ProgramExpander.IsExpanded = s.RemoteAppProgram.Length > 0 || s.StartProgram.Length > 0;
         UpdateVisibility();
@@ -144,6 +146,7 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
             RemoteAppProgram = RemoteAppBox.Text?.Trim() ?? "",
             StartProgram = StartProgramBox.Text?.Trim() ?? "",
             WorkingDirectory = WorkingDirectoryBox.Text?.Trim() ?? "",
+            JumpHostId = JumpHostPicker.SelectedId(JumpBox),
         };
     }
 

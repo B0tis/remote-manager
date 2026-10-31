@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Connections.Ssh.SshSettingsEditor">
+  <!-- SSH and SFTP: logon method, jump host, forwards (SSH), start folder (SFTP), stored host key. -->
+  <StackPanel Spacing="12">
+    <ComboBox x:Name="AuthBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+      <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_Password}" />
+      <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_KeyFile}" />
+      <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_Agent}" />
+    </ComboBox>
+    <Grid x:Name="KeyRow" ColumnDefinitions="*,8,Auto">
+      <TextBox x:Name="KeyPathBox" PlaceholderText="{x:Static res:Strings.Ssh_KeyPathPlaceholder}" />
+      <Button x:Name="BrowseButton" Grid.Column="2" Content="{x:Static res:Strings.Ssh_Browse}" />
+    </Grid>
+    <TextBlock x:Name="AuthHint" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="{x:Static res:Strings.Ssh_JumpHost}" FontSize="12" Opacity="0.7" />
+      <ComboBox x:Name="JumpBox" HorizontalAlignment="Stretch" />
+    </StackPanel>
+
+    <TextBox x:Name="RemoteDirectoryBox" PlaceholderText="{x:Static res:Strings.Sftp_StartFolderPlaceholder}" />
+
+    <StackPanel x:Name="ForwardsPanel" Spacing="4">
+      <TextBlock Text="{x:Static res:Strings.Ssh_Forwards}" FontSize="12" Opacity="0.7" />
+      <TextBox x:Name="ForwardsBox" AcceptsReturn="True" MinHeight="60" TextWrapping="NoWrap"
+               FontFamily="Cascadia Mono,Consolas,monospace" PlaceholderText="{x:Static res:Strings.Ssh_ForwardsPlaceholder}" />
+    </StackPanel>
+
+    <Grid x:Name="HostKeyRow" ColumnDefinitions="*,8,Auto">
+      <TextBlock x:Name="HostKeyText" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+      <Button x:Name="ForgetHostKeyButton" Grid.Column="2" Content="{x:Static res:Strings.Ssh_HostKeyForget}"
+              ToolTip.Tip="{x:Static res:Strings.Ssh_HostKeyForgetTip}" />
+    </Grid>
+  </StackPanel>
+</UserControl>

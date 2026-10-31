@@ -66,6 +66,10 @@
             <TextBox x:Name="GatewayPasswordBox" Grid.Column="2" PasswordChar="●" Classes="revealPasswordButton" />
           </Grid>
         </StackPanel>
+        <StackPanel Spacing="4">
+          <TextBlock Text="{x:Static res:Strings.Rdp_SshTunnel}" FontSize="12" Opacity="0.7" />
+          <ComboBox x:Name="JumpBox" HorizontalAlignment="Stretch" ToolTip.Tip="{x:Static res:Strings.Rdp_SshTunnelTip}" />
+        </StackPanel>
       </StackPanel>
     </Expander>
 

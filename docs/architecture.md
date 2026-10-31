@@ -112,7 +112,7 @@ The main window, editor, and status checks only talk to `ConnectionHandlerRegist
 
 Today: `Rdp/RdpHandler` (embedded `SessionWindow`), `RemoteTools/*` (TeamViewer, AnyDesk, RustDesk; launched
 externally, see below), `Vnc/VncHandler` (embedded `VncSessionWindow` on Community.MarcusW.VncClient, external
-viewer as fallback), `Ssh/*` (Phase 3). The not-yet-built ones show `PlannedConnectionDialog`. To build one
+viewer as fallback), `Ssh/*` (terminal and SFTP, see below). The not-yet-built ones show `PlannedConnectionDialog`. To build one
 out, replace its `Open` and add a settings editor; a brand-new type also needs a `ConnectionType` value and
 its settings record in `ConnectionSettings.TypeFor`.
 
@@ -201,6 +201,28 @@ Inheritance in the editor: the connection editor shows which group logon applies
 - AnyDesk: `AnyDeskCsvImporter` (`IImporter`) reads the my.anydesk I client export by header; the dialog drops
   IDs that already exist and puts the rest in "Import aus AnyDesk".
 - `IFileTransferHandler`: handlers that implement it get "Dateiübertragung" in the context menu.
+
+## SSH, SFTP, and tunnels (`Core/Ssh`, `App/Connections/Ssh`)
+
+- **Core** (SSH.NET, no UI): `SshLogin` is one server's logon resolved from a connection (user and secret
+  through `CredentialService`, the secret only in memory). Methods: password (plus keyboard-interactive), key
+  file (OpenSSH or PuTTY; the passphrase is the connection's secret), agent. `SshAgent` speaks the agent
+  protocol to the Windows OpenSSH agent (named pipe) and to Pageant (WM_COPYDATA); `SshAgentKeySource` plugs
+  agent keys into SSH.NET, which has no agent support.
+- `SshRoute` chains jump hosts (`SshSettings.JumpHostId`, outermost first via `SshJumpChain`) through local
+  forwards, like `ssh -J`; every hop checks its own host key. `Reach(host, port)` gives a local endpoint for
+  any TCP target, which is how RDP runs over SSH (`RdpSettings.JumpHostId`, `SessionWindow.SshTunnel.cs`).
+- Host keys: the accepted `SHA256:` fingerprint is stored in `SshSettings.HostKeyFingerprint`. An unknown or
+  changed key aborts the handshake with `SshHostKeyException`; the app asks (`HostKeyWindow`, a separate window
+  because the terminal and RDP surfaces are native), stores the key on yes, and connects again.
+- **Terminal** (`SshTerminalWindow`): xterm.js 6 in `Avalonia.Controls.WebView` (WebView2, profile in
+  `<data>\WebView2`). The page (`Connections/Ssh/Terminal`, copied to `terminal\` in the output) talks JSON
+  over `chrome.webview.postMessage`; output goes to it base64 encoded and batched. The page reports
+  "ready" only once it has a real size, so the PTY never starts at 2x1 while the view is hidden.
+- **SFTP** (`SftpWindow`, also "Dateien" in the terminal): plain Avalonia; transfers in `SftpTransfer`
+  (recursive, progress, never overwrites local files). Upload by button or drop from Explorer.
+- Tests: `SshLiveTests` and the self-test use the Docker testbed in `tools/ssh-testbed` (jump host, a target
+  only reachable through it, optional xrdp desktop and Pageant); without it they are skipped.
 
 ## UI text
 

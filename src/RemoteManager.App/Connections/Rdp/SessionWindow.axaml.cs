@@ -197,6 +197,20 @@ public partial class SessionWindow : Window, ISessionWindow
             }
         }
 
+        // RDP over SSH: open the tunnel first and connect to its local end.
+        int port = Connection.Model.EffectivePort;
+        if (settings.JumpHostId is { Length: > 0 } jumpHostId)
+        {
+            if (await OpenTunnelAsync(jumpHostId, host, port) is not { } end)
+            {
+                passwordToSave = null;
+                ShowCard();
+                return;
+            }
+
+            (host, port) = end;
+        }
+
         RdpView.UseRemoteKeyboardShortcuts = settings.Keyboard == RdpKeyboardMode.Session;
         RdpView.DisplayMode = settings.Display == Core.Model.Settings.RdpDisplayMode.FitToWindow
             ? Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.FitToWindow
@@ -212,7 +226,7 @@ public partial class SessionWindow : Window, ISessionWindow
             (int width, int height) = settings.Display == Core.Model.Settings.RdpDisplayMode.FixedResolution && settings.DesktopWidth > 0 && settings.DesktopHeight > 0
                 ? (settings.DesktopWidth, settings.DesktopHeight)
                 : (RdpView.ViewportPixelSize.Width, RdpView.ViewportPixelSize.Height);
-            var logon = new RdpLogon(host, Connection.Model.EffectivePort, UserBox.Text?.Trim() ?? "", DomainBox.Text?.Trim() ?? "", password, gatewayPassword);
+            var logon = new RdpLogon(host, port, UserBox.Text?.Trim() ?? "", DomainBox.Text?.Trim() ?? "", password, gatewayPassword);
             RdpClientConfigurator.Apply(RdpView, settings, logon, width, height);
             Log(RdpClientConfigurator.Describe(settings));
             // Only fit-to-window follows the window size; the other modes keep the session size and scale.
@@ -222,6 +236,7 @@ public partial class SessionWindow : Window, ISessionWindow
         {
             IsSessionActive = false;
             passwordToSave = null;
+            CloseTunnel();
             SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Session_ConnectFailed, ex.Message));
             ShowCard();
             return;
@@ -336,6 +351,7 @@ public partial class SessionWindow : Window, ISessionWindow
         IsLoggedIn = false;
         passwordToSave = null;
         LastDisconnectReason = reason;
+        CloseTunnel();
         frameTimer.Stop();
         SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Session_Disconnected, DescribeDisconnect(reason)));
 
@@ -470,5 +486,6 @@ public partial class SessionWindow : Window, ISessionWindow
         clientEvents?.Dispose();
         clientEvents = null;
         RdpView.Dispose();
+        CloseTunnel();
     }
 }

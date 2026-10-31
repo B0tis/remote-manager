@@ -22,6 +22,13 @@
     <PackageReference Include="Community.MarcusW.VncClient" Version="2.0.8" />
     <PackageReference Include="FluentAvaloniaUI" Version="3.1.0" />
     <PackageReference Include="Devolutions.MsRdpEx" Version="2026.10.26" />
+    <!-- SSH terminal: xterm.js in WebView2 (MIT). -->
+    <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- xterm.js page of the SSH terminal, copied to terminal/ in the output (vendored, see LICENSE-xterm.txt). -->
+    <Content Include="Connections\Ssh\Terminal\*" CopyToOutputDirectory="PreserveNewest" Link="terminal\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

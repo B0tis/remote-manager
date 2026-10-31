@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Connections.Ssh.SshLogonCard"
+             Width="420" HorizontalAlignment="Center" VerticalAlignment="Center">
+  <!-- Logon card of the SSH terminal and SFTP windows (shown while no session is open). -->
+  <Border Padding="28,24" CornerRadius="12" BorderThickness="1"
+          Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+          BoxShadow="0 8 32 0 #33000000">
+    <StackPanel Spacing="14">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Border x:Name="TypeBadge" Width="44" Height="44" CornerRadius="10">
+          <TextBlock x:Name="TypeBadgeText" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="White" />
+        </Border>
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock x:Name="NameText" FontSize="20" FontWeight="SemiBold" />
+          <TextBlock x:Name="HostText" Opacity="0.7" />
+        </StackPanel>
+      </StackPanel>
+      <TextBlock x:Name="RouteText" Opacity="0.7" TextWrapping="Wrap" IsVisible="False" />
+      <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Field_User}" />
+      <!-- Password or key passphrase: only in this box until Connect, never logged. -->
+      <TextBox x:Name="SecretBox" PasswordChar="●" Classes="revealPasswordButton" />
+      <CheckBox x:Name="SaveSecretBox" Content="{x:Static res:Strings.Password_Save}" />
+      <TextBlock x:Name="AuthHint" Opacity="0.6" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
+      <TextBlock x:Name="Message" TextWrapping="Wrap" IsVisible="False" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+      <Button x:Name="ConnectButton" Classes="accent" HorizontalAlignment="Stretch" Height="36"
+              Content="{x:Static res:Strings.Action_Connect}" IsDefault="True" />
+    </StackPanel>
+  </Border>
+</UserControl>

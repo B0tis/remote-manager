@@ -103,6 +103,7 @@ internal static partial class SelfTest
 
         await RunRemoteToolChecksAsync(window);
         await RunVncAndVaultChecksAsync(window); // SelfTest.VncAndVaults.cs
+        await RunSshChecksAsync(window);
 
         // --- Two session windows, each with its own RDP client -------------------------------------
         // Temporary connections; they are not added to the store.
