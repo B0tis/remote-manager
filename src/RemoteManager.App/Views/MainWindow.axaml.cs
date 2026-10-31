@@ -109,6 +109,7 @@ public partial class MainWindow : Window, IConnectionHost
         LauncherButton.Click += (_, _) => OpenLauncher();
 
         MoreButton.Flyout = ImportExportCommands.CreateMenu(this);
+        InitializeLivePreview(); // MainWindow.LivePreview.cs
         RemoteToolsButton.Click += async (_, _) => await RemoteToolsDialog.ShowAsync();
         RemoteToolsDialog.LibraryChanged += OnLibraryChangedOutside;
         HookSync();
@@ -203,6 +204,7 @@ public partial class MainWindow : Window, IConnectionHost
             EndHistory(connection);
         };
         sessionWindows.Add(window);
+        TrackLivePreview(window, connection);
         return window;
     }
 

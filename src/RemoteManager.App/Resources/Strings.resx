@@ -486,6 +486,39 @@
   <data name="Launcher_Title" xml:space="preserve">
     <value>Quick-Launcher</value>
   </data>
+  <data name="LivePreview_AgeMinutes" xml:space="preserve">
+    <value>vor {0} min</value>
+  </data>
+  <data name="LivePreview_AgeNow" xml:space="preserve">
+    <value>gerade eben</value>
+  </data>
+  <data name="LivePreview_AgeSeconds" xml:space="preserve">
+    <value>vor {0} s</value>
+  </data>
+  <data name="LivePreview_Badge" xml:space="preserve">
+    <value>Live</value>
+  </data>
+  <data name="LivePreview_BadgeTip" xml:space="preserve">
+    <value>Bild der laufenden Sitzung, wird regelmäßig aktualisiert. Intervall: „…“ › Live-Vorschau.</value>
+  </data>
+  <data name="LivePreview_Connection" xml:space="preserve">
+    <value>Live-Vorschau für diese Verbindung</value>
+  </data>
+  <data name="LivePreview_ConnectionHint" xml:space="preserve">
+    <value>Zeigt in der Übersicht regelmäßig ein Bild der laufenden Sitzung. Für Hosts mit vertraulichen Inhalten ausschalten: Dann bleibt nur das Bild vom Trennen.</value>
+  </data>
+  <data name="LivePreview_EveryMinutes" xml:space="preserve">
+    <value>Alle {0} min</value>
+  </data>
+  <data name="LivePreview_EverySeconds" xml:space="preserve">
+    <value>Alle {0} s</value>
+  </data>
+  <data name="LivePreview_Menu" xml:space="preserve">
+    <value>Live-Vorschau</value>
+  </data>
+  <data name="LivePreview_Off" xml:space="preserve">
+    <value>Aus</value>
+  </data>
   <data name="Move_Title" xml:space="preserve">
     <value>„{0}“ verschieben nach</value>
   </data>

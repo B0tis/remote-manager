@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using RemoteManager.App.Connections;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.Credentials;
@@ -21,6 +22,7 @@ public sealed class ConnectionItem : INotifyPropertyChanged
     private readonly AppHost app;
     private OnlineStatus status;
     private Bitmap? preview;
+    private DateTimeOffset? livePreviewAt;
     private bool hasStoredPassword;
 
     public ConnectionItem(Connection model, AppHost app)
@@ -82,6 +84,24 @@ public sealed class ConnectionItem : INotifyPropertyChanged
     public EffectiveCredential Credentials => app.Credentials.Resolve(Model);
 
     public bool HasPreview => Preview is not null;
+
+    /// <summary>When the preview of the open session was last refreshed; null when the preview is not live.</summary>
+    public DateTimeOffset? LivePreviewAt
+    {
+        get => livePreviewAt;
+        set
+        {
+            livePreviewAt = value;
+            Changed(nameof(IsLivePreview));
+            Changed(nameof(LivePreviewAge));
+        }
+    }
+
+    /// <summary>The preview shows the open session ("Live" badge on the tile and in the detail panel).</summary>
+    public bool IsLivePreview => livePreviewAt is not null;
+
+    /// <summary>Age of the live preview: "gerade eben", "vor 20 s", "vor 2 min".</summary>
+    public string LivePreviewAge => livePreviewAt is { } at ? DescribeAge(DateTimeOffset.Now - at) : "";
     public string TypeLabel => Handler.DisplayName;
     public string TypeInitials => Handler.Initials;
     public IBrush TypeBrush => new SolidColorBrush(Handler.AccentColor);
@@ -144,9 +164,19 @@ public sealed class ConnectionItem : INotifyPropertyChanged
         }
 
         // Decode from a stream we close right away, so the next snapshot can overwrite the file.
-        using FileStream stream = File.OpenRead(path);
-        Preview = new Bitmap(stream);
+        Bitmap? previous = preview;
+        using (FileStream stream = File.OpenRead(path))
+            Preview = new Bitmap(stream);
+
+        // A live preview reloads every few seconds: free the old picture once nothing shows it any more.
+        if (previous is not null)
+            Dispatcher.UIThread.Post(previous.Dispose, DispatcherPriority.Background);
     }
+
+    internal static string DescribeAge(TimeSpan age) =>
+        age < TimeSpan.FromSeconds(5) ? Strings.LivePreview_AgeNow
+        : age < TimeSpan.FromMinutes(1) ? string.Format(CultureInfo.CurrentCulture, Strings.LivePreview_AgeSeconds, (int)age.TotalSeconds)
+        : string.Format(CultureInfo.CurrentCulture, Strings.LivePreview_AgeMinutes, (int)age.TotalMinutes);
 
     /// <summary>What the quick launcher searches, weighted: name first, then host and tags.</summary>
     public IEnumerable<SearchField> SearchFields =>

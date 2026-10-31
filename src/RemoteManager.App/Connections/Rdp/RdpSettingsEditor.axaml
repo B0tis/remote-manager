@@ -23,6 +23,7 @@
           <ComboBoxItem Content="{x:Static res:Strings.Rdp_Keyboard_FullScreen}" />
         </ComboBox>
         <CheckBox x:Name="MultimonBox" Content="{x:Static res:Strings.Rdp_Multimon}" />
+        <CheckBox x:Name="LivePreviewBox" Content="{x:Static res:Strings.LivePreview_Connection}" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.LivePreview_ConnectionHint}" />
         <CheckBox x:Name="ExternalBox" Content="{x:Static res:Strings.Rdp_OpenExternally}" />
         <TextBlock x:Name="ExternalHint" Text="{x:Static res:Strings.Rdp_OpenExternallyHint}" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
       </StackPanel>

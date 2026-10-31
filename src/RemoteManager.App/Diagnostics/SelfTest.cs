@@ -103,6 +103,7 @@ internal static partial class SelfTest
 
         await RunRemoteToolChecksAsync(window);
         await RunVncAndVaultChecksAsync(window); // SelfTest.VncAndVaults.cs
+        await RunLivePreviewChecksAsync(window); // SelfTest.LivePreview.cs
         await RunSshChecksAsync(window);
         await RunSyncChecksAsync(window); // SelfTest.Sync.cs
 
@@ -160,7 +161,7 @@ internal static partial class SelfTest
         if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_HOST")))
             await RunLiveSessionChecksAsync(window);
         else
-            Log("SKIP live-session checks (RM_SPIKE_HOST not set): logon, snapshot as preview, resize, DPI.");
+            Log("SKIP live-session checks (RM_SPIKE_HOST not set): logon, snapshot as preview, live RDP preview, resize, DPI.");
 
         // --- Airspace probe: a menu flyout over a visible RDP surface --------------------------------
         await RunAirspaceProbeAsync(first);
@@ -406,6 +407,7 @@ internal static partial class SelfTest
         Check($"Live snapshot is a non-blank PNG ({png})", png is not null && File.Exists(png) && !CapturedBlank(live));
         Check("Snapshot becomes the connection preview", connection.HasPreview);
         SaveScreenProbe(live, "session-window-live.png");
+        await RunLiveRdpPreviewChecksAsync(window, live, connection); // SelfTest.LivePreview.cs
 
         // Resize: dynamic resolution should follow the viewport after the debounce.
         PixelSize before = live.LastRemoteDesktopSize;
