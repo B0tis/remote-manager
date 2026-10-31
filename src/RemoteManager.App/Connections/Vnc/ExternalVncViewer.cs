@@ -2,9 +2,11 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using FluentAvalonia.UI.Controls;
+using RemoteManager.App.Connections.Ssh;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Views;
 using RemoteManager.Core.Model.Settings;
+using RemoteManager.Core.Ssh;
 
 namespace RemoteManager.App.Connections.Vnc;
 
@@ -81,15 +83,54 @@ public static class ExternalVncViewer
             return;
         }
 
+        // VNC over SSH: the viewer connects to the local end of the tunnel, which stays open until the viewer exits.
+        VncSettings settings = connection.Model.SettingsAs<VncSettings>();
+        (string Host, int Port) target = (connection.Model.Host.Trim(), connection.Model.EffectivePort);
+        SshRoute? tunnel = null;
+        if (settings.JumpHostId is { Length: > 0 } jumpHostId)
+        {
+            try
+            {
+                if (await SshConnect.OpenTunnelAsync(host.Owner, jumpHostId, connection.Id, target.Host, target.Port, _ => { }) is not { } end)
+                {
+                    host.ShowToast(connection.Name, Strings.HostKey_Declined, FAInfoBarSeverity.Warning);
+                    return;
+                }
+
+                tunnel = end.Route;
+                target = (end.Host, end.Port);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                host.ShowToast(connection.Name, string.Format(CultureInfo.CurrentCulture, Strings.Vnc_SshTunnelFailed, SshConnect.Describe(ex)), FAInfoBarSeverity.Error);
+                return;
+            }
+        }
+
         var start = new ProcessStartInfo(viewer.Path) { UseShellExecute = false };
-        foreach (string argument in ArgumentsFor(viewer, connection.Model.Host.Trim(), connection.Model.EffectivePort, connection.Model.SettingsAs<VncSettings>()))
+        foreach (string argument in ArgumentsFor(viewer, target.Host, target.Port, settings))
             start.ArgumentList.Add(argument);
         try
         {
-            using Process? process = Process.Start(start);
+            Process process = Process.Start(start) ?? throw new Win32Exception();
+            if (tunnel is null)
+            {
+                process.Dispose();
+            }
+            else
+            {
+                SshRoute route = tunnel;
+                process.EnableRaisingEvents = true;
+                process.Exited += (_, _) =>
+                {
+                    route.Dispose();
+                    process.Dispose();
+                };
+            }
         }
         catch (Win32Exception ex)
         {
+            tunnel?.Dispose();
             host.ShowToast(connection.Name, string.Format(CultureInfo.CurrentCulture, Strings.Vnc_ViewerFailed, ex.Message), FAInfoBarSeverity.Error);
             return;
         }

@@ -9,6 +9,7 @@ using RemoteManager.Core.History;
 using RemoteManager.Core.ImportExport;
 using RemoteManager.Core.Library;
 using RemoteManager.Core.Model;
+using RemoteManager.Core.Ssh;
 using RemoteManager.Core.Status;
 using RemoteManager.Core.Storage;
 
@@ -73,6 +74,10 @@ public sealed class AppHost : IDisposable
             keePass.LockAll();
     }
 
+    /// <summary>
+    /// The handler's probe; none for connections behind a jump host: their host is usually not reachable from
+    /// here, so a direct TCP check would report a working connection as offline.
+    /// </summary>
     private IStatusProbe? ProbeFor(Connection connection) =>
-        Handlers.Supports(connection.Type) ? Handlers[connection.Type].StatusProbe : null;
+        Handlers.Supports(connection.Type) && SshJumpChain.JumpHostOf(connection) is null ? Handlers[connection.Type].StatusProbe : null;
 }

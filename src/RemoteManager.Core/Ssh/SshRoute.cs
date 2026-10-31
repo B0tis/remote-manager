@@ -135,10 +135,19 @@ public sealed class SshRoute : IDisposable
     }
 }
 
-/// <summary>Follows <see cref="SshSettings.JumpHostId"/> / <see cref="RdpSettings.JumpHostId"/> to the list of jump connections.</summary>
+/// <summary>Follows <see cref="SshSettings.JumpHostId"/> / <see cref="RdpSettings.JumpHostId"/> / <see cref="VncSettings.JumpHostId"/> to the list of jump connections.</summary>
 public static class SshJumpChain
 {
     public const int MaxHops = 8;
+
+    /// <summary>The first jump host of <paramref name="connection"/> (SSH, SFTP, RDP, VNC), or null when it connects directly.</summary>
+    public static string? JumpHostOf(Connection connection) => connection.Settings switch
+    {
+        SshSettings s => s.JumpHostId,
+        RdpSettings r => r.JumpHostId,
+        VncSettings v => v.JumpHostId,
+        _ => null,
+    } is { Length: > 0 } id ? id : null;
 
     /// <summary>
     /// The jump hosts to pass, outermost first, starting at <paramref name="jumpHostId"/>. Every jump host

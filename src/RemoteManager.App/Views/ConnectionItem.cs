@@ -7,6 +7,7 @@ using RemoteManager.App.Resources;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Search;
+using RemoteManager.Core.Ssh;
 using RemoteManager.Core.Status;
 
 namespace RemoteManager.App.Views;
@@ -84,7 +85,7 @@ public sealed class ConnectionItem : INotifyPropertyChanged
     public string TypeLabel => Handler.DisplayName;
     public string TypeInitials => Handler.Initials;
     public IBrush TypeBrush => new SolidColorBrush(Handler.AccentColor);
-    public string StatusHint => Handler.StatusHint;
+    public string StatusHint => SshJumpChain.JumpHostOf(Model) is null ? Handler.StatusHint : Strings.Status_Hint_Tunneled;
 
     /// <summary>Local time of the last status result, null before the first check.</summary>
     public DateTime? StatusCheckedAt { get; private set; }

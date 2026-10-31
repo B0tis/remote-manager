@@ -78,6 +78,28 @@ internal static class SshConnect
         }
     }
 
+    /// <summary>
+    /// A local forward through <paramref name="jumpHostId"/> to <paramref name="host"/>:<paramref name="port"/>
+    /// (RDP with mstsc, VNC over SSH). Null when the user declined a host key; other failures throw. The caller
+    /// owns the route and disposes it when the session ends.
+    /// </summary>
+    public static async Task<(SshRoute Route, string Host, int Port)?> OpenTunnelAsync(Window owner, string jumpHostId, string? startId,
+        string host, int port, Action<string> status, CancellationToken cancellationToken = default)
+    {
+        if (await OpenRouteAsync(owner, jumpHostId, startId, status, cancellationToken) is not { } route)
+            return null;
+        try
+        {
+            (string localHost, int localPort) = await Task.Run(() => route.Reach(host, port), cancellationToken);
+            return (route, localHost, localPort);
+        }
+        catch
+        {
+            route.Dispose();
+            throw;
+        }
+    }
+
     private static async Task<SshRoute> OpenRouteCoreAsync(string? jumpHostId, string? startId, Action<string> status, CancellationToken cancellationToken)
     {
         AppHost app = AppHost.Current;

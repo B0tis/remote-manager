@@ -66,17 +66,15 @@ public sealed class RdpHandler : ConnectionHandler
             (string Host, int Port)? tunnelEnd = null;
             if (jumpHostId is not null)
             {
-                tunnel = await SshConnect.OpenRouteAsync(host.Owner, jumpHostId, connection.Model.Id, _ => { });
-                if (tunnel is null)
+                if (await SshConnect.OpenTunnelAsync(host.Owner, jumpHostId, connection.Model.Id,
+                        connection.Model.Host.Trim(), connection.Model.EffectivePort, _ => { }) is not { } end)
                 {
                     host.ShowToast(connection.Name, Strings.HostKey_Declined, FAInfoBarSeverity.Warning);
                     return;
                 }
 
-                SshRoute route = tunnel;
-                string target = connection.Model.Host.Trim();
-                int port = connection.Model.EffectivePort;
-                tunnelEnd = await Task.Run(() => route.Reach(target, port));
+                tunnel = end.Route;
+                tunnelEnd = (end.Host, end.Port);
             }
 
             ExternalRdpStart start = await ExternalRdpLauncher.PrepareAsync(connection.Model, host.App.Credentials, tunnelEnd);

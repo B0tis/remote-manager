@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using RemoteManager.App.Connections.Rdp;
 using RemoteManager.App.Connections.Ssh;
+using RemoteManager.App.Connections.Vnc;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Views;
 using RemoteManager.Core.Credentials;
@@ -142,7 +143,7 @@ internal static partial class SelfTest
     private static async Task RunSshLiveChecksAsync(MainWindow window)
     {
         AppHost app = AppHost.Current;
-        string[] ids = ["selftest-ssh-jump", "selftest-ssh-target", "selftest-ssh-rdp"];
+        string[] ids = ["selftest-ssh-jump", "selftest-ssh-target", "selftest-ssh-rdp", "selftest-ssh-vnc"];
         foreach (string id in ids)
             WindowsCredentialSource.Delete(id);
 
@@ -169,6 +170,7 @@ internal static partial class SelfTest
             else
                 Log("SKIP SFTP through a jump host (RM_SSH_TEST_TARGET not set).");
 
+            await RunVncOverSshCheckAsync(window, jump, ids[3]);
             if (Environment.GetEnvironmentVariable("RM_SSH_TEST_RDP") is { Length: > 0 } rdpHost)
                 await RunRdpOverSshCheckAsync(window, jump, rdpHost, ids[2]);
             else
@@ -338,6 +340,32 @@ internal static partial class SelfTest
         Check("Delete removes the remote file", deleted);
         sftp.Close();
         await Settle(300);
+    }
+
+    /// <summary>
+    /// VNC through the jump host back to a <see cref="FakeVncServer"/> on this machine: the jump container reaches
+    /// it as host.docker.internal (Docker Desktop; override with RM_SSH_TEST_DOCKER_HOST).
+    /// </summary>
+    private static async Task RunVncOverSshCheckAsync(MainWindow window, Connection jump, string id)
+    {
+        string dockerHost = Environment.GetEnvironmentVariable("RM_SSH_TEST_DOCKER_HOST") is { Length: > 0 } h ? h : "host.docker.internal";
+        using var server = new FakeVncServer(null);
+        var connection = new Connection { Id = id, Name = "Selftest VNC über SSH", Type = ConnectionType.Vnc, Host = dockerHost, Port = server.Port };
+        connection.Settings = connection.SettingsAs<VncSettings>() with { JumpHostId = jump.Id };
+        ConnectionItem item = window.CreateItem(connection);
+        Check("A VNC connection behind a jump host gets no direct status check", item.StatusHint == Strings.Status_Hint_Tunneled);
+
+        var session = (VncSessionWindow)window.OpenSession(item)!;
+        session.StatusLogged += (_, message) => Log($"  [{session.Title}] {message}");
+        await WaitFor(() => (session.IsConnected && session.Vnc.FrameCount > 0) || session.CardError is not null, TimeSpan.FromSeconds(30));
+        await Settle(500);
+        Check($"VNC through an SSH tunnel reaches the server behind the jump host (tunnel {session.IsTunneled}, status \"{session.Status}\", card \"{session.CardError}\")",
+            session.IsTunneled && session.IsConnected && server.Sessions > 0 && session.Vnc.PixelAt(10, 10) == FakeVncServer.ColorAt(10, 10));
+        session.Close();
+        await Settle(500);
+        Check("Closing the VNC window closes the SSH tunnel", !session.IsTunneled);
+        if (File.Exists(connection.ResolvedPreviewPath))
+            File.Delete(connection.ResolvedPreviewPath);
     }
 
     /// <summary>RDP to the xrdp container that only the jump host can reach (testbed -WithRdp).</summary>

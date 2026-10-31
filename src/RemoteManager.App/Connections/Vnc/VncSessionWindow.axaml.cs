@@ -11,11 +11,13 @@ using MarcusW.VncClient.Protocol.Implementation.Services.Transports;
 using MarcusW.VncClient.Protocol.SecurityTypes;
 using MarcusW.VncClient.Security;
 using Microsoft.Extensions.Logging.Abstractions;
+using RemoteManager.App.Connections.Ssh;
 using RemoteManager.App.Credentials;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Views;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
+using RemoteManager.Core.Ssh;
 
 namespace RemoteManager.App.Connections.Vnc;
 
@@ -32,6 +34,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
     private RfbConnection? rfb;
     private CancellationTokenSource? connecting;
     private bool closing;
+    private SshRoute? tunnel;
 
     // Required by the XAML loader; the app always uses the ConnectionItem overload.
     public VncSessionWindow() : this(new ConnectionItem(new Connection { Name = "VNC", Type = ConnectionType.Vnc }, AppHost.Current), null)
@@ -81,6 +84,9 @@ public partial class VncSessionWindow : Window, ISessionWindow
 
     public bool IsConnected => rfb?.ConnectionState == ConnectionState.Connected;
 
+    /// <summary>The session runs through an SSH tunnel (<see cref="VncSettings.JumpHostId"/>).</summary>
+    public bool IsTunneled => tunnel is not null;
+
     /// <summary>The last status or error text (used by the self-test).</summary>
     public string Status => StatusText.Text ?? "";
 
@@ -113,10 +119,28 @@ public partial class VncSessionWindow : Window, ISessionWindow
         VncSettings settings = Connection.Model.SettingsAs<VncSettings>();
         string typed = PasswordBox.Text ?? "";
         PasswordBox.Text = "";
+        connecting = new CancellationTokenSource();
+        HideCard();
+        SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Vnc_Connecting, Connection.HostLabel), "#F59E0B");
+
+        // VNC over SSH: open the tunnel first and connect to its local end (it stays open for reconnects).
+        (string Host, int Port) target = (Connection.Model.Host.Trim(), Connection.Model.EffectivePort);
+        if (settings.JumpHostId is { Length: > 0 } jumpHostId)
+        {
+            if (await OpenTunnelAsync(jumpHostId, target) is not { } end)
+            {
+                connecting.Dispose();
+                connecting = null;
+                return;
+            }
+
+            target = end;
+        }
+
         var authentication = new PasswordHandler(this, typed);
         var parameters = new ConnectParameters
         {
-            TransportParameters = new TcpTransportParameters { Host = Connection.Model.Host.Trim(), Port = Connection.Model.EffectivePort },
+            TransportParameters = new TcpTransportParameters { Host = target.Host, Port = target.Port },
             AuthenticationHandler = authentication,
             ConnectTimeout = TimeSpan.FromSeconds(15),
             MaxReconnectAttempts = 3,
@@ -133,9 +157,6 @@ public partial class VncSessionWindow : Window, ISessionWindow
             InitialOutputHandler = View,
         };
 
-        connecting = new CancellationTokenSource();
-        HideCard();
-        SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Vnc_Connecting, Connection.HostLabel), "#F59E0B");
         try
         {
             RfbConnection connection = await Client.ConnectAsync(parameters, connecting.Token);
@@ -158,6 +179,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
         }
         catch (Exception ex)
         {
+            CloseTunnel();
             ShowCard(DescribeFailure(ex, authentication));
             Log($"Connect failed: {ex.GetType().Name}: {ex.Message}");
         }
@@ -176,6 +198,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
         rfb = null;
         View.Connection = null;
         connection.Dispose();
+        CloseTunnel();
         ShowCard(null);
         SetStatus(message, "#9CA3AF");
         UpdateButtons();
@@ -297,7 +320,49 @@ public partial class VncSessionWindow : Window, ISessionWindow
         closing = true;
         connecting?.Cancel();
         Disconnect(Strings.Vnc_Disconnected);
+        CloseTunnel();
         View.Dispose();
+    }
+
+    /// <summary>Local end of a tunnel to <paramref name="target"/>; null (with a message on the card) when it failed or a host key was declined.</summary>
+    private async Task<(string Host, int Port)?> OpenTunnelAsync(string jumpHostId, (string Host, int Port) target)
+    {
+        CloseTunnel();
+        try
+        {
+            if (await SshConnect.OpenTunnelAsync(this, jumpHostId, Connection.Id, target.Host, target.Port,
+                    status => SetStatus(status, "#F59E0B"), connecting!.Token) is not { } end)
+            {
+                ShowCard(Strings.HostKey_Declined);
+                return null;
+            }
+
+            if (closing)
+            {
+                end.Route.Dispose();
+                return null;
+            }
+
+            tunnel = end.Route;
+            Log($"SSH tunnel to {target.Host}:{target.Port} listens on {end.Host}:{end.Port}.");
+            return (end.Host, end.Port);
+        }
+        catch (OperationCanceledException) when (closing)
+        {
+            return null;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            ShowCard(string.Format(CultureInfo.CurrentCulture, Strings.Vnc_SshTunnelFailed, SshConnect.Describe(ex)));
+            Log($"SSH tunnel failed: {ex.GetType().Name}: {ex.Message}");
+            return null;
+        }
+    }
+
+    private void CloseTunnel()
+    {
+        tunnel?.Dispose();
+        tunnel = null;
     }
 
     private void Log(string message)

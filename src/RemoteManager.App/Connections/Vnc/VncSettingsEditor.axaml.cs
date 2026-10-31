@@ -1,9 +1,10 @@
 using Avalonia.Controls;
+using RemoteManager.App.Connections.Ssh;
 using RemoteManager.Core.Model.Settings;
 
 namespace RemoteManager.App.Connections.Vnc;
 
-/// <summary>The VNC part of the connection editor. The jump host is kept as loaded (SSH tunnels come separately).</summary>
+/// <summary>The VNC part of the connection editor, including the SSH connection to tunnel through.</summary>
 public partial class VncSettingsEditor : UserControl, ISettingsEditor
 {
     private VncSettings loaded = new();
@@ -14,6 +15,7 @@ public partial class VncSettingsEditor : UserControl, ISettingsEditor
 
     public CheckBox ViewOnly => ViewOnlyBox;
     public CheckBox External => ExternalBox;
+    public ComboBox JumpHost => JumpBox;
 
     public void Load(ConnectionSettings settings)
     {
@@ -22,6 +24,7 @@ public partial class VncSettingsEditor : UserControl, ISettingsEditor
         ScaleBox.IsChecked = loaded.ScaleToWindow;
         ViewOnlyBox.IsChecked = loaded.ViewOnly;
         ExternalBox.IsChecked = loaded.OpenExternally;
+        JumpHostPicker.Fill(JumpBox, loaded.JumpHostId);
     }
 
     public string? Validate() => null;
@@ -32,5 +35,6 @@ public partial class VncSettingsEditor : UserControl, ISettingsEditor
         ScaleToWindow = ScaleBox.IsChecked == true,
         ViewOnly = ViewOnlyBox.IsChecked == true,
         OpenExternally = ExternalBox.IsChecked == true,
+        JumpHostId = JumpHostPicker.SelectedId(JumpBox),
     };
 }

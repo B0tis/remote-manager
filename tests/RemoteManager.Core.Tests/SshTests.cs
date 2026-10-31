@@ -51,6 +51,17 @@ public sealed class SshTests : IDisposable
     public void PortForwardRejectsInvalidLines(string line) => Assert.Null(PortForwardText.Parse(line));
 
     [Fact]
+    public void JumpHostOfCoversEveryTunneledType()
+    {
+        Assert.Equal("j", SshJumpChain.JumpHostOf(new Connection { Type = ConnectionType.Ssh, Settings = new SshSettings { JumpHostId = "j" } }));
+        Assert.Equal("j", SshJumpChain.JumpHostOf(new Connection { Type = ConnectionType.Rdp, Settings = new RdpSettings { JumpHostId = "j" } }));
+        Assert.Equal("j", SshJumpChain.JumpHostOf(new Connection { Type = ConnectionType.Vnc, Settings = new VncSettings { JumpHostId = "j" } }));
+        Assert.Null(SshJumpChain.JumpHostOf(new Connection { Type = ConnectionType.Vnc, Settings = new VncSettings { JumpHostId = "" } }));
+        Assert.Null(SshJumpChain.JumpHostOf(new Connection { Type = ConnectionType.Rdp }));
+        Assert.Null(SshJumpChain.JumpHostOf(new Connection { Type = ConnectionType.TeamViewer }));
+    }
+
+    [Fact]
     public void PortForwardParseAllReportsTheFirstBadLine()
     {
         IReadOnlyList<PortForward> forwards = PortForwardText.ParseAll("L 1:a:2\n\nnonsense\nD 3\nalso bad", out int invalid);

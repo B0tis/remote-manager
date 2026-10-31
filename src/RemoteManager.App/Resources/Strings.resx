@@ -1343,6 +1343,9 @@
   <data name="Status_Hint_RemoteTool" xml:space="preserve">
     <value>Kein Online-Status: AnyDesk und RustDesk bieten ihn ohne Lizenz-API nicht an.</value>
   </data>
+  <data name="Status_Hint_Tunneled" xml:space="preserve">
+    <value>Kein Online-Status: Die Verbindung läuft über einen SSH-Jump-Host, der Host ist von hier aus meist nicht direkt erreichbar.</value>
+  </data>
   <data name="Status_Hint_TcpPort" xml:space="preserve">
     <value>Status per TCP-Prüfung des Ports im Hintergrund. Keine Antwort = unbekannt, abgelehnt = offline.</value>
   </data>
@@ -1543,6 +1546,15 @@
   </data>
   <data name="Vnc_Settings_ViewOnly" xml:space="preserve">
     <value>Nur ansehen (keine Maus- und Tastatureingaben senden)</value>
+  </data>
+  <data name="Vnc_SshTunnel" xml:space="preserve">
+    <value>Über SSH-Tunnel verbinden</value>
+  </data>
+  <data name="Vnc_SshTunnelFailed" xml:space="preserve">
+    <value>SSH-Tunnel fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Vnc_SshTunnelTip" xml:space="preserve">
+    <value>VNC läuft durch einen SSH-Tunnel über diese SSH-Verbindung (für Hosts hinter einem Jump-Host). Der VNC-Port muss nur vom Jump-Host aus erreichbar sein.</value>
   </data>
   <data name="Vnc_StoredPasswordRejected" xml:space="preserve">
     <value>Der Server hat das gespeicherte Passwort abgelehnt. Gib das richtige ein.</value>
