@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:res="using:RemoteManager.App.Resources"
+        x:Class="RemoteManager.App.Connections.Ssh.HostKeyWindow"
+        Width="700" SizeToContent="Height" CanResize="False" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Title="{x:Static res:Strings.HostKey_WindowTitle}"
+        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+  <!-- A separate window, not an in-window dialog: the owner may host a native surface (terminal, RDP) that would cover it. -->
+  <StackPanel Margin="24,20" Spacing="14">
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <ui:FASymbolIcon x:Name="HeadingIcon" Symbol="Permissions" FontSize="28" VerticalAlignment="Center" />
+      <TextBlock x:Name="Heading" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+    </StackPanel>
+    <TextBlock x:Name="Explanation" TextWrapping="Wrap" Opacity="0.85" />
+
+    <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,6,Auto,6,Auto,6,Auto">
+      <TextBlock Text="{x:Static res:Strings.HostKey_Server}" Opacity="0.6" />
+      <TextBlock x:Name="ServerText" Grid.Column="2" TextWrapping="Wrap" />
+      <TextBlock Grid.Row="2" Text="{x:Static res:Strings.HostKey_Algorithm}" Opacity="0.6" />
+      <TextBlock x:Name="AlgorithmText" Grid.Row="2" Grid.Column="2" />
+      <TextBlock Grid.Row="4" Text="{x:Static res:Strings.HostKey_Fingerprint}" Opacity="0.6" VerticalAlignment="Center" />
+      <TextBox x:Name="FingerprintBox" Grid.Row="4" Grid.Column="2" IsReadOnly="True" FontFamily="Cascadia Mono,Consolas,monospace" FontSize="13" />
+      <TextBlock x:Name="StoredLabel" Grid.Row="6" Text="{x:Static res:Strings.HostKey_Stored}" Opacity="0.6" VerticalAlignment="Center" />
+      <TextBox x:Name="StoredBox" Grid.Row="6" Grid.Column="2" IsReadOnly="True" FontFamily="Cascadia Mono,Consolas,monospace" FontSize="13" />
+    </Grid>
+
+    <TextBlock x:Name="Advice" TextWrapping="Wrap" FontSize="12" Opacity="0.6" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button x:Name="AcceptButton" Classes="accent" />
+      <Button x:Name="CancelButton" Content="{x:Static res:Strings.Action_Cancel}" IsCancel="True" IsDefault="True" />
+    </StackPanel>
+  </StackPanel>
+</Window>

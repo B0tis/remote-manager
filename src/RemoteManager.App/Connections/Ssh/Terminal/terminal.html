@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <!-- Terminal page of SshTerminalWindow. Only talks to the app (chrome.webview), never to the network. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'" />
+  <link rel="stylesheet" href="xterm.css" />
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #1c1c1c; }
+    #terminal { position: absolute; inset: 6px 4px 4px 8px; }
+  </style>
+  <script src="xterm.js"></script>
+  <script src="addon-fit.js"></script>
+</head>
+<body>
+  <div id="terminal"></div>
+  <script>
+    (function () {
+      const host = window.chrome && window.chrome.webview;
+      const send = (message) => { if (host) host.postMessage(JSON.stringify(message)); };
+
+      const term = new Terminal({
+        cursorBlink: true,
+        fontFamily: '"Cascadia Mono", Consolas, "Courier New", monospace',
+        fontSize: 14,
+        scrollback: 5000,
+        allowProposedApi: false,
+        theme: { background: '#1c1c1c', foreground: '#e5e5e5', cursor: '#e5e5e5', selectionBackground: '#3b82f680' },
+      });
+      const fit = new FitAddon.FitAddon();
+      term.loadAddon(fit);
+      term.open(document.getElementById('terminal'));
+
+      // While the web view is hidden the page has no size (xterm would report 2x1). "ready" waits for a
+      // real size, so the app never opens a PTY that small; after that, every change is a "resize".
+      const container = document.getElementById('terminal');
+      let ready = false, lastCols = 0, lastRows = 0;
+      function refit() {
+        if (container.clientWidth < 40 || container.clientHeight < 40) return;
+        try { fit.fit(); } catch (e) { return; }
+        if (!ready) {
+          ready = true;
+          lastCols = term.cols; lastRows = term.rows;
+          send({ t: 'ready', cols: term.cols, rows: term.rows });
+          term.focus();
+        } else if (term.cols !== lastCols || term.rows !== lastRows) {
+          lastCols = term.cols; lastRows = term.rows;
+          send({ t: 'resize', cols: term.cols, rows: term.rows });
+        }
+      }
+
+      term.onData((data) => send({ t: 'data', d: data }));
+      term.onBinary((data) => send({ t: 'data', d: data }));
+
+      // Ctrl+Shift+C / Ctrl+Shift+V (and Shift+Insert) go through the app's clipboard; plain Ctrl+C stays SIGINT.
+      term.attachCustomKeyEventHandler((e) => {
+        if (e.type !== 'keydown') return true;
+        if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
+          if (term.hasSelection()) send({ t: 'copy', d: term.getSelection() });
+          return false;
+        }
+        if ((e.ctrlKey && e.shiftKey && e.code === 'KeyV') || (e.shiftKey && e.code === 'Insert')) {
+          send({ t: 'paste' });
+          return false;
+        }
+        return true;
+      });
+      document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (term.hasSelection()) { send({ t: 'copy', d: term.getSelection() }); term.clearSelection(); }
+        else send({ t: 'paste' });
+      });
+
+      new ResizeObserver(() => refit()).observe(container);
+
+      // Called by the app (InvokeScript). Output arrives base64 encoded so any byte sequence survives.
+      window.rm = {
+        write(base64) {
+          const raw = atob(base64);
+          const bytes = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+          term.write(bytes);
+        },
+        writeText(text) { term.write(text); },
+        paste(text) { term.paste(text); },
+        focus() { term.focus(); },
+        reset() { term.reset(); },
+        size() { return JSON.stringify({ cols: term.cols, rows: term.rows }); },
+        // Visible screen as text (self-test checks that htop and vim really drew something).
+        screen() {
+          const buffer = term.buffer.active;
+          const lines = [];
+          for (let i = 0; i < term.rows; i++) {
+            const line = buffer.getLine(buffer.viewportY + i);
+            lines.push(line ? line.translateToString(true) : '');
+          }
+          return JSON.stringify({ type: buffer.type, lines });
+        },
+      };
+
+      refit();
+    })();
+  </script>
+</body>
+</html>

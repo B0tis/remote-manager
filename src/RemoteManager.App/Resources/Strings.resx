@@ -1,0 +1,1577 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All user-facing text of Remote-Manager (German). Code and XAML use the generated
+     RemoteManager.App.Resources.Strings class; add new keys here, never inline text.
+     Key prefixes group the screen or topic: Action_, Nav_, Editor_, Session_, Status_, ... -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Action_Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="Action_Connect" xml:space="preserve">
+    <value>Verbinden</value>
+  </data>
+  <data name="Action_ConnectAll" xml:space="preserve">
+    <value>Alle verbinden</value>
+  </data>
+  <data name="Action_ConnectCount" xml:space="preserve">
+    <value>Verbinden ({0})</value>
+  </data>
+  <data name="Action_CopyPassword" xml:space="preserve">
+    <value>Passwort kopieren</value>
+  </data>
+  <data name="Action_Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="Action_DeleteEllipsis" xml:space="preserve">
+    <value>Löschen…</value>
+  </data>
+  <data name="Action_DeleteGroup" xml:space="preserve">
+    <value>Gruppe löschen …</value>
+  </data>
+  <data name="Action_Duplicate" xml:space="preserve">
+    <value>Duplizieren</value>
+  </data>
+  <data name="Action_Edit" xml:space="preserve">
+    <value>Bearbeiten…</value>
+  </data>
+  <data name="Action_EditGroup" xml:space="preserve">
+    <value>Gruppe bearbeiten …</value>
+  </data>
+  <data name="Action_ExportBackup" xml:space="preserve">
+    <value>Sicherung exportieren (JSON) …</value>
+  </data>
+  <data name="Action_Favorite" xml:space="preserve">
+    <value>Zu Favoriten hinzufügen</value>
+  </data>
+  <data name="Action_Import" xml:space="preserve">
+    <value>Importieren …</value>
+  </data>
+  <data name="Action_More" xml:space="preserve">
+    <value>Weitere Aktionen</value>
+  </data>
+  <data name="Action_Move" xml:space="preserve">
+    <value>Verschieben</value>
+  </data>
+  <data name="Action_MoveToGroup" xml:space="preserve">
+    <value>In Gruppe verschieben …</value>
+  </data>
+  <data name="Action_New" xml:space="preserve">
+    <value>Neue Verbindung</value>
+  </data>
+  <data name="Action_NewConnectionHere" xml:space="preserve">
+    <value>Neue Verbindung hier …</value>
+  </data>
+  <data name="Action_NewGroup" xml:space="preserve">
+    <value>Neue Gruppe …</value>
+  </data>
+  <data name="Action_NewSubgroup" xml:space="preserve">
+    <value>Neue Untergruppe …</value>
+  </data>
+  <data name="Action_Remove" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="Action_Save" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="Action_ToggleFavorite" xml:space="preserve">
+    <value>Favorit an/aus</value>
+  </data>
+  <data name="Action_Unfavorite" xml:space="preserve">
+    <value>Aus Favoriten entfernen</value>
+  </data>
+  <data name="Column_Description" xml:space="preserve">
+    <value>Beschreibung</value>
+  </data>
+  <data name="Column_Group" xml:space="preserve">
+    <value>Gruppe</value>
+  </data>
+  <data name="Column_Host" xml:space="preserve">
+    <value>Host / ID</value>
+  </data>
+  <data name="Column_LastConnected" xml:space="preserve">
+    <value>Zuletzt verbunden</value>
+  </data>
+  <data name="Column_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Column_SortTip" xml:space="preserve">
+    <value>Nach {0} sortieren (nochmal klicken: absteigend, dann Gruppenreihenfolge)</value>
+  </data>
+  <data name="Column_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Column_Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Column_Type" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="Common_Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Delete_Message" xml:space="preserve">
+    <value>Die Verbindung, ihr Vorschaubild und ihr gespeichertes Passwort werden entfernt. Das lässt sich nicht rückgängig machen.</value>
+  </data>
+  <data name="Delete_Title" xml:space="preserve">
+    <value>{0} löschen?</value>
+  </data>
+  <data name="Delete_TitleMany" xml:space="preserve">
+    <value>{0} Verbindungen löschen?</value>
+  </data>
+  <data name="Details_Change" xml:space="preserve">
+    <value>Ändern</value>
+  </data>
+  <data name="Details_Empty" xml:space="preserve">
+    <value>Wähle eine Verbindung aus, um ihre Details zu sehen.</value>
+  </data>
+  <data name="Details_HideTip" xml:space="preserve">
+    <value>Details ausblenden (Strg+I)</value>
+  </data>
+  <data name="Details_History" xml:space="preserve">
+    <value>Verlauf</value>
+  </data>
+  <data name="Details_HistoryEmpty" xml:space="preserve">
+    <value>Noch keine Verbindung aufgezeichnet.</value>
+  </data>
+  <data name="Details_Host" xml:space="preserve">
+    <value>Host / ID</value>
+  </data>
+  <data name="Details_Inherited" xml:space="preserve">
+    <value>{0} (geerbt von {1})</value>
+  </data>
+  <data name="Details_More" xml:space="preserve">
+    <value>… und {0} weitere</value>
+  </data>
+  <data name="Details_NoLogon" xml:space="preserve">
+    <value>Keine Anmeldedaten</value>
+  </data>
+  <data name="Details_NotesPlaceholder" xml:space="preserve">
+    <value>Notizen zu dieser Verbindung …</value>
+  </data>
+  <data name="Details_PasswordOnly" xml:space="preserve">
+    <value>Nur Passwort</value>
+  </data>
+  <data name="Details_Selected" xml:space="preserve">
+    <value>{0} Verbindungen ausgewählt</value>
+  </data>
+  <data name="Details_StartParameters" xml:space="preserve">
+    <value>Startparameter</value>
+  </data>
+  <data name="Details_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Details_Title" xml:space="preserve">
+    <value>DETAILS</value>
+  </data>
+  <data name="Details_ToggleTip" xml:space="preserve">
+    <value>Detailbereich ein/aus (Strg+I)</value>
+  </data>
+  <data name="Details_User" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="Details_UserWithPassword" xml:space="preserve">
+    <value>{0} · Passwort gespeichert</value>
+  </data>
+  <data name="Duplicate_Name" xml:space="preserve">
+    <value>{0} (Kopie)</value>
+  </data>
+  <data name="Editor_Error_Host" xml:space="preserve">
+    <value>Bitte einen Host angeben.</value>
+  </data>
+  <data name="Editor_Error_Name" xml:space="preserve">
+    <value>Bitte einen Namen angeben.</value>
+  </data>
+  <data name="Editor_Error_Password" xml:space="preserve">
+    <value>Passwort eingeben oder „Passwort speichern“ ausschalten.</value>
+  </data>
+  <data name="Editor_Error_Port" xml:space="preserve">
+    <value>Der Port muss zwischen 1 und 65535 liegen.</value>
+  </data>
+  <data name="Editor_Error_RemoteId" xml:space="preserve">
+    <value>Bitte eine Remote-ID angeben.</value>
+  </data>
+  <data name="Editor_GroupLogonButton" xml:space="preserve">
+    <value>Anmeldung der Gruppe …</value>
+  </data>
+  <data name="Editor_HostPlaceholder" xml:space="preserve">
+    <value>Host oder IP</value>
+  </data>
+  <data name="Editor_InheritedLogon" xml:space="preserve">
+    <value>Ohne eigene Anmeldung gilt die der Gruppe „{0}“: {1}{2}.</value>
+  </data>
+  <data name="Editor_InheritedWithPassword" xml:space="preserve">
+    <value> mit gespeichertem Passwort</value>
+  </data>
+  <data name="Editor_Logon" xml:space="preserve">
+    <value>Anmeldung</value>
+  </data>
+  <data name="Editor_OwnOverridesGroup" xml:space="preserve">
+    <value>Eigene Anmeldung: Sie ersetzt die der Gruppe „{0}“ ({1}).</value>
+  </data>
+  <data name="Editor_PasswordHint_CopyOnly" xml:space="preserve">
+    <value>Gespeichert im Windows Credential Manager. „Passwort kopieren“ im Kontextmenü legt es für 30 s in die Zwischenablage.</value>
+  </data>
+  <data name="Editor_PasswordHint_Rdp" xml:space="preserve">
+    <value>Gespeichert im Windows Credential Manager. Mit Passwort meldet sich die Sitzung direkt an (NLA); ohne wird es beim Verbinden abgefragt.</value>
+  </data>
+  <data name="Editor_PasswordHint_Ssh" xml:space="preserve">
+    <value>Passwort oder Passphrase der Schlüsseldatei; wird in der Windows-Anmeldeinformationsverwaltung gespeichert.</value>
+  </data>
+  <data name="Editor_PasswordHint_Vnc" xml:space="preserve">
+    <value>VNC-Passwort. Es wird erst geholt, wenn der Server danach fragt.</value>
+  </data>
+  <data name="Editor_PortPlaceholder" xml:space="preserve">
+    <value>Port ({0})</value>
+  </data>
+  <data name="Editor_RemoteIdPlaceholder" xml:space="preserve">
+    <value>Remote-ID oder Alias</value>
+  </data>
+  <data name="Editor_TitleEdit" xml:space="preserve">
+    <value>{0} bearbeiten</value>
+  </data>
+  <data name="Editor_TitleNew" xml:space="preserve">
+    <value>Neue Verbindung</value>
+  </data>
+  <data name="Empty_NoMatch" xml:space="preserve">
+    <value>Keine passenden Verbindungen.</value>
+  </data>
+  <data name="Export_Done" xml:space="preserve">
+    <value>Sicherung gespeichert (ohne Passwörter): {0}</value>
+  </data>
+  <data name="Export_Failed" xml:space="preserve">
+    <value>Export fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Export_FileTypeName" xml:space="preserve">
+    <value>Remote-Manager-Sicherung</value>
+  </data>
+  <data name="Export_PickerTitle" xml:space="preserve">
+    <value>Sicherung speichern</value>
+  </data>
+  <data name="Export_ToastTitle" xml:space="preserve">
+    <value>Sicherung</value>
+  </data>
+  <data name="Field_Description" xml:space="preserve">
+    <value>Beschreibung</value>
+  </data>
+  <data name="Field_DomainOptional" xml:space="preserve">
+    <value>Domäne (optional)</value>
+  </data>
+  <data name="Field_Favorite" xml:space="preserve">
+    <value>Favorit</value>
+  </data>
+  <data name="Field_Group" xml:space="preserve">
+    <value>Gruppe (Unterordner mit „/“)</value>
+  </data>
+  <data name="Field_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Field_Notes" xml:space="preserve">
+    <value>Notizen</value>
+  </data>
+  <data name="Field_Password" xml:space="preserve">
+    <value>Passwort</value>
+  </data>
+  <data name="Field_Tags" xml:space="preserve">
+    <value>Tags, durch Komma getrennt</value>
+  </data>
+  <data name="Field_User" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="Group_None" xml:space="preserve">
+    <value>Keine Gruppe</value>
+  </data>
+  <data name="GroupDelete_Message" xml:space="preserve">
+    <value>Untergruppen und Verbindungen wandern nach „{0}“. Ein gespeichertes Gruppenpasswort wird aus der Windows-Anmeldeinformationsverwaltung gelöscht.</value>
+  </data>
+  <data name="GroupDelete_Title" xml:space="preserve">
+    <value>Gruppe „{0}“ löschen?</value>
+  </data>
+  <data name="GroupEditor_Error_Duplicate" xml:space="preserve">
+    <value>Auf dieser Ebene gibt es schon eine Gruppe mit diesem Namen.</value>
+  </data>
+  <data name="GroupEditor_Error_Slash" xml:space="preserve">
+    <value>Der Name darf keinen Schrägstrich (/) enthalten.</value>
+  </data>
+  <data name="GroupEditor_Logon" xml:space="preserve">
+    <value>Anmeldung für die Gruppe</value>
+  </data>
+  <data name="GroupEditor_LogonHint" xml:space="preserve">
+    <value>Verbindungen in dieser Gruppe ohne eigene Anmeldedaten verwenden diese.</value>
+  </data>
+  <data name="GroupEditor_Parent" xml:space="preserve">
+    <value>Übergeordnete Gruppe</value>
+  </data>
+  <data name="GroupEditor_TitleEdit" xml:space="preserve">
+    <value>Gruppe „{0}“ bearbeiten</value>
+  </data>
+  <data name="GroupEditor_TitleNew" xml:space="preserve">
+    <value>Neue Gruppe</value>
+  </data>
+  <data name="GroupEditor_TopLevel" xml:space="preserve">
+    <value>(oberste Ebene)</value>
+  </data>
+  <data name="GroupHeader_Summary" xml:space="preserve">
+    <value>eingeklappt · {0} online, {1} offline</value>
+  </data>
+  <data name="GroupLogon_Apply" xml:space="preserve">
+    <value>Übernehmen</value>
+  </data>
+  <data name="GroupLogon_Hint" xml:space="preserve">
+    <value>Gilt für alle Verbindungen dieser Gruppe und ihrer Untergruppen, die keine eigene Anmeldung haben.</value>
+  </data>
+  <data name="GroupLogon_NewGroup" xml:space="preserve">
+    <value>Die Gruppe „{0}“ wird beim Speichern angelegt; ihre Anmeldung lässt sich danach festlegen.</value>
+  </data>
+  <data name="GroupLogon_RemovePassword" xml:space="preserve">
+    <value>Gespeichertes Passwort entfernen</value>
+  </data>
+  <data name="GroupLogon_Saved" xml:space="preserve">
+    <value>Anmeldung der Gruppe „{0}“ gespeichert.</value>
+  </data>
+  <data name="GroupLogon_Title" xml:space="preserve">
+    <value>Anmeldung der Gruppe „{0}“</value>
+  </data>
+  <data name="History_Connected" xml:space="preserve">
+    <value>Verbunden</value>
+  </data>
+  <data name="History_Failed" xml:space="preserve">
+    <value>Fehlgeschlagen</value>
+  </data>
+  <data name="History_Hours" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="History_Launched" xml:space="preserve">
+    <value>Extern gestartet</value>
+  </data>
+  <data name="History_Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="History_UnderAMinute" xml:space="preserve">
+    <value>unter 1 min</value>
+  </data>
+  <data name="HostKey_Accept" xml:space="preserve">
+    <value>Vertrauen und verbinden</value>
+  </data>
+  <data name="HostKey_AcceptChanged" xml:space="preserve">
+    <value>Neuen Schlüssel übernehmen</value>
+  </data>
+  <data name="HostKey_Algorithm" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="HostKey_ChangedAdvice" xml:space="preserve">
+    <value>Übernehmen Sie den neuen Schlüssel nur, wenn Sie sicher wissen, warum er sich geändert hat (zum Beispiel nach einer Neuinstallation).</value>
+  </data>
+  <data name="HostKey_ChangedText" xml:space="preserve">
+    <value>{0} meldet einen anderen Schlüssel als beim letzten Mal. Das passiert nach einer Neuinstallation, kann aber auch ein Angriff (Man-in-the-Middle) sein.</value>
+  </data>
+  <data name="HostKey_ChangedTitle" xml:space="preserve">
+    <value>Achtung: Host-Schlüssel hat sich geändert</value>
+  </data>
+  <data name="HostKey_Declined" xml:space="preserve">
+    <value>Verbindung abgebrochen: Host-Schlüssel nicht bestätigt.</value>
+  </data>
+  <data name="HostKey_Fingerprint" xml:space="preserve">
+    <value>Fingerabdruck</value>
+  </data>
+  <data name="HostKey_Server" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="HostKey_Stored" xml:space="preserve">
+    <value>Bisher</value>
+  </data>
+  <data name="HostKey_UnknownAdvice" xml:space="preserve">
+    <value>Den Fingerabdruck zeigt der Server mit: ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</value>
+  </data>
+  <data name="HostKey_UnknownText" xml:space="preserve">
+    <value>Mit {0} wurde noch nie verbunden. Vertrauen Sie dem Schlüssel nur, wenn der Fingerabdruck mit dem des Servers übereinstimmt.</value>
+  </data>
+  <data name="HostKey_UnknownTitle" xml:space="preserve">
+    <value>Unbekannter Host-Schlüssel</value>
+  </data>
+  <data name="HostKey_WindowTitle" xml:space="preserve">
+    <value>SSH-Host-Schlüssel prüfen</value>
+  </data>
+  <data name="Import_Browse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="Import_Error_NoFile" xml:space="preserve">
+    <value>Bitte eine Datei auswählen.</value>
+  </data>
+  <data name="Import_Error_WrongFormat" xml:space="preserve">
+    <value>Die Datei passt nicht zum Format „{0}“.</value>
+  </data>
+  <data name="Import_Failed" xml:space="preserve">
+    <value>Import fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Import_File" xml:space="preserve">
+    <value>Datei</value>
+  </data>
+  <data name="Import_FilePlaceholder" xml:space="preserve">
+    <value>Keine Datei ausgewählt</value>
+  </data>
+  <data name="Import_Format" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="Import_Hint" xml:space="preserve">
+    <value>Fundorte: 1Remote %APPDATA%\1Remote\1Remote.db oder der JSON-Export · mRemoteNG %APPDATA%\mRemoteNG\confCons.xml · RDCMan die .rdg-Datei. Gefundene Passwörter landen im Windows-Anmeldeinformationsspeicher, nie in der Datenbank.</value>
+  </data>
+  <data name="Import_Start" xml:space="preserve">
+    <value>Importieren</value>
+  </data>
+  <data name="Import_Summary" xml:space="preserve">
+    <value>{0} hinzugefügt · {1} ersetzt · {2} schon vorhanden (übersprungen) · {3} neue Gruppen · {4} Passwörter im Windows-Anmeldeinformationsspeicher</value>
+  </data>
+  <data name="Import_SummaryTitle" xml:space="preserve">
+    <value>Import abgeschlossen</value>
+  </data>
+  <data name="Import_TargetGroup" xml:space="preserve">
+    <value>In Gruppe importieren (optional, z. B. Import / RDCMan)</value>
+  </data>
+  <data name="Import_Title" xml:space="preserve">
+    <value>Verbindungen importieren</value>
+  </data>
+  <data name="Import_Warnings" xml:space="preserve">
+    <value>Hinweise ({0})</value>
+  </data>
+  <data name="Key_Ctrl" xml:space="preserve">
+    <value>Strg</value>
+  </data>
+  <data name="Key_Shift" xml:space="preserve">
+    <value>Umschalt</value>
+  </data>
+  <data name="Key_Space" xml:space="preserve">
+    <value>Leertaste</value>
+  </data>
+  <data name="LastConnected_Never" xml:space="preserve">
+    <value>Nie</value>
+  </data>
+  <data name="Launcher_ButtonTip" xml:space="preserve">
+    <value>Quick-Launcher ({0}, in der App auch Strg+K)</value>
+  </data>
+  <data name="Launcher_ChangeHotkey" xml:space="preserve">
+    <value>Ändern</value>
+  </data>
+  <data name="Launcher_Hints" xml:space="preserve">
+    <value>Enter verbinden · Strg+Enter in der Übersicht zeigen · Esc schließen</value>
+  </data>
+  <data name="Launcher_HotkeyInvalid" xml:space="preserve">
+    <value>Bitte Strg, Alt oder Win mit einem Buchstaben, einer Ziffer, F-Taste oder Leertaste.</value>
+  </data>
+  <data name="Launcher_HotkeyLabel" xml:space="preserve">
+    <value>Hotkey: {0}</value>
+  </data>
+  <data name="Launcher_HotkeyNone" xml:space="preserve">
+    <value>Kein Hotkey aktiv</value>
+  </data>
+  <data name="Launcher_HotkeyTaken" xml:space="preserve">
+    <value>{0} ist schon von einem anderen Programm belegt.</value>
+  </data>
+  <data name="Launcher_Placeholder" xml:space="preserve">
+    <value>Verbindung suchen: Name, Host, Tag, Gruppe …</value>
+  </data>
+  <data name="Launcher_PressHotkey" xml:space="preserve">
+    <value>Neue Tastenkombination drücken (Esc bricht ab) …</value>
+  </data>
+  <data name="Launcher_Title" xml:space="preserve">
+    <value>Quick-Launcher</value>
+  </data>
+  <data name="Move_Title" xml:space="preserve">
+    <value>„{0}“ verschieben nach</value>
+  </data>
+  <data name="Move_TitleMany" xml:space="preserve">
+    <value>{0} Verbindungen verschieben nach</value>
+  </data>
+  <data name="Nav_All" xml:space="preserve">
+    <value>Alle Verbindungen</value>
+  </data>
+  <data name="Nav_Favorites" xml:space="preserve">
+    <value>Favoriten</value>
+  </data>
+  <data name="Nav_Groups" xml:space="preserve">
+    <value>Gruppen</value>
+  </data>
+  <data name="Nav_Recent" xml:space="preserve">
+    <value>Zuletzt verwendet</value>
+  </data>
+  <data name="Nav_Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Password_Copied" xml:space="preserve">
+    <value>Kopiert, wird in {0:0} s geleert</value>
+  </data>
+  <data name="Password_NewPlaceholder" xml:space="preserve">
+    <value>Neues Passwort (leer = behalten)</value>
+  </data>
+  <data name="Password_NoneStored" xml:space="preserve">
+    <value>Kein Passwort gespeichert.</value>
+  </data>
+  <data name="Password_ReadFailed" xml:space="preserve">
+    <value>Gespeichertes Passwort konnte nicht gelesen werden: {0}</value>
+  </data>
+  <data name="Password_RemoveFailed" xml:space="preserve">
+    <value>Gespeichertes Passwort konnte nicht entfernt werden: {0}</value>
+  </data>
+  <data name="Password_Save" xml:space="preserve">
+    <value>Passwort speichern</value>
+  </data>
+  <data name="Password_SaveFailed" xml:space="preserve">
+    <value>Passwort konnte nicht gespeichert werden: {0}</value>
+  </data>
+  <data name="Password_Stored" xml:space="preserve">
+    <value>Passwort gespeichert</value>
+  </data>
+  <data name="Password_WillBeRemoved" xml:space="preserve">
+    <value>Gespeichertes Passwort wird beim Speichern entfernt</value>
+  </data>
+  <data name="Picker_Empty" xml:space="preserve">
+    <value>Keine Einträge gefunden.</value>
+  </data>
+  <data name="Picker_Filter" xml:space="preserve">
+    <value>Titel, Gruppe oder Benutzer suchen</value>
+  </data>
+  <data name="Picker_Select" xml:space="preserve">
+    <value>Übernehmen</value>
+  </data>
+  <data name="Picker_Title" xml:space="preserve">
+    <value>KeePass-Eintrag auswählen</value>
+  </data>
+  <data name="Planned_Phase3" xml:space="preserve">
+    <value>Dieser Verbindungstyp lässt sich schon anlegen und ordnen; Verbinden kommt in Phase 3.</value>
+  </data>
+  <data name="Planned_Title" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="Rdp_Admin" xml:space="preserve">
+    <value>Mit der Admin-Sitzung verbinden (/admin)</value>
+  </data>
+  <data name="Rdp_Audio" xml:space="preserve">
+    <value>Audiowiedergabe</value>
+  </data>
+  <data name="Rdp_Audio_Local" xml:space="preserve">
+    <value>Auf diesem Computer</value>
+  </data>
+  <data name="Rdp_Audio_None" xml:space="preserve">
+    <value>Nicht wiedergeben</value>
+  </data>
+  <data name="Rdp_Audio_Remote" xml:space="preserve">
+    <value>Auf dem Remotecomputer</value>
+  </data>
+  <data name="Rdp_AuthLevel" xml:space="preserve">
+    <value>Serverauthentifizierung</value>
+  </data>
+  <data name="Rdp_AuthLevel_Connect" xml:space="preserve">
+    <value>Immer verbinden, ohne Warnung</value>
+  </data>
+  <data name="Rdp_AuthLevel_Refuse" xml:space="preserve">
+    <value>Bei Zertifikatsproblemen nicht verbinden</value>
+  </data>
+  <data name="Rdp_AuthLevel_Warn" xml:space="preserve">
+    <value>Bei Zertifikatsproblemen warnen</value>
+  </data>
+  <data name="Rdp_CredentialMode" xml:space="preserve">
+    <value>Schutz der Anmeldedaten</value>
+  </data>
+  <data name="Rdp_CredentialMode_Normal" xml:space="preserve">
+    <value>Standard: Anmeldedaten an den Server übergeben</value>
+  </data>
+  <data name="Rdp_CredentialMode_RemoteGuard" xml:space="preserve">
+    <value>Remote Credential Guard</value>
+  </data>
+  <data name="Rdp_CredentialMode_RestrictedAdmin" xml:space="preserve">
+    <value>Eingeschränkter Administratormodus (Restricted Admin)</value>
+  </data>
+  <data name="Rdp_Display_Fit" xml:space="preserve">
+    <value>An Fenster anpassen (dynamische Auflösung)</value>
+  </data>
+  <data name="Rdp_Display_Fixed" xml:space="preserve">
+    <value>Feste Auflösung (skaliert)</value>
+  </data>
+  <data name="Rdp_Display_SmartSizing" xml:space="preserve">
+    <value>Smart Sizing (skaliert)</value>
+  </data>
+  <data name="Rdp_Error_GatewayHost" xml:space="preserve">
+    <value>Bitte den Gateway-Server angeben.</value>
+  </data>
+  <data name="Rdp_Error_Size" xml:space="preserve">
+    <value>Breite und Höhe der festen Auflösung: ganze Zahlen von {0} bis {1}.</value>
+  </data>
+  <data name="Rdp_External_Failed" xml:space="preserve">
+    <value>mstsc konnte nicht gestartet werden: {0}</value>
+  </data>
+  <data name="Rdp_External_Started" xml:space="preserve">
+    <value>Remotedesktopverbindung (mstsc) gestartet.</value>
+  </data>
+  <data name="Rdp_External_StartedWithPassword" xml:space="preserve">
+    <value>Remotedesktopverbindung (mstsc) gestartet. Die Anmeldung kommt aus dem Windows-Anmeldeinformationsspeicher.</value>
+  </data>
+  <data name="Rdp_Gateway_Always" xml:space="preserve">
+    <value>Gateway immer verwenden</value>
+  </data>
+  <data name="Rdp_Gateway_Detect" xml:space="preserve">
+    <value>Gateway automatisch erkennen (lokal umgehen)</value>
+  </data>
+  <data name="Rdp_Gateway_Host" xml:space="preserve">
+    <value>Gateway-Server</value>
+  </data>
+  <data name="Rdp_Gateway_None" xml:space="preserve">
+    <value>Kein Gateway</value>
+  </data>
+  <data name="Rdp_Gateway_SameLogon" xml:space="preserve">
+    <value>Anmeldedaten der Verbindung verwenden</value>
+  </data>
+  <data name="Rdp_Gateway_User" xml:space="preserve">
+    <value>Gateway-Benutzer (DOMÄNE\Name)</value>
+  </data>
+  <data name="Rdp_Height" xml:space="preserve">
+    <value>Höhe</value>
+  </data>
+  <data name="Rdp_Keyboard_FullScreen" xml:space="preserve">
+    <value>Tastenkombinationen nur im Vollbild an die Sitzung</value>
+  </data>
+  <data name="Rdp_Keyboard_Local" xml:space="preserve">
+    <value>Windows-Tastenkombinationen auf diesem Computer</value>
+  </data>
+  <data name="Rdp_Keyboard_Session" xml:space="preserve">
+    <value>Windows-Tastenkombinationen an die Sitzung</value>
+  </data>
+  <data name="Rdp_Multimon" xml:space="preserve">
+    <value>Alle Monitore verwenden (im Vollbild)</value>
+  </data>
+  <data name="Rdp_Nla" xml:space="preserve">
+    <value>Authentifizierung auf Netzwerkebene (NLA / CredSSP)</value>
+  </data>
+  <data name="Rdp_OpenExternally" xml:space="preserve">
+    <value>Mit mstsc öffnen (statt eingebettet)</value>
+  </data>
+  <data name="Rdp_OpenExternallyHint" xml:space="preserve">
+    <value>Startet die Windows-Remotedesktopverbindung mit einer erzeugten .rdp-Datei. Das gespeicherte Passwort steht nie in der Datei: Es liegt nur während der Sitzung als TERMSRV-Eintrag im Windows-Anmeldeinformationsspeicher.</value>
+  </data>
+  <data name="Rdp_Redirect_Clipboard" xml:space="preserve">
+    <value>Zwischenablage</value>
+  </data>
+  <data name="Rdp_Redirect_Drives" xml:space="preserve">
+    <value>Laufwerke</value>
+  </data>
+  <data name="Rdp_Redirect_Microphone" xml:space="preserve">
+    <value>Mikrofon</value>
+  </data>
+  <data name="Rdp_Redirect_Ports" xml:space="preserve">
+    <value>COM-Anschlüsse</value>
+  </data>
+  <data name="Rdp_Redirect_Printers" xml:space="preserve">
+    <value>Drucker</value>
+  </data>
+  <data name="Rdp_Redirect_SmartCards" xml:space="preserve">
+    <value>Smartcards</value>
+  </data>
+  <data name="Rdp_RemoteApp" xml:space="preserve">
+    <value>RemoteApp, z. B. ||excel (leer: ganzer Desktop)</value>
+  </data>
+  <data name="Rdp_RemoteAppHint" xml:space="preserve">
+    <value>Eine RemoteApp öffnet sich über mstsc in einem eigenen Fenster.</value>
+  </data>
+  <data name="Rdp_Section_Display" xml:space="preserve">
+    <value>Anzeige und Tastatur</value>
+  </data>
+  <data name="Rdp_Section_Gateway" xml:space="preserve">
+    <value>Gateway und SSH-Tunnel</value>
+  </data>
+  <data name="Rdp_Section_Program" xml:space="preserve">
+    <value>Programm</value>
+  </data>
+  <data name="Rdp_Section_Redirections" xml:space="preserve">
+    <value>Lokale Ressourcen</value>
+  </data>
+  <data name="Rdp_Section_Security" xml:space="preserve">
+    <value>Sicherheit und Anmeldung</value>
+  </data>
+  <data name="Rdp_SshTunnel" xml:space="preserve">
+    <value>Über SSH-Tunnel verbinden</value>
+  </data>
+  <data name="Rdp_SshTunnelFailed" xml:space="preserve">
+    <value>SSH-Tunnel fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Rdp_SshTunnelTip" xml:space="preserve">
+    <value>RDP läuft durch einen SSH-Tunnel über diese SSH-Verbindung (für Hosts hinter einem Jump-Host).</value>
+  </data>
+  <data name="Rdp_StartProgram" xml:space="preserve">
+    <value>Startprogramm statt Desktop (optional)</value>
+  </data>
+  <data name="Rdp_Width" xml:space="preserve">
+    <value>Breite</value>
+  </data>
+  <data name="Rdp_WorkingDirectory" xml:space="preserve">
+    <value>Arbeitsverzeichnis (optional)</value>
+  </data>
+  <data name="RemoteTool_Access_0" xml:space="preserve">
+    <value>Zugriff: Vollzugriff (-a 0)</value>
+  </data>
+  <data name="RemoteTool_Access_1" xml:space="preserve">
+    <value>Zugriff: Alles bestätigen (-a 1)</value>
+  </data>
+  <data name="RemoteTool_Access_2" xml:space="preserve">
+    <value>Zugriff: Ansehen und zeigen (-a 2)</value>
+  </data>
+  <data name="RemoteTool_Access_3" xml:space="preserve">
+    <value>Zugriff: Benutzerdefiniert (-a 3)</value>
+  </data>
+  <data name="RemoteTool_Access_9" xml:space="preserve">
+    <value>Zugriff: Standardeinstellung (-a 9)</value>
+  </data>
+  <data name="RemoteTool_Access_None" xml:space="preserve">
+    <value>Zugriff: Standard (nicht übergeben)</value>
+  </data>
+  <data name="RemoteTool_Action_FileTransfer" xml:space="preserve">
+    <value>Dateiübertragung</value>
+  </data>
+  <data name="RemoteTool_AliasPlaceholder" xml:space="preserve">
+    <value>Alias (optional)</value>
+  </data>
+  <data name="RemoteTool_ArgumentsPlaceholder" xml:space="preserve">
+    <value>Zusätzliche Startparameter ({id} = Remote-ID)</value>
+  </data>
+  <data name="RemoteTool_Csv_Error" xml:space="preserve">
+    <value>Die CSV-Datei konnte nicht gelesen werden: {0}</value>
+  </data>
+  <data name="RemoteTool_Csv_Group" xml:space="preserve">
+    <value>Import aus AnyDesk</value>
+  </data>
+  <data name="RemoteTool_Csv_Hint" xml:space="preserve">
+    <value>Clients-Liste aus my.anydesk I als CSV exportieren und hier einlesen. Einmal-Import ohne Abgleich und ohne Passwörter; schon vorhandene AnyDesk-IDs werden übersprungen.</value>
+  </data>
+  <data name="RemoteTool_Csv_Import" xml:space="preserve">
+    <value>AnyDesk-CSV importieren …</value>
+  </data>
+  <data name="RemoteTool_Csv_Result" xml:space="preserve">
+    <value>{0} importiert, {1} schon vorhanden, {2} Zeilen übersprungen.</value>
+  </data>
+  <data name="RemoteTool_Csv_Title" xml:space="preserve">
+    <value>AnyDesk-Import (CSV)</value>
+  </data>
+  <data name="RemoteTool_Error_SecretInArguments" xml:space="preserve">
+    <value>Die zusätzlichen Startparameter enthalten „{0}“. Passwörter gehören ins Passwortfeld, nicht in die Startparameter.</value>
+  </data>
+  <data name="RemoteTool_FullScreen" xml:space="preserve">
+    <value>Vollbild (--full-screen)</value>
+  </data>
+  <data name="RemoteTool_Hint" xml:space="preserve">
+    <value>Start ohne Shell; jeder Parameter wird einzeln übergeben. Kein Passwort in die Startparameter eintragen: es stünde in der Prozessliste.</value>
+  </data>
+  <data name="RemoteTool_InvalidId" xml:space="preserve">
+    <value>„{0}“ ist keine gültige Remote-ID.</value>
+  </data>
+  <data name="RemoteTool_Missing_Download" xml:space="preserve">
+    <value>Herunterladen</value>
+  </data>
+  <data name="RemoteTool_Missing_Message" xml:space="preserve">
+    <value>{0} ({1}) wurde auf diesem PC nicht gefunden. Installiere {0} oder lege den Pfad zur Programmdatei in den Remote-Tool-Einstellungen fest.</value>
+  </data>
+  <data name="RemoteTool_Missing_SetPath" xml:space="preserve">
+    <value>Pfad festlegen …</value>
+  </data>
+  <data name="RemoteTool_Missing_Title" xml:space="preserve">
+    <value>{0} nicht gefunden</value>
+  </data>
+  <data name="RemoteTool_Mode_Control" xml:space="preserve">
+    <value>Fernsteuerung</value>
+  </data>
+  <data name="RemoteTool_Mode_FileTransfer" xml:space="preserve">
+    <value>Dateiübertragung</value>
+  </data>
+  <data name="RemoteTool_Mode_PortForward" xml:space="preserve">
+    <value>Port-Weiterleitung</value>
+  </data>
+  <data name="RemoteTool_Mode_Vpn" xml:space="preserve">
+    <value>VPN</value>
+  </data>
+  <data name="RemoteTool_PasswordHint" xml:space="preserve">
+    <value>Gespeichert im Windows Credential Manager. AnyDesk bekommt es über stdin, TeamViewer und RustDesk über die Zwischenablage (nach 30 s geleert).</value>
+  </data>
+  <data name="RemoteTool_PasswordInfo_AnyDesk" xml:space="preserve">
+    <value>Das gespeicherte Passwort geht über stdin an AnyDesk (--with-password) und taucht nicht in der Prozessliste auf.</value>
+  </data>
+  <data name="RemoteTool_PasswordInfo_Clipboard" xml:space="preserve">
+    <value>Ohne diese Option legt Remote-Manager das gespeicherte Passwort beim Verbinden in die Zwischenablage (nach 30 s geleert); Easy Access braucht gar keins.</value>
+  </data>
+  <data name="RemoteTool_PasswordOnLine_RustDesk" xml:space="preserve">
+    <value>Passwort auf der Kommandozeile übergeben (--password)</value>
+  </data>
+  <data name="RemoteTool_PasswordOnLine_TeamViewer" xml:space="preserve">
+    <value>Passwort auf der Kommandozeile übergeben (-p)</value>
+  </data>
+  <data name="RemoteTool_PasswordWarning_Message" xml:space="preserve">
+    <value>Jedes Programm auf diesem PC kann die Kommandozeile von {0} lesen, also auch das Passwort. Besser Easy Access oder die Zwischenablage nutzen.</value>
+  </data>
+  <data name="RemoteTool_PasswordWarning_Title" xml:space="preserve">
+    <value>Passwort sichtbar in der Prozessliste</value>
+  </data>
+  <data name="RemoteTool_Paths_Auto" xml:space="preserve">
+    <value>Automatisch erkennen</value>
+  </data>
+  <data name="RemoteTool_Paths_Browse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="RemoteTool_Paths_ConfiguredMissing" xml:space="preserve">
+    <value>Eingestellter Pfad fehlt: {0}</value>
+  </data>
+  <data name="RemoteTool_Paths_Detected" xml:space="preserve">
+    <value>Automatisch: {0}</value>
+  </data>
+  <data name="RemoteTool_Paths_Hint" xml:space="preserve">
+    <value>Leer lassen für die automatische Erkennung (Registry, Programme-Ordner). Ein eingetragener Pfad hat Vorrang.</value>
+  </data>
+  <data name="RemoteTool_Paths_Invalid" xml:space="preserve">
+    <value>Keine vorhandene .exe-Datei: {0}</value>
+  </data>
+  <data name="RemoteTool_Paths_Missing" xml:space="preserve">
+    <value>{0} wurde nicht gefunden.</value>
+  </data>
+  <data name="RemoteTool_Paths_Title" xml:space="preserve">
+    <value>Programmpfade</value>
+  </data>
+  <data name="RemoteTool_Paths_UsingDetected" xml:space="preserve">
+    <value>Gefunden: {0}</value>
+  </data>
+  <data name="RemoteTool_Paths_UsingSetting" xml:space="preserve">
+    <value>Eingestellt: {0}</value>
+  </data>
+  <data name="RemoteTool_Plain" xml:space="preserve">
+    <value>Ohne Rahmen und Menü (--plain)</value>
+  </data>
+  <data name="RemoteTool_Preview" xml:space="preserve">
+    <value>Vorschau des Aufrufs</value>
+  </data>
+  <data name="RemoteTool_Preview_Stdin" xml:space="preserve">
+    <value>{0}
+(Passwort {1} über stdin, nicht in der Prozessliste)</value>
+  </data>
+  <data name="RemoteTool_PreviewId" xml:space="preserve">
+    <value>&lt;ID&gt;</value>
+  </data>
+  <data name="RemoteTool_Quality_1" xml:space="preserve">
+    <value>Qualität: Automatisch (-q 1)</value>
+  </data>
+  <data name="RemoteTool_Quality_2" xml:space="preserve">
+    <value>Qualität: Optimiert (-q 2)</value>
+  </data>
+  <data name="RemoteTool_Quality_3" xml:space="preserve">
+    <value>Qualität: Geschwindigkeit (-q 3)</value>
+  </data>
+  <data name="RemoteTool_Quality_4" xml:space="preserve">
+    <value>Qualität: Benutzerdefiniert (-q 4)</value>
+  </data>
+  <data name="RemoteTool_Quality_5" xml:space="preserve">
+    <value>Qualität: Standardeinstellung (-q 5)</value>
+  </data>
+  <data name="RemoteTool_Quality_None" xml:space="preserve">
+    <value>Qualität: Standard (nicht übergeben)</value>
+  </data>
+  <data name="RemoteTool_Settings_Tip" xml:space="preserve">
+    <value>Remote-Tools: Pfade, TeamViewer-Abgleich, AnyDesk-Import</value>
+  </data>
+  <data name="RemoteTool_Settings_Title" xml:space="preserve">
+    <value>Remote-Tools</value>
+  </data>
+  <data name="RemoteTool_StartFailed" xml:space="preserve">
+    <value>Das Tool konnte nicht gestartet werden: {0}</value>
+  </data>
+  <data name="RemoteTool_StartOptions" xml:space="preserve">
+    <value>Startparameter</value>
+  </data>
+  <data name="RemoteTool_Sync_Error_Forbidden" xml:space="preserve">
+    <value>TeamViewer verweigert den Zugriff (403). Der Token braucht Leserechte für „Computer &amp; Kontakte“; die Web API gibt es ab der Business-Lizenz.</value>
+  </data>
+  <data name="RemoteTool_Sync_Error_Other" xml:space="preserve">
+    <value>Abgleich fehlgeschlagen: {0}</value>
+  </data>
+  <data name="RemoteTool_Sync_Error_Unauthorized" xml:space="preserve">
+    <value>TeamViewer lehnt den Token ab (401). Bitte einen gültigen Script-Token speichern.</value>
+  </data>
+  <data name="RemoteTool_Sync_Hint" xml:space="preserve">
+    <value>Script-Token aus der TeamViewer Management Console (Profil › Apps), nur mit Leserechten für „Computer &amp; Kontakte“. Er liegt im Windows Credential Manager. Der Abgleich ändert Alias und Online-Status; Notizen, Tags, Gruppe und Passwort bleiben lokal.</value>
+  </data>
+  <data name="RemoteTool_Sync_NewGroup" xml:space="preserve">
+    <value>Neu aus TeamViewer</value>
+  </data>
+  <data name="RemoteTool_Sync_NoToken" xml:space="preserve">
+    <value>Kein Token gespeichert</value>
+  </data>
+  <data name="RemoteTool_Sync_Now" xml:space="preserve">
+    <value>Jetzt abgleichen</value>
+  </data>
+  <data name="RemoteTool_Sync_Result" xml:space="preserve">
+    <value>{0} neu, {1} aktualisiert, {2} unverändert, {3} nicht mehr im Konto (markiert, nicht gelöscht).</value>
+  </data>
+  <data name="RemoteTool_Sync_SaveToken" xml:space="preserve">
+    <value>Token speichern</value>
+  </data>
+  <data name="RemoteTool_Sync_Title" xml:space="preserve">
+    <value>TeamViewer Web API</value>
+  </data>
+  <data name="RemoteTool_Sync_TokenPlaceholder" xml:space="preserve">
+    <value>Script-Token einfügen</value>
+  </data>
+  <data name="RemoteTool_Sync_TokenStored" xml:space="preserve">
+    <value>Token im Credential Manager gespeichert</value>
+  </data>
+  <data name="RemoteTool_Warning_PasswordOnCommandLine" xml:space="preserve">
+    <value>{0} wurde mit dem Passwort auf der Kommandozeile gestartet: es steht in der Prozessliste.</value>
+  </data>
+  <data name="Search_Placeholder" xml:space="preserve">
+    <value>Name, Host, Tag, Beschreibung suchen</value>
+  </data>
+  <data name="Session_ClientNotReady" xml:space="preserve">
+    <value>Der RDP-Client ist noch nicht bereit. Bitte gleich noch einmal versuchen.</value>
+  </data>
+  <data name="Session_ConnectFailed" xml:space="preserve">
+    <value>Verbinden fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Session_ConnectingStored" xml:space="preserve">
+    <value>Verbinde mit dem gespeicherten Passwort…</value>
+  </data>
+  <data name="Session_Disconnect" xml:space="preserve">
+    <value>Trennen</value>
+  </data>
+  <data name="Session_Disconnected" xml:space="preserve">
+    <value>Getrennt: {0}</value>
+  </data>
+  <data name="Session_DisconnectReason" xml:space="preserve">
+    <value>Grund {0}</value>
+  </data>
+  <data name="Session_DisconnectReportedByView" xml:space="preserve">
+    <value>von RdpClientView gemeldet</value>
+  </data>
+  <data name="Session_Focus" xml:space="preserve">
+    <value>Sitzung fokussieren</value>
+  </data>
+  <data name="Session_Footer" xml:space="preserve">
+    <value>NLA ist immer an. Windows-Tasten gehen an die Sitzung, solange sie den Fokus hat.</value>
+  </data>
+  <data name="Session_FullScreenTip" xml:space="preserve">
+    <value>Vollbild (Strg+Alt+Pause zum Verlassen)</value>
+  </data>
+  <data name="Session_More" xml:space="preserve">
+    <value>Mehr</value>
+  </data>
+  <data name="Session_NoHost" xml:space="preserve">
+    <value>Diese Verbindung hat keinen Host.</value>
+  </data>
+  <data name="Session_NotConnected" xml:space="preserve">
+    <value>Nicht verbunden</value>
+  </data>
+  <data name="Session_PasswordPlaceholderStored" xml:space="preserve">
+    <value>Passwort (leer = gespeichertes verwenden)</value>
+  </data>
+  <data name="Session_Reconnect" xml:space="preserve">
+    <value>Erneut verbinden</value>
+  </data>
+  <data name="Session_SavePasswordTip" xml:space="preserve">
+    <value>Nach erfolgreicher Anmeldung im Windows Credential Manager speichern</value>
+  </data>
+  <data name="Session_SaveSnapshot" xml:space="preserve">
+    <value>Momentaufnahme als Vorschau speichern</value>
+  </data>
+  <data name="Session_StoredPasswordRejected" xml:space="preserve">
+    <value>Das gespeicherte Passwort wurde abgelehnt. Bitte neu eingeben; mit „Passwort speichern“ wird es ersetzt.
+{0}</value>
+  </data>
+  <data name="Sftp_CopyPath" xml:space="preserve">
+    <value>Pfad kopieren</value>
+  </data>
+  <data name="Sftp_Create" xml:space="preserve">
+    <value>Anlegen</value>
+  </data>
+  <data name="Sftp_DeleteMany" xml:space="preserve">
+    <value>{0} Einträge</value>
+  </data>
+  <data name="Sftp_DeleteMessage" xml:space="preserve">
+    <value>„{0}“ wirklich löschen? Ordner werden mit ihrem ganzen Inhalt gelöscht.</value>
+  </data>
+  <data name="Sftp_Download" xml:space="preserve">
+    <value>Herunterladen</value>
+  </data>
+  <data name="Sftp_DownloadEllipsis" xml:space="preserve">
+    <value>Herunterladen …</value>
+  </data>
+  <data name="Sftp_Downloading" xml:space="preserve">
+    <value>Herunterladen</value>
+  </data>
+  <data name="Sftp_DownloadPickerTitle" xml:space="preserve">
+    <value>Zielordner für den Download wählen</value>
+  </data>
+  <data name="Sftp_DownloadTip" xml:space="preserve">
+    <value>Auswahl herunterladen</value>
+  </data>
+  <data name="Sftp_DropHint" xml:space="preserve">
+    <value>Loslassen zum Hochladen nach {0}</value>
+  </data>
+  <data name="Sftp_Empty" xml:space="preserve">
+    <value>Dieser Ordner ist leer. Dateien aus dem Explorer hierher ziehen, um sie hochzuladen.</value>
+  </data>
+  <data name="Sftp_Home" xml:space="preserve">
+    <value>Home-Ordner</value>
+  </data>
+  <data name="Sftp_InvalidName" xml:space="preserve">
+    <value>Ungültiger Name.</value>
+  </data>
+  <data name="Sftp_ListFailed" xml:space="preserve">
+    <value>{0} kann nicht geöffnet werden: {1}</value>
+  </data>
+  <data name="Sftp_Modified" xml:space="preserve">
+    <value>Geändert</value>
+  </data>
+  <data name="Sftp_NewFolder" xml:space="preserve">
+    <value>Neuer Ordner</value>
+  </data>
+  <data name="Sftp_NewFolderEllipsis" xml:space="preserve">
+    <value>Neuer Ordner …</value>
+  </data>
+  <data name="Sftp_Open" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="Sftp_OperationFailed" xml:space="preserve">
+    <value>Aktion fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Sftp_Overwrite" xml:space="preserve">
+    <value>Überschreiben</value>
+  </data>
+  <data name="Sftp_OverwriteMessage" xml:space="preserve">
+    <value>Im Ordner gibt es schon: {0}. Überschreiben?</value>
+  </data>
+  <data name="Sftp_OverwriteTitle" xml:space="preserve">
+    <value>Überschreiben?</value>
+  </data>
+  <data name="Sftp_Permissions" xml:space="preserve">
+    <value>Rechte</value>
+  </data>
+  <data name="Sftp_Refresh" xml:space="preserve">
+    <value>Aktualisieren</value>
+  </data>
+  <data name="Sftp_Rename" xml:space="preserve">
+    <value>Umbenennen</value>
+  </data>
+  <data name="Sftp_RenameEllipsis" xml:space="preserve">
+    <value>Umbenennen …</value>
+  </data>
+  <data name="Sftp_Size" xml:space="preserve">
+    <value>Größe</value>
+  </data>
+  <data name="Sftp_StartFolderPlaceholder" xml:space="preserve">
+    <value>Startordner (leer: Home-Ordner)</value>
+  </data>
+  <data name="Sftp_Title" xml:space="preserve">
+    <value>{0} – Dateien</value>
+  </data>
+  <data name="Sftp_TransferCanceled" xml:space="preserve">
+    <value>Übertragung abgebrochen.</value>
+  </data>
+  <data name="Sftp_TransferDone" xml:space="preserve">
+    <value>{0} abgeschlossen.</value>
+  </data>
+  <data name="Sftp_TransferFailed" xml:space="preserve">
+    <value>{0} fehlgeschlagen: {1}</value>
+  </data>
+  <data name="Sftp_TransferProgress" xml:space="preserve">
+    <value>{0}: {1} ({2} von {3}, {4} von {5})</value>
+  </data>
+  <data name="Sftp_Up" xml:space="preserve">
+    <value>Übergeordneter Ordner</value>
+  </data>
+  <data name="Sftp_Upload" xml:space="preserve">
+    <value>Hochladen</value>
+  </data>
+  <data name="Sftp_Uploading" xml:space="preserve">
+    <value>Hochladen</value>
+  </data>
+  <data name="Sftp_UploadPickerTitle" xml:space="preserve">
+    <value>Dateien zum Hochladen wählen</value>
+  </data>
+  <data name="Sftp_UploadTip" xml:space="preserve">
+    <value>Dateien hochladen (oder aus dem Explorer hierher ziehen)</value>
+  </data>
+  <data name="Ssh_Auth_Agent" xml:space="preserve">
+    <value>Anmeldung über SSH-Agent (OpenSSH-Agent oder Pageant)</value>
+  </data>
+  <data name="Ssh_Auth_AgentHint" xml:space="preserve">
+    <value>Die Schlüssel bleiben im Agent; Remote-Manager speichert nichts davon.</value>
+  </data>
+  <data name="Ssh_Auth_KeyFile" xml:space="preserve">
+    <value>Anmeldung mit Schlüsseldatei</value>
+  </data>
+  <data name="Ssh_Auth_KeyFileHint" xml:space="preserve">
+    <value>OpenSSH- oder PuTTY-Schlüssel (.ppk). Eine Passphrase wird wie ein Passwort in der Windows-Anmeldeinformationsverwaltung gespeichert.</value>
+  </data>
+  <data name="Ssh_Auth_Password" xml:space="preserve">
+    <value>Anmeldung mit Passwort</value>
+  </data>
+  <data name="Ssh_Auth_PasswordHint" xml:space="preserve">
+    <value>Passwort oben speichern oder beim Verbinden eingeben.</value>
+  </data>
+  <data name="Ssh_Browse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="Ssh_Card_AgentHint" xml:space="preserve">
+    <value>Anmeldung über den SSH-Agent (OpenSSH-Agent oder Pageant).</value>
+  </data>
+  <data name="Ssh_Card_Connecting" xml:space="preserve">
+    <value>Verbinde …</value>
+  </data>
+  <data name="Ssh_Card_KeyHint" xml:space="preserve">
+    <value>Anmeldung mit Schlüsseldatei {0}</value>
+  </data>
+  <data name="Ssh_Card_Passphrase" xml:space="preserve">
+    <value>Passphrase des Schlüssels (falls nötig)</value>
+  </data>
+  <data name="Ssh_Card_PassphraseStored" xml:space="preserve">
+    <value>Passphrase gespeichert (leer lassen)</value>
+  </data>
+  <data name="Ssh_Card_Via" xml:space="preserve">
+    <value>Über Jump-Host {0}</value>
+  </data>
+  <data name="Ssh_Error_Agent" xml:space="preserve">
+    <value>SSH-Agent: {0}</value>
+  </data>
+  <data name="Ssh_Error_Auth" xml:space="preserve">
+    <value>Anmeldung abgelehnt ({0}). Benutzer, Passwort oder Schlüssel prüfen.</value>
+  </data>
+  <data name="Ssh_Error_Canceled" xml:space="preserve">
+    <value>Abgebrochen.</value>
+  </data>
+  <data name="Ssh_Error_ForwardInvalid" xml:space="preserve">
+    <value>Weiterleitung in Zeile {0} ist ungültig (Beispiel: L 8080:intranet:80).</value>
+  </data>
+  <data name="Ssh_Error_JumpHostLoop" xml:space="preserve">
+    <value>Die Jump-Hosts bilden eine Schleife (bei „{0}“).</value>
+  </data>
+  <data name="Ssh_Error_JumpHostMissing" xml:space="preserve">
+    <value>Der eingetragene Jump-Host existiert nicht mehr.</value>
+  </data>
+  <data name="Ssh_Error_JumpHostNotSsh" xml:space="preserve">
+    <value>„{0}“ ist keine SSH-Verbindung und kann kein Jump-Host sein.</value>
+  </data>
+  <data name="Ssh_Error_KeyFileMissing" xml:space="preserve">
+    <value>Schlüsseldatei für „{0}“ nicht gefunden: {1}</value>
+  </data>
+  <data name="Ssh_Error_KeyFileUnreadable" xml:space="preserve">
+    <value>Schlüsseldatei für „{0}“ kann nicht gelesen werden: {1}</value>
+  </data>
+  <data name="Ssh_Error_KeyPathEmpty" xml:space="preserve">
+    <value>Bitte eine Schlüsseldatei angeben.</value>
+  </data>
+  <data name="Ssh_Error_MissingPassword" xml:space="preserve">
+    <value>Kein Passwort für „{0}“: bitte eingeben oder in der Verbindung speichern.</value>
+  </data>
+  <data name="Ssh_Error_MissingUser" xml:space="preserve">
+    <value>Für „{0}“ ist kein Benutzer eingetragen.</value>
+  </data>
+  <data name="Ssh_Error_Network" xml:space="preserve">
+    <value>Server nicht erreichbar: {0}</value>
+  </data>
+  <data name="Ssh_Error_NoAgentKeys" xml:space="preserve">
+    <value>Kein SSH-Agent mit Schlüsseln gefunden. OpenSSH-Agent oder Pageant starten und einen Schlüssel laden.</value>
+  </data>
+  <data name="Ssh_Error_Other" xml:space="preserve">
+    <value>Verbindung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Ssh_Error_PassphraseRequired" xml:space="preserve">
+    <value>Der Schlüssel von „{0}“ ist mit einer Passphrase geschützt: bitte eingeben.</value>
+  </data>
+  <data name="Ssh_Error_Timeout" xml:space="preserve">
+    <value>Zeitüberschreitung beim Verbinden.</value>
+  </data>
+  <data name="Ssh_Error_WrongPassphrase" xml:space="preserve">
+    <value>Falsche Passphrase für den Schlüssel von „{0}“.</value>
+  </data>
+  <data name="Ssh_Forwards" xml:space="preserve">
+    <value>Port-Weiterleitungen (eine pro Zeile)</value>
+  </data>
+  <data name="Ssh_ForwardsPlaceholder" xml:space="preserve">
+    <value>L 8080:intranet:80   R 9000:localhost:3000   D 1080</value>
+  </data>
+  <data name="Ssh_HostKeyForget" xml:space="preserve">
+    <value>Vergessen</value>
+  </data>
+  <data name="Ssh_HostKeyForgetTip" xml:space="preserve">
+    <value>Beim nächsten Verbinden wird der Schlüssel erneut abgefragt.</value>
+  </data>
+  <data name="Ssh_HostKeyNone" xml:space="preserve">
+    <value>Host-Schlüssel: noch nicht bestätigt</value>
+  </data>
+  <data name="Ssh_HostKeyStored" xml:space="preserve">
+    <value>Host-Schlüssel: {0}</value>
+  </data>
+  <data name="Ssh_JumpHost" xml:space="preserve">
+    <value>Jump-Host</value>
+  </data>
+  <data name="Ssh_JumpHost_Missing" xml:space="preserve">
+    <value>(gelöschte Verbindung)</value>
+  </data>
+  <data name="Ssh_JumpHost_None" xml:space="preserve">
+    <value>Kein Jump-Host (direkt verbinden)</value>
+  </data>
+  <data name="Ssh_KeyPathPlaceholder" xml:space="preserve">
+    <value>Pfad zur privaten Schlüsseldatei</value>
+  </data>
+  <data name="Ssh_KeyPickerTitle" xml:space="preserve">
+    <value>Private Schlüsseldatei wählen</value>
+  </data>
+  <data name="Ssh_Status_Closed" xml:space="preserve">
+    <value>Verbindung beendet</value>
+  </data>
+  <data name="Ssh_Status_Connected" xml:space="preserve">
+    <value>Verbunden als {0} mit {1}</value>
+  </data>
+  <data name="Ssh_Status_Connecting" xml:space="preserve">
+    <value>Verbinde mit {0} …</value>
+  </data>
+  <data name="Ssh_Status_ForwardFailed" xml:space="preserve">
+    <value>Weiterleitung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Ssh_Status_JumpHost" xml:space="preserve">
+    <value>Über Jump-Host {0} …</value>
+  </data>
+  <data name="Ssh_Terminal_Files" xml:space="preserve">
+    <value>Dateien</value>
+  </data>
+  <data name="Ssh_Terminal_FilesTip" xml:space="preserve">
+    <value>SFTP-Dateibrowser für diesen Server öffnen</value>
+  </data>
+  <data name="Ssh_Terminal_PageFailed" xml:space="preserve">
+    <value>Das Terminal konnte nicht geladen werden. Ist die WebView2-Runtime installiert?</value>
+  </data>
+  <data name="Ssh_Terminal_PasteTip" xml:space="preserve">
+    <value>Einfügen (Strg+Umschalt+V). Kopieren: markieren und Strg+Umschalt+C oder Rechtsklick.</value>
+  </data>
+  <data name="StartParams_Custom" xml:space="preserve">
+    <value>Eigene Einstellungen</value>
+  </data>
+  <data name="StartParams_Default" xml:space="preserve">
+    <value>Standardeinstellungen</value>
+  </data>
+  <data name="StartParams_Rdp_Admin" xml:space="preserve">
+    <value>Admin-Sitzung (Konsole)</value>
+  </data>
+  <data name="StartParams_Rdp_AudioNone" xml:space="preserve">
+    <value>Ton aus</value>
+  </data>
+  <data name="StartParams_Rdp_AudioRemote" xml:space="preserve">
+    <value>Ton auf dem Remote-PC</value>
+  </data>
+  <data name="StartParams_Rdp_Clipboard" xml:space="preserve">
+    <value>Zwischenablage</value>
+  </data>
+  <data name="StartParams_Rdp_CredentialGuard" xml:space="preserve">
+    <value>Remote Credential Guard</value>
+  </data>
+  <data name="StartParams_Rdp_Drives" xml:space="preserve">
+    <value>Laufwerke</value>
+  </data>
+  <data name="StartParams_Rdp_External" xml:space="preserve">
+    <value>Extern mit mstsc</value>
+  </data>
+  <data name="StartParams_Rdp_Fit" xml:space="preserve">
+    <value>Anzeige passt sich dem Fenster an</value>
+  </data>
+  <data name="StartParams_Rdp_Fixed" xml:space="preserve">
+    <value>Feste Auflösung {0} × {1}</value>
+  </data>
+  <data name="StartParams_Rdp_Gateway" xml:space="preserve">
+    <value>Gateway {0}</value>
+  </data>
+  <data name="StartParams_Rdp_KeysFullScreen" xml:space="preserve">
+    <value>Windows-Tasten nur im Vollbild an die Sitzung</value>
+  </data>
+  <data name="StartParams_Rdp_KeysLocal" xml:space="preserve">
+    <value>Windows-Tasten bleiben lokal</value>
+  </data>
+  <data name="StartParams_Rdp_KeysSession" xml:space="preserve">
+    <value>Windows-Tasten an die Sitzung</value>
+  </data>
+  <data name="StartParams_Rdp_Microphone" xml:space="preserve">
+    <value>Mikrofon</value>
+  </data>
+  <data name="StartParams_Rdp_Multimon" xml:space="preserve">
+    <value>alle Monitore</value>
+  </data>
+  <data name="StartParams_Rdp_NlaOff" xml:space="preserve">
+    <value>NLA aus</value>
+  </data>
+  <data name="StartParams_Rdp_NlaOn" xml:space="preserve">
+    <value>NLA an</value>
+  </data>
+  <data name="StartParams_Rdp_Ports" xml:space="preserve">
+    <value>Anschlüsse</value>
+  </data>
+  <data name="StartParams_Rdp_Printers" xml:space="preserve">
+    <value>Drucker</value>
+  </data>
+  <data name="StartParams_Rdp_Redirected" xml:space="preserve">
+    <value>Umgeleitet: {0}</value>
+  </data>
+  <data name="StartParams_Rdp_RemoteApp" xml:space="preserve">
+    <value>RemoteApp: {0}</value>
+  </data>
+  <data name="StartParams_Rdp_RestrictedAdmin" xml:space="preserve">
+    <value>Restricted Admin</value>
+  </data>
+  <data name="StartParams_Rdp_SmartCards" xml:space="preserve">
+    <value>Smartcards</value>
+  </data>
+  <data name="StartParams_Rdp_SmartSizing" xml:space="preserve">
+    <value>Skaliert ins Fenster</value>
+  </data>
+  <data name="StartParams_Rdp_StartProgram" xml:space="preserve">
+    <value>Startprogramm: {0}</value>
+  </data>
+  <data name="Status_CheckedAt" xml:space="preserve">
+    <value>Zuletzt geprüft: {0}</value>
+  </data>
+  <data name="Status_Hint_Rdp" xml:space="preserve">
+    <value>Status per TCP-Prüfung des RDP-Ports im Hintergrund. Keine Antwort = unbekannt, abgelehnt = offline.</value>
+  </data>
+  <data name="Status_Hint_RemoteTool" xml:space="preserve">
+    <value>Kein Online-Status: AnyDesk und RustDesk bieten ihn ohne Lizenz-API nicht an.</value>
+  </data>
+  <data name="Status_Hint_Tunneled" xml:space="preserve">
+    <value>Kein Online-Status: Die Verbindung läuft über einen SSH-Jump-Host, der Host ist von hier aus meist nicht direkt erreichbar.</value>
+  </data>
+  <data name="Status_Hint_TcpPort" xml:space="preserve">
+    <value>Status per TCP-Prüfung des Ports im Hintergrund. Keine Antwort = unbekannt, abgelehnt = offline.</value>
+  </data>
+  <data name="Status_Hint_TeamViewer" xml:space="preserve">
+    <value>Online-Status aus der TeamViewer Web API (Token in den Remote-Tool-Einstellungen). Ohne Token unbekannt.</value>
+  </data>
+  <data name="Status_Offline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
+  <data name="Status_Online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Status_RefreshTip" xml:space="preserve">
+    <value>Online-Status aktualisieren</value>
+  </data>
+  <data name="Status_Unknown" xml:space="preserve">
+    <value>Unbekannt</value>
+  </data>
+  <data name="Subtitle_Many" xml:space="preserve">
+    <value>{0} Verbindungen · {1} online</value>
+  </data>
+  <data name="Subtitle_One" xml:space="preserve">
+    <value>{0} Verbindung · {1} online</value>
+  </data>
+  <data name="Unlock_Button" xml:space="preserve">
+    <value>Entsperren</value>
+  </data>
+  <data name="Unlock_Hint" xml:space="preserve">
+    <value>Das Master-Passwort wird nicht gespeichert. Danach bleibt die Datenbank {0} Minuten entsperrt, nur im Arbeitsspeicher.</value>
+  </data>
+  <data name="Unlock_KeyFile" xml:space="preserve">
+    <value>Mit Schlüsseldatei {0}</value>
+  </data>
+  <data name="Unlock_Password" xml:space="preserve">
+    <value>Master-Passwort</value>
+  </data>
+  <data name="Unlock_Title" xml:space="preserve">
+    <value>KeePass entsperren</value>
+  </data>
+  <data name="Unlock_Wrong" xml:space="preserve">
+    <value>Master-Passwort oder Schlüsseldatei ist falsch. Versuch es noch einmal.</value>
+  </data>
+  <data name="Vault_Browse" xml:space="preserve">
+    <value>Durchsuchen …</value>
+  </data>
+  <data name="Vault_Check" xml:space="preserve">
+    <value>Prüfen</value>
+  </data>
+  <data name="Vault_Check_Ok" xml:space="preserve">
+    <value>Gefunden. Das Passwort wurde gelesen und gleich wieder verworfen.</value>
+  </data>
+  <data name="Vault_Checking" xml:space="preserve">
+    <value>Wird geprüft …</value>
+  </data>
+  <data name="Vault_Err_Canceled" xml:space="preserve">
+    <value>Entsperren abgebrochen.</value>
+  </data>
+  <data name="Vault_Err_EntryAmbiguous" xml:space="preserve">
+    <value>Mehrere Einträge passen zu „{0}“. Gib den Pfad (Gruppe/Titel) oder die UUID an.</value>
+  </data>
+  <data name="Vault_Err_EntryNotFound" xml:space="preserve">
+    <value>Eintrag nicht gefunden: {0}</value>
+  </data>
+  <data name="Vault_Err_FileNotFound" xml:space="preserve">
+    <value>Datei nicht gefunden: {0}</value>
+  </data>
+  <data name="Vault_Err_InvalidReference" xml:space="preserve">
+    <value>Ungültiger Verweis auf den Passwort-Manager ({0}).</value>
+  </data>
+  <data name="Vault_Err_NotSignedIn" xml:space="preserve">
+    <value>Die 1Password-CLI ist nicht angemeldet. Schalte in der 1Password-App unter Einstellungen &gt; Entwickler die CLI-Integration ein oder melde dich mit „op signin“ an.</value>
+  </data>
+  <data name="Vault_Err_ToolFailed" xml:space="preserve">
+    <value>1Password: {0}</value>
+  </data>
+  <data name="Vault_Err_ToolMissing" xml:space="preserve">
+    <value>Die 1Password-CLI (op) wurde nicht gefunden. Installieren mit: winget install AgileBits.1Password.CLI</value>
+  </data>
+  <data name="Vault_Err_UnknownSource" xml:space="preserve">
+    <value>Die Passwortquelle „{0}“ ist nicht verfügbar.</value>
+  </data>
+  <data name="Vault_Err_UnsupportedFormat" xml:space="preserve">
+    <value>Die Datei ist keine unterstützte KeePass-Datenbank ({0}).</value>
+  </data>
+  <data name="Vault_Err_WrongMasterKey" xml:space="preserve">
+    <value>Master-Passwort oder Schlüsseldatei ist falsch.</value>
+  </data>
+  <data name="Vault_Error_DatabaseRequired" xml:space="preserve">
+    <value>Wähle die KeePass-Datenbank aus.</value>
+  </data>
+  <data name="Vault_Error_EntryRequired" xml:space="preserve">
+    <value>Gib den KeePass-Eintrag an oder wähle ihn aus.</value>
+  </data>
+  <data name="Vault_Error_OpReference" xml:space="preserve">
+    <value>Gib eine 1Password-Referenz der Form op://Tresor/Eintrag/Feld an.</value>
+  </data>
+  <data name="Vault_FileFilter_KeePass" xml:space="preserve">
+    <value>KeePass-Datenbank</value>
+  </data>
+  <data name="Vault_FileFilter_KeyFile" xml:space="preserve">
+    <value>Schlüsseldatei</value>
+  </data>
+  <data name="Vault_KeePass_Database" xml:space="preserve">
+    <value>KeePass-Datenbank (.kdbx)</value>
+  </data>
+  <data name="Vault_KeePass_Entry" xml:space="preserve">
+    <value>Eintrag: Gruppe/Titel, Titel oder UUID</value>
+  </data>
+  <data name="Vault_KeePass_Hint" xml:space="preserve">
+    <value>Das Master-Passwort wird beim Verbinden abgefragt und nie gespeichert. Danach bleibt die Datenbank {0} Minuten entsperrt, nur im Arbeitsspeicher.</value>
+  </data>
+  <data name="Vault_KeePass_KeyFile" xml:space="preserve">
+    <value>Schlüsseldatei (optional)</value>
+  </data>
+  <data name="Vault_OnePassword_Hint" xml:space="preserve">
+    <value>Das Passwort wird beim Verbinden mit „op read“ geholt und nicht gespeichert. 1Password fragt dabei selbst nach der Freigabe.</value>
+  </data>
+  <data name="Vault_OnePassword_Reference" xml:space="preserve">
+    <value>op://Tresor/Eintrag/password</value>
+  </data>
+  <data name="Vault_PickEntry" xml:space="preserve">
+    <value>Auswählen …</value>
+  </data>
+  <data name="Vault_Source_App" xml:space="preserve">
+    <value>Passwort in Remote-Manager (Windows Credential Manager)</value>
+  </data>
+  <data name="Vault_Source_KeePass" xml:space="preserve">
+    <value>Passwort aus KeePass (.kdbx)</value>
+  </data>
+  <data name="Vault_Source_OnePassword" xml:space="preserve">
+    <value>Passwort aus 1Password (op-CLI)</value>
+  </data>
+  <data name="View_ListTip" xml:space="preserve">
+    <value>Liste (Strg+2)</value>
+  </data>
+  <data name="View_TilesTip" xml:space="preserve">
+    <value>Kacheln (Strg+1)</value>
+  </data>
+  <data name="Vnc_AuthFailed" xml:space="preserve">
+    <value>Der Server hat das Passwort abgelehnt.</value>
+  </data>
+  <data name="Vnc_Connected" xml:space="preserve">
+    <value>Verbunden: {0} ({1} × {2})</value>
+  </data>
+  <data name="Vnc_ConnectFailed" xml:space="preserve">
+    <value>Verbindung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Vnc_Connecting" xml:space="preserve">
+    <value>Verbinde mit {0} …</value>
+  </data>
+  <data name="Vnc_ConnectionLost" xml:space="preserve">
+    <value>Verbindung getrennt: {0}</value>
+  </data>
+  <data name="Vnc_CtrlAltDel" xml:space="preserve">
+    <value>Strg+Alt+Entf</value>
+  </data>
+  <data name="Vnc_Disconnected" xml:space="preserve">
+    <value>Getrennt.</value>
+  </data>
+  <data name="Vnc_Footer" xml:space="preserve">
+    <value>Eingebettet über das VNC-Protokoll (RFB). Das Passwort wird erst beim Verbinden aus seiner Quelle geholt.</value>
+  </data>
+  <data name="Vnc_OpenExternal" xml:space="preserve">
+    <value>Extern öffnen</value>
+  </data>
+  <data name="Vnc_PasswordPlaceholderStored" xml:space="preserve">
+    <value>Leer lassen für das gespeicherte Passwort</value>
+  </data>
+  <data name="Vnc_PasswordRequired" xml:space="preserve">
+    <value>Der Server verlangt ein Passwort. Gib es ein oder hinterlege eins in der Verbindung.</value>
+  </data>
+  <data name="Vnc_Quality_Auto" xml:space="preserve">
+    <value>Bildqualität: automatisch</value>
+  </data>
+  <data name="Vnc_Quality_High" xml:space="preserve">
+    <value>Bildqualität: hoch</value>
+  </data>
+  <data name="Vnc_Quality_Low" xml:space="preserve">
+    <value>Bildqualität: niedrig (langsame Leitung)</value>
+  </data>
+  <data name="Vnc_Quality_Medium" xml:space="preserve">
+    <value>Bildqualität: mittel</value>
+  </data>
+  <data name="Vnc_Reconnecting" xml:space="preserve">
+    <value>Verbindung unterbrochen, verbinde neu …</value>
+  </data>
+  <data name="Vnc_ScaleTip" xml:space="preserve">
+    <value>An Fenstergröße anpassen</value>
+  </data>
+  <data name="Vnc_Settings_External" xml:space="preserve">
+    <value>Externen VNC-Viewer verwenden (TightVNC, TigerVNC, UltraVNC, RealVNC)</value>
+  </data>
+  <data name="Vnc_Settings_Scale" xml:space="preserve">
+    <value>An Fenstergröße anpassen</value>
+  </data>
+  <data name="Vnc_Settings_Title" xml:space="preserve">
+    <value>VNC</value>
+  </data>
+  <data name="Vnc_Settings_ViewOnly" xml:space="preserve">
+    <value>Nur ansehen (keine Maus- und Tastatureingaben senden)</value>
+  </data>
+  <data name="Vnc_SshTunnel" xml:space="preserve">
+    <value>Über SSH-Tunnel verbinden</value>
+  </data>
+  <data name="Vnc_SshTunnelFailed" xml:space="preserve">
+    <value>SSH-Tunnel fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Vnc_SshTunnelTip" xml:space="preserve">
+    <value>VNC läuft durch einen SSH-Tunnel über diese SSH-Verbindung (für Hosts hinter einem Jump-Host). Der VNC-Port muss nur vom Jump-Host aus erreichbar sein.</value>
+  </data>
+  <data name="Vnc_StoredPasswordRejected" xml:space="preserve">
+    <value>Der Server hat das gespeicherte Passwort abgelehnt. Gib das richtige ein.</value>
+  </data>
+  <data name="Vnc_ViewerFailed" xml:space="preserve">
+    <value>Der VNC-Viewer konnte nicht gestartet werden: {0}</value>
+  </data>
+  <data name="Vnc_ViewerMissing" xml:space="preserve">
+    <value>Kein VNC-Viewer gefunden. Installiere TightVNC, TigerVNC, UltraVNC oder RealVNC Viewer, oder nutze die eingebettete Sitzung.</value>
+  </data>
+  <data name="Vnc_ViewerStarted" xml:space="preserve">
+    <value>{0} gestartet.</value>
+  </data>
+  <data name="Vnc_ViewOnly" xml:space="preserve">
+    <value>Nur ansehen</value>
+  </data>
+  <data name="Vnc_ViewOnlyTip" xml:space="preserve">
+    <value>Keine Maus- und Tastatureingaben senden</value>
+  </data>
+</root>

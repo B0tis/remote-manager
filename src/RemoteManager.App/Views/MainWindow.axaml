@@ -1,0 +1,241 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:app="using:RemoteManager.App.Views"
+        xmlns:res="using:RemoteManager.App.Resources"
+        x:Class="RemoteManager.App.Views.MainWindow"
+        Title="Remote-Manager"
+        Width="1320" Height="840" MinWidth="760" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        TransparencyLevelHint="Mica, AcrylicBlur"
+        Background="Transparent">
+  <Window.DataTemplates>
+    <!-- Group section header in both views: chevron, name, count; collapsed with an online summary. -->
+    <DataTemplate DataType="app:GroupHeaderItem">
+      <Border Classes="groupHeader" Padding="{Binding Indent}" Background="Transparent">
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="4,0,0,0">
+          <Panel Width="14" VerticalAlignment="Center">
+            <ui:FASymbolIcon Symbol="ChevronDown" FontSize="12" IsVisible="{Binding ShowExpanded}" />
+            <ui:FASymbolIcon Symbol="ChevronRight" FontSize="12" IsVisible="{Binding ShowCollapsed}" />
+          </Panel>
+          <ui:FASymbolIcon Symbol="Folder" FontSize="15" Opacity="0.65" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+          <Border Classes="count" VerticalAlignment="Center">
+            <TextBlock Text="{Binding CountLabel}" FontSize="11" />
+          </Border>
+          <TextBlock Text="{Binding Summary}" Opacity="0.55" FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
+      </Border>
+    </DataTemplate>
+  </Window.DataTemplates>
+
+  <ui:FANavigationView x:Name="Nav"
+                       PaneDisplayMode="Left" OpenPaneLength="248"
+                       IsSettingsVisible="False" IsPaneToggleButtonVisible="True">
+    <Grid ColumnDefinitions="*,Auto">
+      <Grid RowDefinitions="Auto,*" Margin="28,20,20,0" ClipToBounds="True">
+        <!-- Header: title, then search, view toggle, and actions in one row below it. -->
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" Margin="0,0,0,16" RowSpacing="12" ColumnSpacing="8">
+          <StackPanel Grid.ColumnSpan="2">
+            <TextBlock x:Name="PageTitle" Text="{x:Static res:Strings.Nav_All}" FontSize="28" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+            <TextBlock x:Name="PageSubtitle" Opacity="0.6" />
+          </StackPanel>
+          <TextBox x:Name="SearchBox" Grid.Row="1" MaxWidth="420" HorizontalAlignment="Stretch" PlaceholderText="{x:Static res:Strings.Search_Placeholder}"
+                   Classes="clearButton">
+            <TextBox.InnerLeftContent>
+              <ui:FASymbolIcon Symbol="Find" FontSize="14" Margin="10,0,0,0" Opacity="0.6" />
+            </TextBox.InnerLeftContent>
+          </TextBox>
+          <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <Border Classes="segmented">
+              <StackPanel Orientation="Horizontal">
+                <ToggleButton x:Name="TileToggle" Classes="segment" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.View_TilesTip}">
+                  <ui:FASymbolIcon Symbol="ViewAll" FontSize="16" />
+                </ToggleButton>
+                <ToggleButton x:Name="ListToggle" Classes="segment" ToolTip.Tip="{x:Static res:Strings.View_ListTip}">
+                  <ui:FASymbolIcon Symbol="List" FontSize="16" />
+                </ToggleButton>
+              </StackPanel>
+            </Border>
+            <!-- Import and JSON backup (ImportExportCommands). -->
+            <Button x:Name="MoreButton" ToolTip.Tip="{x:Static res:Strings.Action_More}" Padding="9">
+              <ui:FASymbolIcon Symbol="More" FontSize="16" />
+            </Button>
+            <Button x:Name="RemoteToolsButton" ToolTip.Tip="{x:Static res:Strings.RemoteTool_Settings_Tip}" Padding="9">
+              <ui:FASymbolIcon Symbol="Settings" FontSize="16" />
+            </Button>
+            <Button x:Name="LauncherButton" Padding="9">
+              <ui:FASymbolIcon Symbol="Keyboard" FontSize="16" />
+            </Button>
+            <Button x:Name="RefreshButton" ToolTip.Tip="{x:Static res:Strings.Status_RefreshTip}" Padding="9">
+              <ui:FASymbolIcon Symbol="Refresh" FontSize="16" />
+            </Button>
+            <Button x:Name="NewGroupButton" ToolTip.Tip="{x:Static res:Strings.Action_NewGroup}" Padding="9">
+              <ui:FASymbolIcon Symbol="NewFolder" FontSize="16" />
+            </Button>
+            <ToggleButton x:Name="DetailsToggle" ToolTip.Tip="{x:Static res:Strings.Details_ToggleTip}" Padding="9" IsChecked="True">
+              <ui:FASymbolIcon Symbol="DockRight" FontSize="16" />
+            </ToggleButton>
+            <Button x:Name="ConnectButton" IsEnabled="False" Padding="12,7">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ui:FASymbolIcon Symbol="Play" FontSize="14" />
+                <TextBlock Text="{x:Static res:Strings.Action_Connect}" />
+              </StackPanel>
+            </Button>
+            <Button x:Name="AddButton" Classes="accent" Padding="12,7">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ui:FASymbolIcon Symbol="Add" FontSize="14" />
+                <TextBlock Text="{x:Static res:Strings.Action_New}" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <Panel Grid.Row="1">
+          <!-- Tiles: preview or type icon, status, type badge, favorite, name, host, description, tags, footer. -->
+          <ListBox x:Name="TileList" Classes="tiles" Background="Transparent" SelectionMode="Multiple">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <app:SectionWrapPanel />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.DataTemplates>
+              <DataTemplate DataType="app:ConnectionItem">
+                <Border Width="264" CornerRadius="8" ClipToBounds="True" BorderThickness="1"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                  <StackPanel>
+                    <Grid Height="140">
+                      <Border Background="{Binding TypeBrush}" Opacity="0.14" />
+                      <Border Width="64" Height="64" CornerRadius="32" Background="{Binding TypeBrush}"
+                              IsVisible="{Binding !HasPreview}">
+                        <TextBlock Text="{Binding TypeInitials}" Foreground="White" FontSize="18" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Border>
+                      <Image Source="{Binding Preview}" Stretch="UniformToFill" IsVisible="{Binding HasPreview}" />
+                      <!-- Keeps the pills readable on bright previews. -->
+                      <Border Classes="previewShade" IsVisible="{Binding HasPreview}" />
+                      <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
+                              ToolTip.Tip="{Binding StatusTip}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center" />
+                          <TextBlock Text="{Binding StatusLabel}" FontSize="11" Foreground="White" />
+                        </StackPanel>
+                      </Border>
+                      <Border Classes="pill" Background="{Binding TypeBrush}"
+                              HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">
+                        <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
+                      </Border>
+                    </Grid>
+                    <StackPanel Margin="14,10,10,12" Spacing="3">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                          <ui:FASymbolIcon Symbol="Permissions" FontSize="13" Opacity="0.7" VerticalAlignment="Center"
+                                           IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
+                          <Button Classes="star" Tag="{Binding}" ToolTip.Tip="{x:Static res:Strings.Action_ToggleFavorite}">
+                            <Panel>
+                              <ui:FASymbolIcon Symbol="StarFilled" FontSize="15" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
+                              <ui:FASymbolIcon Classes="starOutline" Symbol="Star" FontSize="15" IsVisible="{Binding !IsFavorite}" />
+                            </Panel>
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                      <TextBlock Text="{Binding HostLabel}" Opacity="0.75" FontSize="13" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Description}" Opacity="0.55" FontSize="12" TextTrimming="CharacterEllipsis" />
+                      <ItemsControl ItemsSource="{Binding VisibleTags}" Margin="0,6,0,0" Height="22" ClipToBounds="True">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="6" />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="x:String">
+                            <Border Classes="tag">
+                              <TextBlock Text="{Binding}" FontSize="11" />
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <TextBlock Text="{Binding FooterLabel}" Opacity="0.45" FontSize="11" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ListBox.DataTemplates>
+          </ListBox>
+
+          <Grid x:Name="ListPanel" RowDefinitions="Auto,*" IsVisible="False">
+            <!-- Column headers; a click sorts (ascending, descending, back to the group order). -->
+            <Border Padding="12,0" Height="34" BorderThickness="0,0,0,1"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+              <Grid x:Name="ColumnHeaders" ColumnDefinitions="28,190,100,150,Auto,Auto,*,140">
+                <Button Grid.Column="0" Classes="column" Tag="Status" ToolTip.Tip="{x:Static res:Strings.Column_Status}" />
+                <Button Grid.Column="1" Classes="column" Tag="Name" />
+                <Button Grid.Column="2" Classes="column" Tag="Type" />
+                <Button Grid.Column="3" Classes="column" Tag="Host" />
+                <Button Grid.Column="4" Classes="column wide" Width="130" Tag="Group" />
+                <Button Grid.Column="5" Classes="column wide" Width="170" Tag="Tags" />
+                <Button Grid.Column="6" Classes="column" Tag="Description" />
+                <Button Grid.Column="7" Classes="column" Tag="LastConnected" />
+              </Grid>
+            </Border>
+            <ListBox x:Name="RowList" Grid.Row="1" Classes="rows" Background="Transparent" SelectionMode="Multiple">
+              <ListBox.DataTemplates>
+                <DataTemplate DataType="app:ConnectionItem">
+                  <Grid ColumnDefinitions="28,190,100,150,Auto,Auto,*,140" Height="40" Background="Transparent">
+                    <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" ToolTip.Tip="{Binding StatusTip}" HorizontalAlignment="Left" Margin="4,0,0,0" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                      <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
+                      <ui:FASymbolIcon Symbol="Permissions" FontSize="12" Opacity="0.7"
+                                       IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
+                    </StackPanel>
+                    <Border Grid.Column="2" Classes="pill" Background="{Binding TypeBrush}" HorizontalAlignment="Left" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
+                    </Border>
+                    <TextBlock Grid.Column="3" Text="{Binding HostLabel}" Opacity="0.8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="4" Classes="wide" Width="130" Text="{Binding GroupLabel}" Opacity="0.8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <ItemsControl Grid.Column="5" Classes="wide" Width="170" ItemsSource="{Binding VisibleTags}" VerticalAlignment="Center" ClipToBounds="True">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Orientation="Horizontal" Spacing="4" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                          <Border Classes="tag">
+                            <TextBlock Text="{Binding}" FontSize="11" />
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Grid.Column="6" Text="{Binding Description}" Opacity="0.6" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                    <TextBlock Grid.Column="7" Text="{Binding LastConnectedLabel}" Opacity="0.6" VerticalAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.DataTemplates>
+            </ListBox>
+          </Grid>
+
+          <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Spacing="8" IsVisible="False">
+            <ui:FASymbolIcon Symbol="Find" FontSize="40" Opacity="0.4" />
+            <TextBlock Text="{x:Static res:Strings.Empty_NoMatch}" HorizontalAlignment="Center" Opacity="0.6" />
+          </StackPanel>
+        </Panel>
+
+        <!-- Short confirmations (copy password); closes itself after a few seconds. -->
+        <ui:FAInfoBar x:Name="Toast" Grid.Row="1" IsOpen="False" IsClosable="True" MaxWidth="460"
+                      HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,24" />
+      </Grid>
+
+      <!-- Detail panel: a column, not an overlay. -->
+      <Border x:Name="DetailPane" Grid.Column="1" Width="340" BorderThickness="1,0,0,0"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              Background="{DynamicResource LayerFillColorDefaultBrush}">
+        <app:ConnectionDetailPanel x:Name="Details" />
+      </Border>
+    </Grid>
+  </ui:FANavigationView>
+</Window>

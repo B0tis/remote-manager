@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Connections.RemoteTools.RemoteToolsDialog"
+             Width="480">
+  <ScrollViewer MaxHeight="620" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Spacing="10" Margin="0,0,14,0">
+      <!-- Tool paths: detected automatically; a path set here wins. -->
+      <TextBlock Text="{x:Static res:Strings.RemoteTool_Paths_Title}" FontWeight="SemiBold" />
+      <TextBlock Text="{x:Static res:Strings.RemoteTool_Paths_Hint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+      <StackPanel x:Name="PathRows" Spacing="10" />
+
+      <!-- TeamViewer Web API -->
+      <TextBlock Text="{x:Static res:Strings.RemoteTool_Sync_Title}" FontWeight="SemiBold" Margin="0,10,0,0" />
+      <TextBlock Text="{x:Static res:Strings.RemoteTool_Sync_Hint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+      <Grid ColumnDefinitions="*,8,Auto,8,Auto">
+        <TextBox x:Name="TokenBox" PasswordChar="●" Classes="revealPasswordButton" />
+        <Button x:Name="SaveTokenButton" Grid.Column="2" Content="{x:Static res:Strings.RemoteTool_Sync_SaveToken}" />
+        <Button x:Name="DeleteTokenButton" Grid.Column="4" Content="{x:Static res:Strings.Action_Remove}" />
+      </Grid>
+      <Grid ColumnDefinitions="Auto,8,*">
+        <Button x:Name="SyncButton" Classes="accent">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <ui:FASymbolIcon Symbol="Sync" FontSize="14" />
+            <TextBlock Text="{x:Static res:Strings.RemoteTool_Sync_Now}" />
+          </StackPanel>
+        </Button>
+        <TextBlock x:Name="TokenState" Grid.Column="2" VerticalAlignment="Center" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+      </Grid>
+      <ui:FAInfoBar x:Name="SyncResult" IsOpen="False" IsClosable="False" />
+
+      <!-- AnyDesk CSV -->
+      <TextBlock Text="{x:Static res:Strings.RemoteTool_Csv_Title}" FontWeight="SemiBold" Margin="0,10,0,0" />
+      <TextBlock Text="{x:Static res:Strings.RemoteTool_Csv_Hint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+      <Button x:Name="CsvButton">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <ui:FASymbolIcon Symbol="Import" FontSize="14" />
+          <TextBlock Text="{x:Static res:Strings.RemoteTool_Csv_Import}" />
+        </StackPanel>
+      </Button>
+      <ui:FAInfoBar x:Name="CsvResult" IsOpen="False" IsClosable="False" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

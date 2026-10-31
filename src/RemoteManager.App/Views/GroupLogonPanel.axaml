@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="using:RemoteManager.App.Resources"
+             xmlns:cred="using:RemoteManager.App.Credentials"
+             x:Class="RemoteManager.App.Views.GroupLogonPanel"
+             Width="340">
+  <!-- Logon of a group, inherited by its connections without their own. Shown in a flyout of the connection editor. -->
+  <StackPanel Spacing="10">
+    <TextBlock x:Name="TitleText" FontWeight="SemiBold" TextWrapping="Wrap" />
+    <TextBlock Text="{x:Static res:Strings.GroupLogon_Hint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+    <Grid ColumnDefinitions="*,8,*">
+      <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Field_User}" />
+      <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_DomainOptional}" />
+    </Grid>
+    <cred:PasswordSourcePanel x:Name="SourcePanel" />
+    <StackPanel x:Name="OwnPasswordPanel" Spacing="10">
+      <TextBox x:Name="PasswordBox" PasswordChar="●" Classes="revealPasswordButton" />
+      <CheckBox x:Name="RemovePasswordBox" Content="{x:Static res:Strings.GroupLogon_RemovePassword}" IsVisible="False" />
+    </StackPanel>
+    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource SystemFillColorCriticalBrush}" IsVisible="False" TextWrapping="Wrap" />
+    <Button x:Name="ApplyButton" Classes="accent" HorizontalAlignment="Right" Content="{x:Static res:Strings.GroupLogon_Apply}" />
+  </StackPanel>
+</UserControl>

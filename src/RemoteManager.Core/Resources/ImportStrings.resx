@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Import warnings (German), shown as they are in the import summary and the remote-tools dialog.
+     Core has no UI; the generated RemoteManager.Core.Resources.ImportStrings class is internal. -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AnyDesk_Duplicate" xml:space="preserve">
+    <value>Zeile {0}: {1} kommt doppelt vor, übersprungen.</value>
+  </data>
+  <data name="AnyDesk_NoTarget" xml:space="preserve">
+    <value>Zeile {0}: keine ID und kein Alias, übersprungen.</value>
+  </data>
+  <data name="AnyDesk_NotAnId" xml:space="preserve">
+    <value>Zeile {0}: „{1}“ ist keine AnyDesk-ID und kein Alias, übersprungen.</value>
+  </data>
+  <data name="Backup_UnknownType" xml:space="preserve">
+    <value>{0}: unbekannter Typ {1}, übersprungen.</value>
+  </data>
+  <data name="Import_GroupCycle" xml:space="preserve">
+    <value>Gruppe „{0}“ ist ihre eigene übergeordnete Gruppe (Zyklus) und wurde übersprungen.</value>
+  </data>
+  <data name="Import_GroupLogonKept" xml:space="preserve">
+    <value>Gruppe „{0}“ hat schon eine Anmeldung; die importierte wurde nicht übernommen.</value>
+  </data>
+  <data name="Import_NoAddress" xml:space="preserve">
+    <value>{0}: keine Adresse, übersprungen.</value>
+  </data>
+  <data name="Import_NoHost" xml:space="preserve">
+    <value>{0}: kein Hostname, übersprungen.</value>
+  </data>
+  <data name="Import_PasswordNotStored" xml:space="preserve">
+    <value>{0}: Das Passwort konnte nicht gespeichert werden ({1}).</value>
+  </data>
+  <data name="Import_UnsupportedProtocol" xml:space="preserve">
+    <value>{0}: Protokoll {1} wird nicht unterstützt, übersprungen.</value>
+  </data>
+  <data name="Legacy_NoIdOrName" xml:space="preserve">
+    <value>Eintrag ohne ID oder Namen übersprungen ({0}).</value>
+  </data>
+  <data name="MRemoteNg_CustomMasterPassword" xml:space="preserve">
+    <value>Bei {0} Verbindung(en) ist das Passwort mit einem eigenen mRemoteNG-Masterpasswort geschützt und wurde nicht übernommen.</value>
+  </data>
+  <data name="MRemoteNg_PasswordNotDecrypted" xml:space="preserve">
+    <value>{0}: Das Passwort ließ sich nicht entschlüsseln und wurde nicht übernommen.</value>
+  </data>
+  <data name="OneRemote_EncryptedPasswords" xml:space="preserve">
+    <value>Bei {0} Verbindung(en) ist das Passwort mit dem eigenen Schlüssel von 1Remote verschlüsselt und wurde nicht übernommen; bitte einmal im Editor oder beim ersten Verbinden eingeben.</value>
+  </data>
+  <data name="RdcMan_PasswordOfOtherUser" xml:space="preserve">
+    <value>{0}: Das Passwort wurde von einem anderen Windows-Benutzer oder auf einem anderen PC gespeichert und ließ sich nicht entschlüsseln; bitte neu eingeben.</value>
+  </data>
+  <data name="RdcMan_ProfileMissing" xml:space="preserve">
+    <value>{0}: Das Anmeldeprofil „{1}“ steht nicht in der Datei (RDCMan speichert es in seinen Einstellungen), Anmeldung nicht übernommen.</value>
+  </data>
+  <data name="RdcMan_ServerWithoutName" xml:space="preserve">
+    <value>{0}: Server ohne Namen übersprungen.</value>
+  </data>
+  <data name="RdcMan_SmartGroup" xml:space="preserve">
+    <value>Intelligente Gruppe „{0}“ übersprungen (ihre Regeln haben hier keine Entsprechung).</value>
+  </data>
+  <data name="RdpFile_NoAddress" xml:space="preserve">
+    <value>{0}: kein „full address“, übersprungen.</value>
+  </data>
+  <data name="RdpFile_PasswordIgnored" xml:space="preserve">
+    <value>{0}: Das verschlüsselte Passwort aus der Datei wurde nicht übernommen (es gilt nur auf dem PC, der es gespeichert hat).</value>
+  </data>
+</root>

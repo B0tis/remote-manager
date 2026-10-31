@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RDCMan 2.93 file. {{DPAPI:...}} is replaced by the test with a DPAPI blob of the current user. -->
+<RDCMan programVersion="2.93" schemaVersion="3">
+  <file>
+    <credentialsProfiles>
+      <credentialsProfile inherit="None">
+        <profileName scope="Local">Kunde-B-Admin</profileName>
+        <userName>kb-admin</userName>
+        <password>{{DPAPI:Profil-Geheim-1}}</password>
+        <domain>KUNDEB</domain>
+      </credentialsProfile>
+    </credentialsProfiles>
+    <properties>
+      <expanded>True</expanded>
+      <name>Rechenzentrum</name>
+    </properties>
+    <logonCredentials inherit="None">
+      <profileName scope="Local">Custom</profileName>
+      <userName>admin</userName>
+      <password>{{DPAPI:Datei-Geheim-1}}</password>
+      <domain>CORP</domain>
+    </logonCredentials>
+    <remoteDesktop inherit="None">
+      <sameSizeAsClientArea>True</sameSizeAsClientArea>
+      <fullScreen>False</fullScreen>
+      <colorDepth>24</colorDepth>
+    </remoteDesktop>
+    <group>
+      <properties>
+        <expanded>False</expanded>
+        <name>Kunde A</name>
+      </properties>
+      <gatewaySettings inherit="None">
+        <enabled>True</enabled>
+        <hostName>gw.kunde-a.example</hostName>
+        <logonMethod>Any</logonMethod>
+        <localBypass>False</localBypass>
+        <credSharing>True</credSharing>
+      </gatewaySettings>
+      <server>
+        <properties>
+          <displayName>dc01</displayName>
+          <name>10.0.0.10</name>
+          <comment>Domain Controller</comment>
+        </properties>
+        <logonCredentials inherit="FromParent" />
+        <connectionSettings inherit="None">
+          <connectToConsole>True</connectToConsole>
+          <startProgram />
+          <workingDir />
+          <port>3389</port>
+          <loadBalanceInfo />
+        </connectionSettings>
+        <localResources inherit="None">
+          <audioRedirection>Remote</audioRedirection>
+          <audioRedirectionQuality>Dynamic</audioRedirectionQuality>
+          <audioCaptureRedirection>DoNotRecord</audioCaptureRedirection>
+          <keyboardHook>FullScreenClient</keyboardHook>
+          <redirectClipboard>True</redirectClipboard>
+          <redirectDrives>True</redirectDrives>
+          <redirectDrivesList />
+          <redirectPrinters>False</redirectPrinters>
+          <redirectPorts>False</redirectPorts>
+          <redirectSmartCards>True</redirectSmartCards>
+          <redirectPnpDevices>False</redirectPnpDevices>
+        </localResources>
+      </server>
+      <server>
+        <properties>
+          <name>fileserver.kunde-a.example</name>
+        </properties>
+        <logonCredentials inherit="None">
+          <profileName scope="Local">Custom</profileName>
+          <userName>KUNDEA\fs-admin</userName>
+          <password />
+          <domain />
+        </logonCredentials>
+        <connectionSettings inherit="None">
+          <connectToConsole>False</connectToConsole>
+          <startProgram />
+          <workingDir />
+          <port>3390</port>
+          <loadBalanceInfo />
+        </connectionSettings>
+        <remoteDesktop inherit="None">
+          <size>1280 x 720</size>
+          <sameSizeAsClientArea>False</sameSizeAsClientArea>
+          <fullScreen>False</fullScreen>
+          <colorDepth>24</colorDepth>
+        </remoteDesktop>
+        <securitySettings inherit="None">
+          <authentication>Connect</authentication>
+        </securitySettings>
+      </server>
+      <group>
+        <properties>
+          <expanded>True</expanded>
+          <name>Standort 1</name>
+        </properties>
+        <server>
+          <properties>
+            <displayName>print01</displayName>
+            <name>print01.kunde-a.example</name>
+          </properties>
+        </server>
+      </group>
+    </group>
+    <group>
+      <properties>
+        <expanded>True</expanded>
+        <name>Kunde B</name>
+      </properties>
+      <logonCredentials inherit="None">
+        <profileName scope="File">Kunde-B-Admin</profileName>
+      </logonCredentials>
+      <server>
+        <properties>
+          <displayName>app01 (Kunde B)</displayName>
+          <name>app01.kunde-b.example</name>
+        </properties>
+        <logonCredentials inherit="FromParent" />
+      </server>
+      <smartGroup>
+        <properties>
+          <name>Alle Drucker</name>
+        </properties>
+      </smartGroup>
+    </group>
+  </file>
+  <connected />
+  <favorites />
+  <recentlyUsed />
+</RDCMan>

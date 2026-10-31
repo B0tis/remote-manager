@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Everything below the UI: model, SQLite store, credentials, status checks, import/export, SSH. No Avalonia here. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- MIT. KeePass reader: Argon2, ChaCha20, Salsa20, Twofish (see docs/vnc-and-vaults.md). -->
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+    <PackageReference Include="SSH.NET" Version="2026.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Numbered schema migrations, applied in order by SqliteMigrator. -->
+    <EmbeddedResource Include="Storage\Migrations\*.sql" LogicalName="RemoteManager.Core.Migrations.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Import warnings (German). The ImportStrings class is generated at build time, like the app's Strings. -->
+    <EmbeddedResource Update="Resources\ImportStrings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)ImportStrings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>RemoteManager.Core.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>ImportStrings</StronglyTypedClassName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="RemoteManager.Core.Tests" />
+  </ItemGroup>
+</Project>

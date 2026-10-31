@@ -2,20 +2,47 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <!-- MsRdpEx ships one native MsRdpEx.dll per architecture; the spike targets x64. -->
+    <!-- MsRdpEx ships one native MsRdpEx.dll per architecture; the app targets x64. -->
     <PlatformTarget>x64</PlatformTarget>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Enables Devolutions.MsRdpEx.Avalonia.RdpClientView and the generated MSTSCLib projection. -->
     <MsRdpExAvalonia>true</MsRdpExAvalonia>
+    <!-- The UI is German; Resources/Strings.resx is the neutral (and only) language. -->
+    <NeutralLanguage>de-DE</NeutralLanguage>
+    <SatelliteResourceLanguages>de</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.4" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+    <!-- MIT. Embedded VNC (RFB protocol); our own Avalonia 12 view in Connections/Vnc (see docs/vnc-and-vaults.md). -->
+    <PackageReference Include="Community.MarcusW.VncClient" Version="2.0.8" />
     <PackageReference Include="FluentAvaloniaUI" Version="3.1.0" />
     <PackageReference Include="Devolutions.MsRdpEx" Version="2026.10.26" />
+    <!-- SSH terminal: xterm.js in WebView2 (MIT). -->
+    <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- xterm.js page of the SSH terminal, copied to terminal/ in the output (vendored, see LICENSE-xterm.txt). -->
+    <Content Include="Connections\Ssh\Terminal\*" CopyToOutputDirectory="PreserveNewest" Link="terminal\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RemoteManager.Core\RemoteManager.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Every user-facing string. The Strings class is generated at build time (no checked-in designer file). -->
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>RemoteManager.App.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

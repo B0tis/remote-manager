@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:res="using:RemoteManager.App.Resources"
+             xmlns:cred="using:RemoteManager.App.Credentials"
+             x:Class="RemoteManager.App.Views.GroupEditor"
+             Width="440">
+  <StackPanel Spacing="12">
+    <TextBox x:Name="NameBox" PlaceholderText="{x:Static res:Strings.Field_Name}" />
+    <StackPanel Spacing="4">
+      <TextBlock Text="{x:Static res:Strings.GroupEditor_Parent}" FontSize="12" Opacity="0.7" />
+      <ComboBox x:Name="ParentBox" HorizontalAlignment="Stretch" />
+    </StackPanel>
+    <TextBox x:Name="DescriptionBox" PlaceholderText="{x:Static res:Strings.Field_Description}" />
+
+    <TextBlock Text="{x:Static res:Strings.GroupEditor_Logon}" FontWeight="SemiBold" Margin="0,6,0,0" />
+    <TextBlock Text="{x:Static res:Strings.GroupEditor_LogonHint}" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
+    <Grid ColumnDefinitions="*,12,*">
+      <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Field_User}" />
+      <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_DomainOptional}" />
+    </Grid>
+
+    <!-- The group password: the app's own (Credential Manager), a KeePass entry, or a 1Password item. -->
+    <cred:PasswordSourcePanel x:Name="SourcePanel" />
+
+    <!-- Like the connection editor: the stored password is never read back, the box only takes a new one. -->
+    <StackPanel x:Name="OwnPasswordPanel" Spacing="6">
+      <Grid ColumnDefinitions="*,12,Auto">
+        <TextBox x:Name="PasswordBox" PasswordChar="●" PlaceholderText="{x:Static res:Strings.Field_Password}" Classes="revealPasswordButton" />
+        <CheckBox x:Name="SavePasswordBox" Grid.Column="2" Content="{x:Static res:Strings.Password_Save}" />
+      </Grid>
+      <Grid x:Name="StoredRow" ColumnDefinitions="Auto,*,Auto" IsVisible="False">
+        <ui:FASymbolIcon x:Name="StoredIcon" Symbol="Permissions" FontSize="14" Margin="2,0,8,0"
+                         Foreground="{DynamicResource SystemFillColorSuccessBrush}" />
+        <TextBlock x:Name="StoredText" Grid.Column="1" VerticalAlignment="Center" FontSize="12" Text="{x:Static res:Strings.Password_Stored}" />
+        <Button x:Name="RemovePasswordButton" Grid.Column="2" Classes="toolbar" Padding="8,2" FontSize="12" Content="{x:Static res:Strings.Action_Remove}" />
+      </Grid>
+    </StackPanel>
+    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource SystemFillColorCriticalBrush}" IsVisible="False" TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>

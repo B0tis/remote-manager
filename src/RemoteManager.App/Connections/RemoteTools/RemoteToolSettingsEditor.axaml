@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Connections.RemoteTools.RemoteToolSettingsEditor">
+  <StackPanel Spacing="10">
+    <TextBlock Text="{x:Static res:Strings.RemoteTool_StartOptions}" FontWeight="SemiBold" Margin="0,6,0,0" />
+    <Grid ColumnDefinitions="*,12,*">
+      <TextBox x:Name="AliasBox" PlaceholderText="{x:Static res:Strings.RemoteTool_AliasPlaceholder}" />
+      <!-- Filled with the modes of the tool (RemoteToolCommandLine.ModesOf). -->
+      <ComboBox x:Name="ModeBox" Grid.Column="2" HorizontalAlignment="Stretch" />
+    </Grid>
+
+    <!-- TeamViewer: -q and -a -->
+    <Grid x:Name="TeamViewerRow" ColumnDefinitions="*,12,*">
+      <ComboBox x:Name="QualityBox" HorizontalAlignment="Stretch" />
+      <ComboBox x:Name="AccessBox" Grid.Column="2" HorizontalAlignment="Stretch" />
+    </Grid>
+
+    <!-- AnyDesk: full screen and plain window -->
+    <StackPanel x:Name="AnyDeskRow" Orientation="Horizontal" Spacing="16">
+      <CheckBox x:Name="FullScreenBox" Content="{x:Static res:Strings.RemoteTool_FullScreen}" />
+      <CheckBox x:Name="PlainBox" Content="{x:Static res:Strings.RemoteTool_Plain}" />
+    </StackPanel>
+
+    <!-- Password on the command line (TeamViewer, RustDesk): off by default, warns when on. -->
+    <CheckBox x:Name="PasswordOnLineBox" />
+    <ui:FAInfoBar x:Name="PasswordWarning" Severity="Warning" IsClosable="False" IsOpen="False"
+                  Title="{x:Static res:Strings.RemoteTool_PasswordWarning_Title}" />
+    <TextBlock x:Name="PasswordInfo" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
+
+    <TextBox x:Name="ArgumentsBox" PlaceholderText="{x:Static res:Strings.RemoteTool_ArgumentsPlaceholder}" />
+    <Border Padding="10,8" CornerRadius="4" Background="{DynamicResource ControlFillColorSecondaryBrush}">
+      <StackPanel Spacing="2">
+        <TextBlock Text="{x:Static res:Strings.RemoteTool_Preview}" FontSize="11" Opacity="0.6" />
+        <SelectableTextBlock x:Name="PreviewText" FontFamily="Cascadia Mono,Consolas,monospace" FontSize="12" TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+    <TextBlock Opacity="0.55" FontSize="12" TextWrapping="Wrap" Text="{x:Static res:Strings.RemoteTool_Hint}" />
+  </StackPanel>
+</UserControl>

@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/RemoteManager.App/RemoteManager.App.csproj" />
+    <Project Path="src/RemoteManager.Core/RemoteManager.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RemoteManager.Core.Tests/RemoteManager.Core.Tests.csproj" />
   </Folder>
 </Solution>
