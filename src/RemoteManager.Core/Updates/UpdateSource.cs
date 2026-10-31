@@ -31,7 +31,6 @@ public sealed record UpdateSource(UpdateSourceKind Kind, string Location)
 
             if (uri.IsFile)
                 return new UpdateSource(UpdateSourceKind.Folder, uri.LocalPath);
-            // "C:\…" also parses as a URI with scheme "c"; it is handled as a path below.
         }
 
         return Path.IsPathFullyQualified(value) ? new UpdateSource(UpdateSourceKind.Folder, value) : null;

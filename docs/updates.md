@@ -123,8 +123,12 @@ the processes, Setup `--installto`):
 2. Add test data (groups, subgroups, connections of five types with tags, notes, settings) and dump every row
    of every table.
 3. `release.ps1 -Version 0.4.1 -UploadTo <feed>` (78 KB delta package).
-4. Start 0.4.0, "Nach Updates suchen", notice, "Jetzt aktualisieren": the app restarts as 0.4.1 (process path
-   and file version), the toast confirms, About shows 0.4.1, `backups\` holds the 0.4.0 copy, and the row dump is
-   identical to step 2.
-5. `Update.exe uninstall --silent`: program, shortcuts, and uninstall entry gone, data identical; Setup again:
+4. Start 0.4.0, open an RDP session, "Nach Updates suchen", notice, "Jetzt aktualisieren": the app asks because
+   of the open session; after "Trennen und aktualisieren" it restarts as 0.4.1 (process path and file version),
+   the toast confirms, About shows 0.4.1, `backups\` holds the 0.4.0 copy, and the row dump is identical to step 2.
+5. `release.ps1 -Version 0.4.2`, update again from 0.4.1 without sessions: 0.4.2 runs, two backups, rows identical.
+6. `Update.exe uninstall --silent`: program, shortcuts, and uninstall entry gone, data identical; Setup again:
    the data opens unchanged.
+
+The app was driven through UI Automation (the same buttons and menu items a user clicks); the real
+`%LOCALAPPDATA%\RemoteManager` was hashed before and after and did not change.
