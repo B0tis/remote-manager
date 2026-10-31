@@ -47,6 +47,8 @@ public partial class ConnectionDetailPanel : UserControl
     public IReadOnlyList<string> HistoryLines => HistoryList.ItemsSource as IReadOnlyList<string> ?? [];
     public IReadOnlyList<string> ParameterLines => ParameterList.ItemsSource as IReadOnlyList<string> ?? [];
     public TextBox Notes => NotesBox;
+    public bool ShowsLiveBadge => LiveBadge.IsVisible;
+    public string LiveAge => LiveAgeText.Text ?? "";
 
     internal void Attach(MainWindow window) => host = window;
 
@@ -88,6 +90,7 @@ public partial class ConnectionDetailPanel : UserControl
         PreviewImage.Source = c.Preview;
         PreviewImage.IsVisible = c.HasPreview;
         PreviewIcon.IsVisible = !c.HasPreview;
+        UpdateLiveBadge(c);
 
         NameText.Text = c.Name;
         FavoriteOn.IsVisible = c.IsFavorite;
@@ -176,5 +179,23 @@ public partial class ConnectionDetailPanel : UserControl
         host.Save(shown);
     }
 
-    private void OnShownChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
+    /// <summary>"Live · vor 20 s" over the preview while the open session refreshes it.</summary>
+    private void UpdateLiveBadge(ConnectionItem c)
+    {
+        LiveBadge.IsVisible = c.IsLivePreview && c.HasPreview;
+        LiveAgeText.Text = c.LivePreviewAge;
+    }
+
+    private void OnShownChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // The age ticks every few seconds; that needs only the badge, not the history query of a full refresh.
+        if (e.PropertyName is nameof(ConnectionItem.IsLivePreview) or nameof(ConnectionItem.LivePreviewAge))
+        {
+            if (sender is ConnectionItem c)
+                UpdateLiveBadge(c);
+            return;
+        }
+
+        Refresh();
+    }
 }

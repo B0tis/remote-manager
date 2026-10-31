@@ -65,3 +65,47 @@ public sealed class UpgradeTests : IDisposable
         Assert.Empty(new SqliteConnectionStore(report.DatabasePath).AppliedMigrations);
     }
 }
+
+/// <summary>
+/// A database written by the Phase 3 build on main (schema 2: samples, a subgroup, notes, a credential reference,
+/// history) upgrades to the sync schema in place and can sync right away.
+/// </summary>
+public sealed class MainUpgradeTests : IDisposable
+{
+    private readonly TempFolder folder = new();
+
+    public MainUpgradeTests()
+    {
+        Directory.CreateDirectory(folder.File("data"));
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Upgrade", "main-phase3.db"), Path.Combine(folder.File("data"), DataStore.DatabaseFileName));
+    }
+
+    public void Dispose() => folder.Dispose();
+
+    [Fact]
+    public async Task MainDatabaseUpgradesToSyncSchemaWithoutLosingData()
+    {
+        (var library, DataStoreReport report) = await DataStore.OpenAsync(folder.File("data"), new MemoryCredentialSource("wincred"), cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal([3], report.AppliedMigrations);
+        Assert.False(report.Seeded);
+        Assert.Equal(7, library.Connections.Count);
+        Assert.Equal(["Homelab", "Kunde A", "Laden", "Standort 1"], library.Groups.Select(g => g.Name).Order());
+        Connection dc = library.Connections.Single(c => c.Name == "dc01");
+        Assert.Equal("Wartung dienstags", dc.Notes);
+        Assert.Equal(new CredentialRef("wincred", dc.Id), dc.Credential);
+        Assert.NotNull(dc.LastConnectedAt);
+        Assert.Single(new ConnectionHistory(report.DatabasePath).Recent(dc.Id));
+
+        var sync = new RemoteManager.Core.Sync.SyncStateStore(report.DatabasePath);
+        Assert.Empty(sync.LoadBases());
+        Assert.Empty(sync.LoadConflicts());
+
+        Directory.CreateDirectory(folder.File("sync"));
+        var engine = new RemoteManager.Core.Sync.SyncEngine(library, sync, new RemoteManager.Core.Sync.FolderSyncTransport(folder.File("sync")),
+            new RemoteManager.Core.Sync.SyncDevice("upgrade", "PC"));
+        RemoteManager.Core.Sync.SyncResult result = await engine.SyncAsync("Upgrade-Passphrase-1", cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal(7 + 4, result.Pushed);
+        Assert.Equal(11, sync.LoadBases().Count);
+    }
+}

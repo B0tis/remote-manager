@@ -61,6 +61,13 @@
             <Button x:Name="MoreButton" ToolTip.Tip="{x:Static res:Strings.Action_More}" Padding="9">
               <ui:FASymbolIcon Symbol="More" FontSize="16" />
             </Button>
+            <!-- Device sync (MainWindow.Sync.cs): the count shows open conflicts. -->
+            <Button x:Name="SyncButton" Padding="9">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ui:FASymbolIcon Symbol="Sync" FontSize="16" />
+                <TextBlock x:Name="SyncConflictCount" IsVisible="False" FontWeight="SemiBold" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
             <Button x:Name="RemoteToolsButton" ToolTip.Tip="{x:Static res:Strings.RemoteTool_Settings_Tip}" Padding="9">
               <ui:FASymbolIcon Symbol="Settings" FontSize="16" />
             </Button>
@@ -125,6 +132,15 @@
                       <Border Classes="pill" Background="{Binding TypeBrush}"
                               HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">
                         <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
+                      </Border>
+                      <!-- The preview shows the open session (MainWindow.LivePreview.cs). -->
+                      <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10"
+                              IsVisible="{Binding IsLivePreview}" ToolTip.Tip="{x:Static res:Strings.LivePreview_BadgeTip}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <Ellipse Width="8" Height="8" Fill="#EF4444" VerticalAlignment="Center" />
+                          <TextBlock Text="{x:Static res:Strings.LivePreview_Badge}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
+                          <TextBlock Text="{Binding LivePreviewAge}" FontSize="11" Foreground="White" Opacity="0.8" />
+                        </StackPanel>
                       </Border>
                     </Grid>
                     <StackPanel Margin="14,10,10,12" Spacing="3">

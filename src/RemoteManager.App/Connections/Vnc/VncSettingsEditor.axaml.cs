@@ -15,6 +15,7 @@ public partial class VncSettingsEditor : UserControl, ISettingsEditor
 
     public CheckBox ViewOnly => ViewOnlyBox;
     public CheckBox External => ExternalBox;
+    public CheckBox LivePreview => LivePreviewBox;
     public ComboBox JumpHost => JumpBox;
 
     public void Load(ConnectionSettings settings)
@@ -23,6 +24,7 @@ public partial class VncSettingsEditor : UserControl, ISettingsEditor
         QualityBox.SelectedIndex = (int)loaded.Quality;
         ScaleBox.IsChecked = loaded.ScaleToWindow;
         ViewOnlyBox.IsChecked = loaded.ViewOnly;
+        LivePreviewBox.IsChecked = loaded.LivePreview;
         ExternalBox.IsChecked = loaded.OpenExternally;
         JumpHostPicker.Fill(JumpBox, loaded.JumpHostId);
     }
@@ -34,6 +36,7 @@ public partial class VncSettingsEditor : UserControl, ISettingsEditor
         Quality = (VncQuality)Math.Max(0, QualityBox.SelectedIndex),
         ScaleToWindow = ScaleBox.IsChecked == true,
         ViewOnly = ViewOnlyBox.IsChecked == true,
+        LivePreview = LivePreviewBox.IsChecked == true,
         OpenExternally = ExternalBox.IsChecked == true,
         JumpHostId = JumpHostPicker.SelectedId(JumpBox),
     };

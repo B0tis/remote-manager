@@ -549,6 +549,39 @@
   <data name="Launcher_Title" xml:space="preserve">
     <value>Quick-Launcher</value>
   </data>
+  <data name="LivePreview_AgeMinutes" xml:space="preserve">
+    <value>vor {0} min</value>
+  </data>
+  <data name="LivePreview_AgeNow" xml:space="preserve">
+    <value>gerade eben</value>
+  </data>
+  <data name="LivePreview_AgeSeconds" xml:space="preserve">
+    <value>vor {0} s</value>
+  </data>
+  <data name="LivePreview_Badge" xml:space="preserve">
+    <value>Live</value>
+  </data>
+  <data name="LivePreview_BadgeTip" xml:space="preserve">
+    <value>Bild der laufenden Sitzung, wird regelmäßig aktualisiert. Intervall: „…“ › Live-Vorschau.</value>
+  </data>
+  <data name="LivePreview_Connection" xml:space="preserve">
+    <value>Live-Vorschau für diese Verbindung</value>
+  </data>
+  <data name="LivePreview_ConnectionHint" xml:space="preserve">
+    <value>Zeigt in der Übersicht regelmäßig ein Bild der laufenden Sitzung. Für Hosts mit vertraulichen Inhalten ausschalten: Dann bleibt nur das Bild vom Trennen.</value>
+  </data>
+  <data name="LivePreview_EveryMinutes" xml:space="preserve">
+    <value>Alle {0} min</value>
+  </data>
+  <data name="LivePreview_EverySeconds" xml:space="preserve">
+    <value>Alle {0} s</value>
+  </data>
+  <data name="LivePreview_Menu" xml:space="preserve">
+    <value>Live-Vorschau</value>
+  </data>
+  <data name="LivePreview_Off" xml:space="preserve">
+    <value>Aus</value>
+  </data>
   <data name="Move_Title" xml:space="preserve">
     <value>„{0}“ verschieben nach</value>
   </data>
@@ -1432,6 +1465,246 @@
   </data>
   <data name="Subtitle_One" xml:space="preserve">
     <value>{0} Verbindung · {1} online</value>
+  </data>
+  <data name="Sync_Conflict_DeletedHere" xml:space="preserve">
+    <value>hier gelöscht, auf {0} geändert</value>
+  </data>
+  <data name="Sync_Conflict_DeletedThere" xml:space="preserve">
+    <value>hier geändert, auf {0} gelöscht</value>
+  </data>
+  <data name="Sync_Conflict_EditedBoth" xml:space="preserve">
+    <value>hier und auf {0} geändert</value>
+  </data>
+  <data name="Sync_Conflict_Explanation" xml:space="preserve">
+    <value>{0}, {1}. Letzte Änderung auf {2}: {3:g}. Bis zur Entscheidung behält jeder PC seine eigene Version.</value>
+  </data>
+  <data name="Sync_Conflict_Field" xml:space="preserve">
+    <value>Feld</value>
+  </data>
+  <data name="Sync_Conflict_OtherDeleted" xml:space="preserve">
+    <value>{0} (gelöscht)</value>
+  </data>
+  <data name="Sync_Conflict_ThisPc" xml:space="preserve">
+    <value>Dieser PC</value>
+  </data>
+  <data name="Sync_Conflict_ThisPcDeleted" xml:space="preserve">
+    <value>Dieser PC (gelöscht)</value>
+  </data>
+  <data name="Sync_Conflicts_None" xml:space="preserve">
+    <value>Keine offenen Konflikte.</value>
+  </data>
+  <data name="Sync_Conflicts_Title" xml:space="preserve">
+    <value>Sync-Konflikte</value>
+  </data>
+  <data name="Sync_CopyName" xml:space="preserve">
+    <value>{0} (Kopie)</value>
+  </data>
+  <data name="Sync_Disabled" xml:space="preserve">
+    <value>Synchronisierung aus</value>
+  </data>
+  <data name="Sync_Done" xml:space="preserve">
+    <value>Synchronisiert</value>
+  </data>
+  <data name="Sync_Enabled" xml:space="preserve">
+    <value>Synchronisierung an</value>
+  </data>
+  <data name="Sync_Error_Damaged" xml:space="preserve">
+    <value>Die Sync-Datei ist unvollständig oder beschädigt, vielleicht schreibt der Sync-Dienst sie gerade noch. Sie wurde nicht überschrieben; später wird es erneut versucht.</value>
+  </data>
+  <data name="Sync_Error_EnterPassphrase" xml:space="preserve">
+    <value>Bitte eine Passphrase eingeben.</value>
+  </data>
+  <data name="Sync_Error_FolderMissing" xml:space="preserve">
+    <value>Der Sync-Ordner ist nicht erreichbar. Ist das Laufwerk verbunden?</value>
+  </data>
+  <data name="Sync_Error_Locked" xml:space="preserve">
+    <value>Die Sync-Datei ist gerade gesperrt oder wird geändert (Sync-Dienst oder Virenscanner). Später wird es erneut versucht.</value>
+  </data>
+  <data name="Sync_Error_NewerFormat" xml:space="preserve">
+    <value>Die Sync-Datei stammt von einer neueren Version von Remote-Manager. Bitte diese Installation aktualisieren.</value>
+  </data>
+  <data name="Sync_Error_NoPassphrase" xml:space="preserve">
+    <value>Für die Synchronisierung ist keine Passphrase gespeichert.</value>
+  </data>
+  <data name="Sync_Error_Other" xml:space="preserve">
+    <value>Synchronisierung fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Sync_Error_PassphraseMismatch" xml:space="preserve">
+    <value>Die beiden Passphrasen stimmen nicht überein.</value>
+  </data>
+  <data name="Sync_Error_PassphraseShort" xml:space="preserve">
+    <value>Die Passphrase muss mindestens {0} Zeichen lang sein.</value>
+  </data>
+  <data name="Sync_Error_PickFolder" xml:space="preserve">
+    <value>Bitte einen vorhandenen Sync-Ordner wählen.</value>
+  </data>
+  <data name="Sync_Error_WrongPassphrase" xml:space="preserve">
+    <value>Die Passphrase passt nicht zu den Sync-Daten in diesem Ordner. Gib dieselbe Passphrase ein wie auf dem ersten PC.</value>
+  </data>
+  <data name="Sync_Failed" xml:space="preserve">
+    <value>Synchronisierung fehlgeschlagen</value>
+  </data>
+  <data name="Sync_Field_Credential" xml:space="preserve">
+    <value>Kennwort</value>
+  </data>
+  <data name="Sync_Field_Description" xml:space="preserve">
+    <value>Beschreibung</value>
+  </data>
+  <data name="Sync_Field_Domain" xml:space="preserve">
+    <value>Domäne</value>
+  </data>
+  <data name="Sync_Field_Favorite" xml:space="preserve">
+    <value>Favorit</value>
+  </data>
+  <data name="Sync_Field_Group" xml:space="preserve">
+    <value>Gruppe</value>
+  </data>
+  <data name="Sync_Field_Host" xml:space="preserve">
+    <value>Host / ID</value>
+  </data>
+  <data name="Sync_Field_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Sync_Field_Notes" xml:space="preserve">
+    <value>Notizen</value>
+  </data>
+  <data name="Sync_Field_Parent" xml:space="preserve">
+    <value>Übergeordnete Gruppe</value>
+  </data>
+  <data name="Sync_Field_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="Sync_Field_Setting" xml:space="preserve">
+    <value>Einstellung „{0}“</value>
+  </data>
+  <data name="Sync_Field_SortOrder" xml:space="preserve">
+    <value>Reihenfolge</value>
+  </data>
+  <data name="Sync_Field_Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Sync_Field_Type" xml:space="preserve">
+    <value>Typ</value>
+  </data>
+  <data name="Sync_Field_UserName" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="Sync_Folder" xml:space="preserve">
+    <value>Sync-Ordner</value>
+  </data>
+  <data name="Sync_FolderHint" xml:space="preserve">
+    <value>Auf jedem PC den Ordner wählen, den der Sync-Dienst abgleicht. Dort liegt nur die verschlüsselte Datei remote-manager.sync.</value>
+  </data>
+  <data name="Sync_FolderPlaceholder" xml:space="preserve">
+    <value>z. B. C:\Users\Name\OneDrive\Remote-Manager</value>
+  </data>
+  <data name="Sync_Hint" xml:space="preserve">
+    <value>Gruppen und Verbindungen werden Ende-zu-Ende-verschlüsselt über eine Datei in einem Ordner abgeglichen, zum Beispiel in OneDrive oder Syncthing. Kennwörter, Verlauf, Status und Vorschaubilder bleiben auf diesem PC.</value>
+  </data>
+  <data name="Sync_Join_Merge" xml:space="preserve">
+    <value>Verbindungen dieses PCs hinzufügen</value>
+  </data>
+  <data name="Sync_Join_Replace" xml:space="preserve">
+    <value>Verbindungen dieses PCs durch die Sync-Daten ersetzen</value>
+  </data>
+  <data name="Sync_Join_Title" xml:space="preserve">
+    <value>Wenn im Ordner schon Sync-Daten liegen</value>
+  </data>
+  <data name="Sync_KeepBoth" xml:space="preserve">
+    <value>Beide behalten (Kopie)</value>
+  </data>
+  <data name="Sync_KeepBothTip" xml:space="preserve">
+    <value>Die Verbindung übernimmt die andere Version; die Version dieses PCs wird als neue Verbindung angelegt.</value>
+  </data>
+  <data name="Sync_KeepMine" xml:space="preserve">
+    <value>Diese behalten</value>
+  </data>
+  <data name="Sync_KeepOther" xml:space="preserve">
+    <value>Andere behalten</value>
+  </data>
+  <data name="Sync_Kind_Connection" xml:space="preserve">
+    <value>Verbindung</value>
+  </data>
+  <data name="Sync_Kind_Group" xml:space="preserve">
+    <value>Gruppe</value>
+  </data>
+  <data name="Sync_LastSync" xml:space="preserve">
+    <value>Zuletzt synchronisiert: {0:g}</value>
+  </data>
+  <data name="Sync_Never" xml:space="preserve">
+    <value>Noch nicht synchronisiert.</value>
+  </data>
+  <data name="Sync_Now" xml:space="preserve">
+    <value>Jetzt synchronisieren</value>
+  </data>
+  <data name="Sync_OtherDevice" xml:space="preserve">
+    <value>anderer PC</value>
+  </data>
+  <data name="Sync_Passphrase" xml:space="preserve">
+    <value>Passphrase</value>
+  </data>
+  <data name="Sync_PassphraseHint" xml:space="preserve">
+    <value>Auf jedem PC dieselbe Passphrase eingeben. Sie wird nur in der Windows-Anmeldeinformationsverwaltung gespeichert. Ohne sie lassen sich die Sync-Daten nicht lesen; sie kann nicht wiederhergestellt werden.</value>
+  </data>
+  <data name="Sync_PassphrasePlaceholder" xml:space="preserve">
+    <value>Mindestens {0} Zeichen</value>
+  </data>
+  <data name="Sync_PassphraseRepeat" xml:space="preserve">
+    <value>Passphrase wiederholen</value>
+  </data>
+  <data name="Sync_PassphraseStored" xml:space="preserve">
+    <value>Gespeichert. Leer lassen, um sie zu behalten</value>
+  </data>
+  <data name="Sync_PickFolder" xml:space="preserve">
+    <value>Ordner wählen …</value>
+  </data>
+  <data name="Sync_ResultConflicts" xml:space="preserve">
+    <value>{0} Konflikte warten auf eine Entscheidung.</value>
+  </data>
+  <data name="Sync_ResultCounts" xml:space="preserve">
+    <value>{0} gesendet, {1} übernommen.</value>
+  </data>
+  <data name="Sync_Running" xml:space="preserve">
+    <value>Synchronisiere …</value>
+  </data>
+  <data name="Sync_ShowConflicts" xml:space="preserve">
+    <value>Konflikte lösen ({0})</value>
+  </data>
+  <data name="Sync_StatusOff" xml:space="preserve">
+    <value>Synchronisierung ist aus.</value>
+  </data>
+  <data name="Sync_Tip_Off" xml:space="preserve">
+    <value>Synchronisierung (aus)</value>
+  </data>
+  <data name="Sync_Tip_On" xml:space="preserve">
+    <value>Synchronisierung (an)</value>
+  </data>
+  <data name="Sync_Title" xml:space="preserve">
+    <value>Synchronisierung</value>
+  </data>
+  <data name="Sync_Toast_Conflicts" xml:space="preserve">
+    <value>{0} neue Konflikte. Über die Sync-Schaltfläche entscheiden, welche Version gilt.</value>
+  </data>
+  <data name="Sync_Value_CredentialRef" xml:space="preserve">
+    <value>Verweis auf ein gespeichertes Kennwort</value>
+  </data>
+  <data name="Sync_Value_Empty" xml:space="preserve">
+    <value>(leer)</value>
+  </data>
+  <data name="Sync_Value_No" xml:space="preserve">
+    <value>Nein</value>
+  </data>
+  <data name="Sync_Value_NoGroup" xml:space="preserve">
+    <value>(keine Gruppe)</value>
+  </data>
+  <data name="Sync_Value_None" xml:space="preserve">
+    <value>(nicht gesetzt)</value>
+  </data>
+  <data name="Sync_Value_UnknownGroup" xml:space="preserve">
+    <value>(Gruppe nicht vorhanden)</value>
+  </data>
+  <data name="Sync_Value_Yes" xml:space="preserve">
+    <value>Ja</value>
   </data>
   <data name="Unlock_Button" xml:space="preserve">
     <value>Entsperren</value>

@@ -39,6 +39,8 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
 
     public Control View => this;
 
+    public CheckBox LivePreview => LivePreviewBox;
+
     /// <summary>Opens every section (self-test screenshots).</summary>
     public void ExpandAll()
     {
@@ -55,6 +57,7 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
         HeightBox.Text = s.DesktopHeight > 0 ? s.DesktopHeight.ToString(CultureInfo.CurrentCulture) : "";
         KeyboardBox.SelectedIndex = Math.Max(0, Array.IndexOf(KeyboardModes, s.Keyboard));
         MultimonBox.IsChecked = s.UseMultimon;
+        LivePreviewBox.IsChecked = s.LivePreview;
         ExternalBox.IsChecked = s.OpenExternally;
 
         NlaBox.IsChecked = s.EnableNla;
@@ -122,6 +125,7 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
             DesktopHeight = fixedSize ? ParseSize(HeightBox.Text) ?? 0 : 0,
             Keyboard = KeyboardModes[Math.Max(0, KeyboardBox.SelectedIndex)],
             UseMultimon = MultimonBox.IsChecked == true,
+            LivePreview = LivePreviewBox.IsChecked == true,
             OpenExternally = ExternalBox.IsChecked == true,
             EnableNla = NlaBox.IsChecked == true,
             AuthenticationLevel = AuthLevels[Math.Max(0, AuthLevelBox.SelectedIndex)],
