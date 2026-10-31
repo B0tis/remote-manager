@@ -119,9 +119,6 @@ the same through the editor and checks that the secret is not on the fake op's c
 
 ### Not covered yet
 
-- Group credentials (inherited by the connections of a group) can still only use the app's own password; the
-  KeePass/1Password choice is per connection.
 - The KeePass entry's user name is not used automatically (RDP keeps the user from the connection or group).
 - No settings page yet for the KeePass unlock duration or a fixed VNC viewer path (`vnc.viewerPath` exists as a
   setting key without UI).
-- VNC through an SSH jump host comes with the SSH tunnel work (`VncSettings.JumpHostId` is kept, not used).

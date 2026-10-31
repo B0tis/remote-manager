@@ -49,6 +49,8 @@ adds a session against a real VNC server.
   Tables `connection_groups`, `connections`, `connection_tags`, `app_settings` (key/value, for tool paths and view state).
 - `SqliteMigrator`: numbered scripts in `Storage/Migrations/NNNN_name.sql` (embedded), applied in order;
   the version is `PRAGMA user_version`. To change the schema, add the next number. Never edit a shipped script.
+  Today: `0001_initial`, `0002_connection_history`. `UpgradeTests` opens a database written by the
+  p1-foundation build (`tests/.../Fixtures/Upgrade/p1-foundation.db`) to prove old data upgrades in place.
 - `DataStore.OpenAsync`: opens the database and initializes it once. If a `connections.json` from the
   earlier builds exists, it is imported (ids kept, so existing Credential Manager passwords stay attached)
   and renamed to `connections.json.bak`; otherwise sample connections are added. The `store.initialized`
@@ -66,7 +68,9 @@ adds a session against a real VNC server.
   `CredentialSourceException` (locked, canceled, entry missing, CLI missing); the app turns them into German
   messages (`App/Credentials/CredentialErrors`). Details and library choices: `docs/vnc-and-vaults.md`.
 - In the editor, `App/Credentials/PasswordSourcePanel` picks the source; `CredentialService.UseReferenceAsync`
-  stores a password-manager reference (and deletes an own Credential Manager password).
+  stores a password-manager reference (and deletes an own Credential Manager password). Groups use the same
+  panel (group editor and the editor's group-logon flyout) and `UseGroupReferenceAsync`, so a group's KeePass
+  entry or 1Password item is inherited like a stored group password.
 - `CredentialService.Resolve(connection)`: the connection's own user/domain/secret when it sets a user or a
   secret, otherwise those of the nearest ancestor group that does. User, domain, and secret are inherited
   together. A connection's own password is stored under its id; a group's under `group-<id>`.
@@ -112,7 +116,8 @@ The main window, editor, and status checks only talk to `ConnectionHandlerRegist
 
 Today: `Rdp/RdpHandler` (embedded `SessionWindow`), `RemoteTools/*` (TeamViewer, AnyDesk, RustDesk; launched
 externally, see below), `Vnc/VncHandler` (embedded `VncSessionWindow` on Community.MarcusW.VncClient, external
-viewer as fallback), `Ssh/*` (terminal and SFTP, see below). The not-yet-built ones show `PlannedConnectionDialog`. To build one
+viewer as fallback), `Ssh/*` (terminal and SFTP, see below). Every type is built now; `PlannedConnectionDialog`
+remains for a new type that has no `Open` yet. To build one
 out, replace its `Open` and add a settings editor; a brand-new type also needs a `ConnectionType` value and
 its settings record in `ConnectionSettings.TypeFor`.
 
@@ -211,7 +216,11 @@ Inheritance in the editor: the connection editor shows which group logon applies
   agent keys into SSH.NET, which has no agent support.
 - `SshRoute` chains jump hosts (`SshSettings.JumpHostId`, outermost first via `SshJumpChain`) through local
   forwards, like `ssh -J`; every hop checks its own host key. `Reach(host, port)` gives a local endpoint for
-  any TCP target, which is how RDP runs over SSH (`RdpSettings.JumpHostId`, `SessionWindow.SshTunnel.cs`).
+  any TCP target, which is how RDP and VNC run over SSH (`RdpSettings.JumpHostId`, `VncSettings.JumpHostId`).
+  `SessionWindow.SshTunnel.cs` and `VncSessionWindow` hold the tunnel for the session; mstsc, RemoteApps, and
+  the external VNC viewer get the local end from `SshConnect.OpenTunnelAsync`, which closes when the process exits.
+  Connections behind a jump host get no TCP status probe (`SshJumpChain.JumpHostOf`): their host is usually
+  not reachable from here and would show as offline.
 - Host keys: the accepted `SHA256:` fingerprint is stored in `SshSettings.HostKeyFingerprint`. An unknown or
   changed key aborts the handshake with `SshHostKeyException`; the app asks (`HostKeyWindow`, a separate window
   because the terminal and RDP surfaces are native), stores the key on yes, and connects again.
@@ -222,14 +231,22 @@ Inheritance in the editor: the connection editor shows which group logon applies
 - **SFTP** (`SftpWindow`, also "Dateien" in the terminal): plain Avalonia; transfers in `SftpTransfer`
   (recursive, progress, never overwrites local files). Upload by button or drop from Explorer.
 - Tests: `SshLiveTests` and the self-test use the Docker testbed in `tools/ssh-testbed` (jump host, a target
-  only reachable through it, optional xrdp desktop and Pageant); without it they are skipped.
+  only reachable through it, optional xrdp desktop and Pageant); without it they are skipped. VNC over SSH
+  tunnels from the jump container back to a `FakeVncServer` on this machine (`host.docker.internal`).
 
 ## UI text
 
 The UI is German. Every user-facing string is in `App/Resources/Strings.resx`; the `Strings` class is
 generated at build time. XAML uses `{x:Static res:Strings.Key}`, code uses `Strings.Key` (with
 `string.Format(CultureInfo.CurrentCulture, ...)` for placeholders). Product names (RDP, TeamViewer) and log
-lines are not translated.
+lines are not translated. Core has no UI, but its import warnings are shown as they are; they come from
+`Core/Resources/ImportStrings.resx` (internal generated class, German as well).
+
+## Self-test isolation
+
+`SelfTest.Isolation.cs`: every Credential Manager target and TERMSRV host the self-test writes ends in a per-run
+id (`TestId`), so runs in other worktrees or CI never touch each other's entries. Clipboard checks run under the
+session-wide mutex `Local\RemoteManager.SelfTest.Clipboard` and read the clipboard back with retries.
 
 ## Spike workarounds that must stay
 
