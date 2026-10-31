@@ -12,6 +12,7 @@
     </ComboBox>
     <CheckBox x:Name="ScaleBox" Content="{x:Static res:Strings.Vnc_Settings_Scale}" />
     <CheckBox x:Name="ViewOnlyBox" Content="{x:Static res:Strings.Vnc_Settings_ViewOnly}" />
+    <CheckBox x:Name="LivePreviewBox" Content="{x:Static res:Strings.LivePreview_Connection}" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.LivePreview_ConnectionHint}" />
     <CheckBox x:Name="ExternalBox" Content="{x:Static res:Strings.Vnc_Settings_External}" />
     <StackPanel Spacing="4">
       <TextBlock Text="{x:Static res:Strings.Vnc_SshTunnel}" FontSize="12" Opacity="0.7" />

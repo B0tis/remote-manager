@@ -151,6 +151,22 @@ its settings record in `ConnectionSettings.TypeFor`.
   window therefore rebuilds the sidebar only when groups or tags changed, clears the selection before
   replacing items, selects again after layout, and never selects an item inside a collapsed group.
 
+## Live preview (`Core/Preview`, `Views/MainWindow.LivePreview.cs`)
+
+- While an embedded RDP or VNC session is connected, its tile and the detail panel show a picture refreshed every
+  N seconds with a "Live · vor 20 s" badge. Interval in the "…" menu › Live-Vorschau (Aus, 10 s, 30 s, 1 min,
+  5 min; setting `preview.live.interval` in seconds, default 30, "0" = off). Per connection:
+  `RdpSettings.LivePreview` / `VncSettings.LivePreview` ("Live-Vorschau für diese Verbindung", on by default).
+- `LivePreviewScheduler` (Core, unit-tested with a fake source) holds the open sessions as `ILivePreviewSource`
+  and is ticked every 5 s by a UI timer: it captures sessions that are live, allowed, not minimized, and due;
+  never one twice at once; a failed or blank capture keeps the last image. `LiveAt` drives the badge.
+- Sources: `SessionWindow.LivePreview.cs` copies the RDP surface with the snapshot path (`SessionCapture`,
+  PrintWindow, no focus change) on the UI thread and skips minimized windows (the client stops painting);
+  `VncSessionWindow.LivePreview.cs` copies the in-memory frame (also while minimized). `LivePreviewImage` scales
+  to cover 528 x 280 (twice the tile) and encodes the PNG on the thread pool, then replaces the preview file in
+  one step. A full snapshot (disconnect, close, manual) written meanwhile wins, so the final picture stays.
+- SSH terminals have no live preview.
+
 ## RDP start (`App/Connections/Rdp`, `Core/Rdp`)
 
 - Embedded: `SessionWindow` puts every `RdpSettings` option onto the MsRdpEx client through

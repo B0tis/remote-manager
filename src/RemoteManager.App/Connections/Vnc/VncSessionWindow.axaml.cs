@@ -307,6 +307,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             using (frame)
                 frame.Save(path, new PngBitmapEncoderOptions());
+            savedSnapshots++;
             SnapshotSaved?.Invoke(this, EventArgs.Empty);
         }
         catch (IOException ex)

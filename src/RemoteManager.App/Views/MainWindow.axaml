@@ -126,6 +126,15 @@
                               HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">
                         <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
                       </Border>
+                      <!-- The preview shows the open session (MainWindow.LivePreview.cs). -->
+                      <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10"
+                              IsVisible="{Binding IsLivePreview}" ToolTip.Tip="{x:Static res:Strings.LivePreview_BadgeTip}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                          <Ellipse Width="8" Height="8" Fill="#EF4444" VerticalAlignment="Center" />
+                          <TextBlock Text="{x:Static res:Strings.LivePreview_Badge}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
+                          <TextBlock Text="{Binding LivePreviewAge}" FontSize="11" Foreground="White" Opacity="0.8" />
+                        </StackPanel>
+                      </Border>
                     </Grid>
                     <StackPanel Margin="14,10,10,12" Spacing="3">
                       <Grid ColumnDefinitions="*,Auto">

@@ -12,4 +12,7 @@ public sealed record VncSettings : ConnectionSettings
     public bool OpenExternally { get; init; }
 
     public string? JumpHostId { get; init; }
+
+    /// <summary>The overview may show a periodically refreshed picture of the open session (off for sensitive hosts).</summary>
+    public bool LivePreview { get; init; } = true;
 }

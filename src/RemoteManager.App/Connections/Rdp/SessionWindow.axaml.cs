@@ -281,6 +281,7 @@ public partial class SessionWindow : Window, ISessionWindow
 
         string path = Connection.Model.ResolvedPreviewPath;
         frame.SavePng(path);
+        savedSnapshots++;
         LastThumbnailPath = path;
         Log($"Snapshot ({reason}) saved: {path} ({frame.Width}x{frame.Height}, method {frame.Method}).");
         SnapshotSaved?.Invoke(this, EventArgs.Empty);
