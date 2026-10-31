@@ -24,6 +24,8 @@
     <PackageReference Include="Devolutions.MsRdpEx" Version="2026.10.26" />
     <!-- SSH terminal: xterm.js in WebView2 (MIT). -->
     <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.1" />
+    <!-- MIT. Installer and updates (Updates/, tools/release.ps1); keep in step with vpk in dotnet-tools.json. -->
+    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
   <ItemGroup>

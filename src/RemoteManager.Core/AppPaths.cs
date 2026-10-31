@@ -19,6 +19,9 @@ public static class AppPaths
     public static string Thumbnails => Ensure(Path.Combine(Root, "thumbnails"));
     public static string Spike => Ensure(Path.Combine(Root, "spike"));
 
+    /// <summary>Database copies taken before an update (see Updates/DatabaseBackup).</summary>
+    public static string Backups => Path.Combine(Root, "backups");
+
     private static string Ensure(string path)
     {
         Directory.CreateDirectory(path);

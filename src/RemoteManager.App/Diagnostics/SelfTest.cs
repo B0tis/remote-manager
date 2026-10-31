@@ -105,6 +105,7 @@ internal static partial class SelfTest
         await RunVncAndVaultChecksAsync(window); // SelfTest.VncAndVaults.cs
         await RunLivePreviewChecksAsync(window); // SelfTest.LivePreview.cs
         await RunSshChecksAsync(window);
+        await RunUpdateChecksAsync(window); // SelfTest.Updates.cs
         await RunSyncChecksAsync(window); // SelfTest.Sync.cs
 
         // --- Two session windows, each with its own RDP client -------------------------------------

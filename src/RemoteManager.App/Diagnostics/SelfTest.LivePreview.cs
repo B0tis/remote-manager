@@ -163,7 +163,7 @@ internal static partial class SelfTest
     private static async Task SaveLivePreviewSettingsProbesAsync(MainWindow window)
     {
         window.Activate();
-        if (window.More.Flyout is MenuFlyout menu && (menu.ItemsSource?.OfType<MenuItem>().FirstOrDefault(m => m.Header as string == Strings.LivePreview_Menu)) is { } parent)
+        if (window.More.Flyout is MenuFlyout menu && (menu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Header as string == Strings.LivePreview_Menu)) is { } parent)
         {
             menu.ShowAt(window.More);
             await Settle(400);
@@ -209,7 +209,7 @@ internal static partial class SelfTest
     }
 
     private static IReadOnlyList<MenuItem>? LivePreviewMenu(MainWindow window) =>
-        (window.More.Flyout as MenuFlyout)?.ItemsSource?.OfType<MenuItem>()
+        (window.More.Flyout as MenuFlyout)?.Items.OfType<MenuItem>()
             .FirstOrDefault(m => m.Header as string == Strings.LivePreview_Menu)?.ItemsSource?.OfType<MenuItem>().ToList();
 
     private static bool TileShowsLiveBadge(MainWindow window, ConnectionItem connection) =>

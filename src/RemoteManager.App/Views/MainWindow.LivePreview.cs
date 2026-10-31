@@ -49,8 +49,8 @@ public partial class MainWindow
 
         if (MoreButton.Flyout is MenuFlyout menu)
         {
-            List<object> entries = [.. menu.ItemsSource?.Cast<object>() ?? [], new Separator(), CreateLivePreviewMenu()];
-            menu.ItemsSource = entries;
+            menu.Items.Add(new Separator());
+            menu.Items.Add(CreateLivePreviewMenu());
         }
     }
 

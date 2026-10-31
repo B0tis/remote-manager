@@ -251,6 +251,16 @@ Inheritance in the editor: the connection editor shows which group logon applies
   only reachable through it, optional xrdp desktop and Pageant); without it they are skipped. VNC over SSH
   tunnels from the jump container back to a `FakeVncServer` on this machine (`host.docker.internal`).
 
+## Installer and updates (`Core/Updates`, `App/Updates`)
+
+Velopack: per-user Setup to `%LOCALAPPDATA%\Botis.RemoteManager` (never the data folder), `VelopackApp.Run()` first
+in `Program.Main` with auto-apply off. `AppUpdates` holds the source (`REMOTE_MANAGER_UPDATE_SOURCE`, setting
+`update.source`, default GitHub Releases), the GitHub token (Credential Manager), the throttled startup check, and
+the database backup before applying (`DatabaseBackup`, last three in `<data>\backups`). The overview's notice and
+"…" menu entries are in `MainWindow.Updates.cs`, the About dialog in `Views/AboutView`; `IAppUpdater` lets the
+self-test use a fake. Releases: `tools/release.ps1` (publish, optional signing, vpk pack, upload). Details,
+private-repository options, and the end-to-end check: `docs/updates.md`.
+
 ## Device sync (`Core/Sync`, `App/Sync`)
 
 Off until the user turns it on (header button "Synchronisierung"). One encrypted file, `remote-manager.sync`, in a

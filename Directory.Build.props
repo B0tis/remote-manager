@@ -8,5 +8,7 @@
     <Deterministic>true</Deterministic>
     <Company>Botis</Company>
     <Product>Remote-Manager</Product>
+    <!-- tools/release.ps1 sets the real version (-p:Version=…); the About dialog shows it. -->
+    <Version>0.0.0-dev</Version>
   </PropertyGroup>
 </Project>

@@ -15,6 +15,69 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="About_Menu" xml:space="preserve">
+    <value>Über Remote-Manager …</value>
+  </data>
+  <data name="About_Title" xml:space="preserve">
+    <value>Über Remote-Manager</value>
+  </data>
+  <data name="About_Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="About_Version" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="About_VersionBuild" xml:space="preserve">
+    <value>Version {0} · Build {1}</value>
+  </data>
+  <data name="About_Installed" xml:space="preserve">
+    <value>Installiert in {0}</value>
+  </data>
+  <data name="About_NotInstalled" xml:space="preserve">
+    <value>Nicht mit Setup installiert (Entwicklungs-Build): diese Kopie kann sich nicht selbst aktualisieren.</value>
+  </data>
+  <data name="About_Data" xml:space="preserve">
+    <value>Deine Daten liegen in {0}, außerhalb des Programmordners. Sie bleiben bei Updates und bei einer Neuinstallation erhalten.</value>
+  </data>
+  <data name="About_UpdatesTitle" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="About_SourceHint" xml:space="preserve">
+    <value>Woher Updates kommen: ein GitHub-Repository, eine Web-Adresse oder ein Ordner (auch eine Netzwerkfreigabe) mit den Release-Dateien. Leer lassen für die GitHub-Releases von B0tis/remote-manager.</value>
+  </data>
+  <data name="About_SourceFixed" xml:space="preserve">
+    <value>Festgelegt durch die Umgebungsvariable {0}.</value>
+  </data>
+  <data name="About_SourceInvalid" xml:space="preserve">
+    <value>Keine gültige Quelle. Erwartet wird eine http(s)-Adresse oder ein vollständiger Ordnerpfad (z. B. \\server\software\remote-manager).</value>
+  </data>
+  <data name="About_TokenTitle" xml:space="preserve">
+    <value>GitHub-Token</value>
+  </data>
+  <data name="About_TokenHint" xml:space="preserve">
+    <value>Nur für ein privates Repository nötig (Leserecht auf Inhalte genügt). Es wird in der Windows-Anmeldeinformationsverwaltung gespeichert, nicht in der Datenbank.</value>
+  </data>
+  <data name="About_TokenPlaceholder" xml:space="preserve">
+    <value>Token einfügen</value>
+  </data>
+  <data name="About_TokenStored" xml:space="preserve">
+    <value>Token gespeichert.</value>
+  </data>
+  <data name="About_TokenNone" xml:space="preserve">
+    <value>Kein Token gespeichert.</value>
+  </data>
+  <data name="About_TokenSaveFailed" xml:space="preserve">
+    <value>Token konnte nicht gespeichert werden: {0}</value>
+  </data>
+  <data name="About_LastCheck" xml:space="preserve">
+    <value>Zuletzt nach Updates gesucht: {0:g}</value>
+  </data>
+  <data name="About_NeverChecked" xml:space="preserve">
+    <value>Noch nicht nach Updates gesucht.</value>
+  </data>
+  <data name="About_CheckNow" xml:space="preserve">
+    <value>Jetzt suchen</value>
+  </data>
   <data name="Action_Cancel" xml:space="preserve">
     <value>Abbrechen</value>
   </data>
@@ -1756,6 +1819,60 @@
   </data>
   <data name="View_TilesTip" xml:space="preserve">
     <value>Kacheln (Strg+1)</value>
+  </data>
+  <data name="Update_Title" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Update_NoticeTitle" xml:space="preserve">
+    <value>Neue Version verfügbar</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>Remote-Manager {0} ist verfügbar (installiert: {1}).</value>
+  </data>
+  <data name="Update_Now" xml:space="preserve">
+    <value>Jetzt aktualisieren</value>
+  </data>
+  <data name="Update_Later" xml:space="preserve">
+    <value>Später</value>
+  </data>
+  <data name="Update_Downloading" xml:space="preserve">
+    <value>Version {0} wird geladen … {1} %</value>
+  </data>
+  <data name="Update_Installing" xml:space="preserve">
+    <value>Daten werden gesichert, dann startet Remote-Manager neu …</value>
+  </data>
+  <data name="Update_Done" xml:space="preserve">
+    <value>Remote-Manager wurde auf Version {0} aktualisiert. Deine Datenbank wurde vorher gesichert.</value>
+  </data>
+  <data name="Update_Current" xml:space="preserve">
+    <value>Remote-Manager {0} ist aktuell.</value>
+  </data>
+  <data name="Update_NotInstalled" xml:space="preserve">
+    <value>Diese Kopie wurde nicht mit Setup installiert (Entwicklungs-Build) und kann sich nicht selbst aktualisieren.</value>
+  </data>
+  <data name="Update_Failed" xml:space="preserve">
+    <value>Update fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Update_PrivateRepoHint" xml:space="preserve">
+    <value>Das GitHub-Repository ist privat: hinterlege unter „Über Remote-Manager“ ein Token mit Leserecht oder nutze einen Update-Ordner.</value>
+  </data>
+  <data name="Update_BackupFailed" xml:space="preserve">
+    <value>Die Datenbank konnte nicht gesichert werden, das Update wurde nicht gestartet: {0}</value>
+  </data>
+  <data name="Update_SessionsTextOne" xml:space="preserve">
+    <value>Es ist noch eine Sitzung geöffnet. Für das Update startet Remote-Manager neu, dabei wird sie getrennt.</value>
+  </data>
+  <data name="Update_SessionsTitle" xml:space="preserve">
+    <value>Sitzungen sind geöffnet</value>
+  </data>
+  <data name="Update_SessionsText" xml:space="preserve">
+    <value>Es sind noch {0} Sitzungen geöffnet. Für das Update startet Remote-Manager neu, dabei werden sie getrennt.</value>
+  </data>
+  <data name="Update_SessionsConfirm" xml:space="preserve">
+    <value>Trennen und aktualisieren</value>
+  </data>
+  <data name="Update_CheckMenu" xml:space="preserve">
+    <value>Nach Updates suchen</value>
   </data>
   <data name="Vnc_AuthFailed" xml:space="preserve">
     <value>Der Server hat das Passwort abgelehnt.</value>

@@ -283,8 +283,8 @@ internal static partial class SelfTest
         {
             // The "more" menu with import and export.
             Check("The \"more\" button offers import and JSON backup",
-                window.More.Flyout is MenuFlyout { ItemsSource: { } entries }
-                && entries.OfType<MenuItem>().Select(m => m.Header as string).Take(2).SequenceEqual([Strings.Action_Import, Strings.Action_ExportBackup]));
+                window.More.Flyout is MenuFlyout menu && menu.Items.OfType<MenuItem>().Select(i => i.Header).Take(2)
+                    .SequenceEqual([Strings.Action_Import, Strings.Action_ExportBackup]));
 
             Task importing = ImportExportCommands.ShowImportAsync(window);
             await Settle(800);
