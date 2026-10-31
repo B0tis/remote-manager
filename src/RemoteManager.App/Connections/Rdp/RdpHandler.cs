@@ -1,12 +1,15 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Media;
 using FluentAvalonia.UI.Controls;
+using RemoteManager.App.Connections.Ssh;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Views;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
+using RemoteManager.Core.Ssh;
 
 namespace RemoteManager.App.Connections.Rdp;
 
@@ -55,10 +58,36 @@ public sealed class RdpHandler : ConnectionHandler
             return;
         }
 
+        // RDP over SSH: mstsc connects to the local end of the tunnel, which stays open until mstsc exits.
+        string? jumpHostId = connection.Model.SettingsAs<RdpSettings>().JumpHostId is { Length: > 0 } id ? id : null;
+        SshRoute? tunnel = null;
         try
         {
-            ExternalRdpStart start = await ExternalRdpLauncher.PrepareAsync(connection.Model, host.App.Credentials);
-            ExternalRdpLauncher.Start(start);
+            (string Host, int Port)? tunnelEnd = null;
+            if (jumpHostId is not null)
+            {
+                tunnel = await SshConnect.OpenRouteAsync(host.Owner, jumpHostId, connection.Model.Id, _ => { });
+                if (tunnel is null)
+                {
+                    host.ShowToast(connection.Name, Strings.HostKey_Declined, FAInfoBarSeverity.Warning);
+                    return;
+                }
+
+                SshRoute route = tunnel;
+                string target = connection.Model.Host.Trim();
+                int port = connection.Model.EffectivePort;
+                tunnelEnd = await Task.Run(() => route.Reach(target, port));
+            }
+
+            ExternalRdpStart start = await ExternalRdpLauncher.PrepareAsync(connection.Model, host.App.Credentials, tunnelEnd);
+            Process mstsc = ExternalRdpLauncher.Start(start);
+            if (tunnel is not null)
+            {
+                SshRoute route = tunnel;
+                mstsc.Exited += (_, _) => route.Dispose();
+                tunnel = null;
+            }
+
             host.MarkConnected(connection);
             host.ShowToast(connection.Name, start.WroteCredential ? Strings.Rdp_External_StartedWithPassword : Strings.Rdp_External_Started,
                 FAInfoBarSeverity.Informational);
@@ -66,6 +95,14 @@ public sealed class RdpHandler : ConnectionHandler
         catch (Exception ex) when (ex is Win32Exception or IOException or UnauthorizedAccessException)
         {
             host.ShowToast(connection.Name, string.Format(CultureInfo.CurrentCulture, Strings.Rdp_External_Failed, ex.Message), FAInfoBarSeverity.Error);
+        }
+        catch (Exception ex) when (jumpHostId is not null && ex is not OutOfMemoryException)
+        {
+            host.ShowToast(connection.Name, string.Format(CultureInfo.CurrentCulture, Strings.Rdp_SshTunnelFailed, SshConnect.Describe(ex)), FAInfoBarSeverity.Error);
+        }
+        finally
+        {
+            tunnel?.Dispose();
         }
     }
 }

@@ -35,16 +35,22 @@ internal static class ExternalRdpLauncher
 {
     public static string MstscPath => Path.Combine(Environment.SystemDirectory, "mstsc.exe");
 
-    /// <summary>Writes the file and the credential; nothing is started yet.</summary>
-    public static async Task<ExternalRdpStart> PrepareAsync(Connection connection, CredentialService credentials)
+    /// <summary>
+    /// Writes the file and the credential; nothing is started yet. With <paramref name="tunnelEnd"/> (RDP over
+    /// SSH) mstsc connects to the local end of the tunnel instead of the host, and the TERMSRV entry is for it.
+    /// </summary>
+    public static async Task<ExternalRdpStart> PrepareAsync(Connection connection, CredentialService credentials, (string Host, int Port)? tunnelEnd = null)
     {
         EffectiveCredential logon = credentials.Resolve(connection);
-        string host = connection.Host.Trim();
+        string host = tunnelEnd?.Host ?? connection.Host.Trim();
 
         string folder = Path.Combine(Path.GetTempPath(), "RemoteManager", "rdp", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         string path = Path.Combine(folder, $"{SafeFileName(connection.Name)}.rdp");
-        RdpFileMapping.ToRdpFile(connection, logon.UserName, logon.Domain).Save(path);
+        RdpFile file = RdpFileMapping.ToRdpFile(connection, logon.UserName, logon.Domain);
+        if (tunnelEnd is { } end)
+            file.Set("full address", RdpFileMapping.FormatAddress(end.Host, end.Port));
+        file.Save(path);
 
         // An entry the user saved in mstsc stays untouched (and is used by mstsc).
         bool wrote = false;
