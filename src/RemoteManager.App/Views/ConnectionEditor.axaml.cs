@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections;
+using RemoteManager.App.Credentials;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Model;
@@ -49,6 +50,11 @@ public partial class ConnectionEditor : UserControl
         SavePasswordBox.IsCheckedChanged += (_, _) => UpdateInheritedHint();
         PasswordBox.TextChanged += (_, _) => UpdateInheritedHint();
         GroupLogonButton.Click += (_, _) => ShowGroupLogon();
+        SourcePanel.KindChanged += (_, _) =>
+        {
+            OwnPasswordPanel.IsVisible = !SourcePanel.IsExternal;
+            UpdateInheritedHint();
+        };
     }
 
     /// <summary>The dialog and its form while open (used by the self-test).</summary>
@@ -58,6 +64,7 @@ public partial class ConnectionEditor : UserControl
     public TextBox Password => PasswordBox;
     public CheckBox SavePassword => SavePasswordBox;
     public Button RemovePassword => RemovePasswordButton;
+    public PasswordSourcePanel Source => SourcePanel;
     public bool IsStoredPasswordShown => StoredRow.IsVisible && SavePasswordBox.IsChecked == true;
     public TextBlock InheritanceHint => InheritedHint;
     public Button GroupLogon => GroupLogonButton;
@@ -107,7 +114,12 @@ public partial class ConnectionEditor : UserControl
         try
         {
             string password = PasswordBox.Text ?? "";
-            if (SavePasswordBox.IsChecked != true)
+            if (SourcePanel.BuildReference() is { } reference)
+            {
+                // KeePass / 1Password: only the reference is stored; the secret is fetched at connect time.
+                await app.Credentials.UseReferenceAsync(c, reference);
+            }
+            else if (SavePasswordBox.IsChecked != true)
             {
                 if (c.Credential is not null || hasStoredPassword)
                     await app.Credentials.RemoveOwnSecretAsync(c);
@@ -145,7 +157,9 @@ public partial class ConnectionEditor : UserControl
         UserBox.Text = c.UserName;
         DomainBox.Text = c.Domain;
         FavoriteBox.IsChecked = c.IsFavorite;
-        hasStoredPassword = c.Credential is not null;
+        // Only a password the app stored itself counts here; a KeePass/1Password reference is the source panel's.
+        hasStoredPassword = c.Credential is not null && c.Credential.Source == app.Credentials.DefaultSource.Id;
+        SourcePanel.Load(c.Credential);
         SavePasswordBox.IsChecked = hasStoredPassword;
         UpdateTypeFields();
         UpdatePasswordState();
@@ -157,6 +171,7 @@ public partial class ConnectionEditor : UserControl
             string.IsNullOrWhiteSpace(NameBox.Text) ? Strings.Editor_Error_Name :
             string.IsNullOrWhiteSpace(HostBox.Text) ? (Handler.HasPort ? Strings.Editor_Error_Host : Strings.Editor_Error_RemoteId) :
             Handler.HasPort && PortBox.Text is { Length: > 0 } port && !(int.TryParse(port, out int p) && p is > 0 and < 65536) ? Strings.Editor_Error_Port :
+            SourcePanel.IsExternal ? SourcePanel.Validate() ?? settingsEditor?.Validate() :
             SavePasswordBox.IsChecked == true && !hasStoredPassword && string.IsNullOrEmpty(PasswordBox.Text) ? Strings.Editor_Error_Password :
             settingsEditor?.Validate();
 
@@ -208,7 +223,8 @@ public partial class ConnectionEditor : UserControl
         ConnectionGroup? group = FindGroup(GroupBox.Text);
         GroupLogonButton.IsVisible = Handler.UsesUserName && group is not null;
         EffectiveCredential inherited = app.Credentials.Resolve(new Connection { GroupId = group?.Id });
-        bool own = UserBox.Text?.Trim().Length > 0 || (SavePasswordBox.IsChecked == true && (hasStoredPassword || PasswordBox.Text?.Length > 0));
+        bool own = UserBox.Text?.Trim().Length > 0 || SourcePanel.IsExternal
+            || (SavePasswordBox.IsChecked == true && (hasStoredPassword || PasswordBox.Text?.Length > 0));
         InheritedHint.IsVisible = Handler.UsesUserName && inherited.IsInherited;
         if (!InheritedHint.IsVisible)
             return;

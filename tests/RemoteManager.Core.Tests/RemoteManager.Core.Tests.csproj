@@ -17,6 +17,8 @@
   <ItemGroup>
     <!-- Sample files of the import formats (1Remote, RDCMan, mRemoteNG, .rdp). -->
     <None Include="Samples\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- KeePass test databases (see Fixtures/KeePass/make_fixtures.py); master password "RemoteManager-Test". -->
+    <None Include="Fixtures\**\*.kdbx;Fixtures\**\*.keyx" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

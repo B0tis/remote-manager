@@ -223,9 +223,10 @@ public partial class MainWindow : Window, IConnectionHost
         {
             password = await app.Credentials.ReadAsync(connection.Credentials.Secret);
         }
-        catch (Win32Exception ex)
+        catch (Exception ex) when (Credentials.CredentialErrors.IsCredentialFailure(ex))
         {
-            ShowToast(connection.Name, string.Format(CultureInfo.CurrentCulture, Strings.Password_ReadFailed, ex.Message), FAInfoBarSeverity.Error);
+            // Credential Manager error, or a password manager that is locked, canceled, or missing the entry.
+            ShowToast(connection.Name, Credentials.CredentialErrors.Describe(ex), FAInfoBarSeverity.Error);
             return;
         }
 

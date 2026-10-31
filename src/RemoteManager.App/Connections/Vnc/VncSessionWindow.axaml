@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:vnc="using:RemoteManager.App.Connections.Vnc"
+        xmlns:res="using:RemoteManager.App.Resources"
+        x:Class="RemoteManager.App.Connections.Vnc.VncSessionWindow"
+        Width="1280" Height="800" MinWidth="640" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+  <!-- One VNC session per window. The view is a normal Avalonia control (no native child window), so
+       overlays and menus draw above it. -->
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Padding="14,6" BorderThickness="0,0,0,1"
+            Background="{DynamicResource LayerFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Ellipse x:Name="StatusDot" Width="8" Height="8" VerticalAlignment="Center" Fill="#9CA3AF" />
+        <TextBlock x:Name="StatusText" Grid.Column="1" Margin="10,0" VerticalAlignment="Center"
+                   Opacity="0.8" Text="{x:Static res:Strings.Session_NotConnected}" TextTrimming="CharacterEllipsis" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+          <Button x:Name="CtrlAltDelButton" Classes="toolbar" IsEnabled="False" Content="{x:Static res:Strings.Vnc_CtrlAltDel}" />
+          <ToggleButton x:Name="ViewOnlyButton" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Vnc_ViewOnlyTip}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <ui:FASymbolIcon Symbol="View" FontSize="16" />
+              <TextBlock Text="{x:Static res:Strings.Vnc_ViewOnly}" VerticalAlignment="Center" />
+            </StackPanel>
+          </ToggleButton>
+          <ToggleButton x:Name="ScaleButton" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Vnc_ScaleTip}">
+            <ui:FASymbolIcon Symbol="FullScreenMaximize" FontSize="16" />
+          </ToggleButton>
+          <Button x:Name="ExternalButton" Classes="toolbar" Content="{x:Static res:Strings.Vnc_OpenExternal}" />
+          <Button x:Name="DisconnectButton" Classes="toolbar" IsEnabled="False" Content="{x:Static res:Strings.Session_Disconnect}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid>
+      <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" IsVisible="False">
+        <vnc:VncView x:Name="View" />
+      </ScrollViewer>
+
+      <!-- Connect / reconnect card. -->
+      <Border x:Name="ConnectCard" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center"
+              Padding="28,24" CornerRadius="12" BorderThickness="1"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BoxShadow="0 8 32 0 #33000000">
+        <StackPanel Spacing="14">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <Border x:Name="TypeBadge" Width="44" Height="44" CornerRadius="10">
+              <TextBlock x:Name="TypeBadgeText" HorizontalAlignment="Center" VerticalAlignment="Center"
+                         FontWeight="SemiBold" Foreground="White" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock x:Name="NameText" FontSize="20" FontWeight="SemiBold" />
+              <TextBlock x:Name="HostText" Opacity="0.7" />
+            </StackPanel>
+          </StackPanel>
+          <TextBlock x:Name="DescriptionText" Opacity="0.7" TextWrapping="Wrap" />
+          <!-- Only lives here until Connect; never logged or saved from this window. -->
+          <TextBox x:Name="PasswordBox" PasswordChar="●" PlaceholderText="{x:Static res:Strings.Field_Password}" Classes="revealPasswordButton" />
+          <TextBlock x:Name="CardMessage" TextWrapping="Wrap" IsVisible="False"
+                     Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+          <Grid ColumnDefinitions="*,10,Auto">
+            <Button x:Name="ConnectButton" Classes="accent" HorizontalAlignment="Stretch" Height="36"
+                    Content="{x:Static res:Strings.Action_Connect}" IsDefault="True" />
+            <Button x:Name="CardExternalButton" Grid.Column="2" Height="36" Content="{x:Static res:Strings.Vnc_OpenExternal}" />
+          </Grid>
+          <TextBlock Opacity="0.5" FontSize="12" TextWrapping="Wrap" Text="{x:Static res:Strings.Vnc_Footer}" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>
