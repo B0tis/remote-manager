@@ -49,8 +49,9 @@ adds a session against a real VNC server.
   Tables `connection_groups`, `connections`, `connection_tags`, `app_settings` (key/value, for tool paths and view state).
 - `SqliteMigrator`: numbered scripts in `Storage/Migrations/NNNN_name.sql` (embedded), applied in order;
   the version is `PRAGMA user_version`. To change the schema, add the next number. Never edit a shipped script.
-  Today: `0001_initial`, `0002_connection_history`. `UpgradeTests` opens a database written by the
-  p1-foundation build (`tests/.../Fixtures/Upgrade/p1-foundation.db`) to prove old data upgrades in place.
+  Today: `0001_initial`, `0002_connection_history`, `0003_sync`. `UpgradeTests` opens databases written by the
+  p1-foundation build (`tests/.../Fixtures/Upgrade/p1-foundation.db`) and by the Phase 3 build on main
+  (`main-phase3.db`, schema 2) to prove old data upgrades in place.
 - `DataStore.OpenAsync`: opens the database and initializes it once. If a `connections.json` from the
   earlier builds exists, it is imported (ids kept, so existing Credential Manager passwords stay attached)
   and renamed to `connections.json.bak`; otherwise sample connections are added. The `store.initialized`
@@ -233,6 +234,48 @@ Inheritance in the editor: the connection editor shows which group logon applies
 - Tests: `SshLiveTests` and the self-test use the Docker testbed in `tools/ssh-testbed` (jump host, a target
   only reachable through it, optional xrdp desktop and Pageant); without it they are skipped. VNC over SSH
   tunnels from the jump container back to a `FakeVncServer` on this machine (`host.docker.internal`).
+
+## Device sync (`Core/Sync`, `App/Sync`)
+
+Off until the user turns it on (header button "Synchronisierung"). One encrypted file, `remote-manager.sync`, in a
+folder the user picks (OneDrive, Syncthing, a share); every PC merges its own records with it.
+
+- **What syncs** (`SyncFieldMap`): groups and connections with name, type, host, port, description, notes, tags,
+  favorite, group/parent, order, user, domain, credential reference, and every type option as its own field
+  (`settings.display`). Not synced: secrets (never in the model), Credential Manager contents, status, history,
+  last-connected time, previews, collapsed state. Deletions go out as tombstones (a record without fields).
+- **File** (`SyncCrypto`): header (magic, version, Argon2id parameters, 16-byte salt, key check, nonce) plus the
+  AES-256-GCM encrypted snapshot JSON; the header is authenticated as associated data. Nothing readable outside
+  the ciphertext (tests search the bytes for names, hosts, ids, and the passphrase in UTF-8 and UTF-16). The key
+  check (HMAC of a fixed label) separates "wrong passphrase" from "damaged file". **KDF: Argon2id**, 64 MiB, 3
+  passes, 4 lanes (RFC 9106's second recommendation), via the BouncyCastle package Core already uses for KeePass.
+  Chosen over PBKDF2 because it is memory-hard: a stolen sync file (it sits in a cloud folder) cannot be attacked
+  cheaply on GPUs, which PBKDF2 at any iteration count still allows. It takes about one second, once per process
+  (the key is cached in memory). The parameters are in the header, so they can be raised later. The passphrase
+  lives only in the Credential Manager (`RemoteManager:sync-passphrase`); the salt is made with the file.
+- **Merge** (`SyncMerge`, pure): per record, three-way between this PC's record, the file's version, and the base
+  (what this PC last agreed with the file; table `sync_base`, migration 0003). A change on one side wins; edits
+  to different fields merge; the same field edited on both sides, or an edit against a delete, becomes a
+  conflict (table `sync_conflicts`). A conflicting field is held back: the file keeps the other value, this PC
+  keeps its own, until the user decides. Every written version has a new revision id and the ids it was built
+  on (`History`), so a version from a conflict copy or a rolled-back file is recognized as newer, older, or
+  parallel; the base also keeps the version it replaced, which gives a parallel copy its common ancestor.
+- **Engine** (`SyncEngine`): read and decrypt (retrying a file that a sync client is still writing; a file that
+  cannot be read is never overwritten), merge the main file, then every conflict copy (`remote-manager.sync-conflict-…`,
+  `remote-manager-PC.sync`, `… conflicted copy …`), write the result if it changed, apply it to the library
+  (`ConnectionLibrary.ApplyExternalChanges`, objects updated in place, dangling group references and parallel
+  move cycles repaired), store bases and conflicts, delete the merged copies. A record the user edited during the
+  write keeps the edit and its old base.
+- **Transport** (`ISyncTransport`): today only `FolderSyncTransport`. Writes go to a temp file in the same folder,
+  then a rename; right before the rename the file is compared with the version that was read (another device
+  wrote: start over). Locked files are retried. A server transport implements the same four methods.
+- **App** (`SyncService`): settings `sync.enabled`, `sync.folder`, `sync.device`, `sync.lastSync`; syncs at start,
+  four seconds after a change, every five minutes, and on "Jetzt synchronisieren". `SyncDialog` (folder,
+  passphrase, what a joining PC does with its own connections: add or replace) checks the passphrase before saving.
+  `SyncConflictsWindow` lists conflicts with both versions side by side: "Diese behalten", "Andere behalten",
+  and for a connection edited on both PCs "Beide behalten (Kopie)" (the copy gets no password reference).
+- **Self-test** (`SelfTest.Sync.cs`): PC A, B, and C as three data folders with one sync folder under %TEMP%,
+  passphrases under per-run Credential Manager keys.
 
 ## UI text
 

@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:res="using:RemoteManager.App.Resources"
+             x:Class="RemoteManager.App.Sync.SyncDialog"
+             Width="500">
+  <!-- Settings scroll; "Jetzt synchronisieren", the status, and the result stay below them, always in view. -->
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Bottom" Spacing="10" Margin="0,12,14,0">
+      <Grid ColumnDefinitions="Auto,8,*">
+        <Button x:Name="SyncNowButton" Classes="accent">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <ui:FASymbolIcon Symbol="Sync" FontSize="14" />
+            <TextBlock Text="{x:Static res:Strings.Sync_Now}" />
+          </StackPanel>
+        </Button>
+        <TextBlock x:Name="StatusText" Grid.Column="2" VerticalAlignment="Center" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+      </Grid>
+      <Button x:Name="ConflictsButton" IsVisible="False">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <ui:FASymbolIcon Symbol="Important" FontSize="14" />
+          <TextBlock x:Name="ConflictsText" />
+        </StackPanel>
+      </Button>
+      <ui:FAInfoBar x:Name="ResultBar" IsOpen="False" IsClosable="False" />
+    </StackPanel>
+
+    <ScrollViewer MaxHeight="360" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Spacing="10" Margin="0,0,14,0">
+        <TextBlock Text="{x:Static res:Strings.Sync_Hint}" Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+        <ToggleSwitch x:Name="EnabledSwitch" OnContent="{x:Static res:Strings.Sync_Enabled}" OffContent="{x:Static res:Strings.Sync_Disabled}" />
+
+        <TextBlock Text="{x:Static res:Strings.Sync_Folder}" FontWeight="SemiBold" Margin="0,6,0,0" />
+        <Grid ColumnDefinitions="*,8,Auto">
+          <TextBox x:Name="FolderBox" />
+          <Button x:Name="PickFolderButton" Grid.Column="2" Content="{x:Static res:Strings.Sync_PickFolder}" />
+        </Grid>
+        <TextBlock Text="{x:Static res:Strings.Sync_FolderHint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+
+        <TextBlock Text="{x:Static res:Strings.Sync_Passphrase}" FontWeight="SemiBold" Margin="0,6,0,0" />
+        <TextBox x:Name="PassphraseBox" PasswordChar="●" Classes="revealPasswordButton" />
+        <TextBox x:Name="RepeatBox" PasswordChar="●" Classes="revealPasswordButton" PlaceholderText="{x:Static res:Strings.Sync_PassphraseRepeat}" />
+        <TextBlock Text="{x:Static res:Strings.Sync_PassphraseHint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+
+        <!-- Only while this PC has never synced with the folder: what happens to its own connections. -->
+        <StackPanel x:Name="JoinPanel" Spacing="4" Margin="0,6,0,0">
+          <TextBlock Text="{x:Static res:Strings.Sync_Join_Title}" FontWeight="SemiBold" />
+          <RadioButton x:Name="JoinMerge" GroupName="join" IsChecked="True" Content="{x:Static res:Strings.Sync_Join_Merge}" />
+          <RadioButton x:Name="JoinReplace" GroupName="join" Content="{x:Static res:Strings.Sync_Join_Replace}" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

@@ -1,0 +1,33 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:res="using:RemoteManager.App.Resources"
+        x:Class="RemoteManager.App.Sync.SyncConflictsWindow"
+        Width="940" Height="560" MinWidth="720" MinHeight="400"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Title="{x:Static res:Strings.Sync_Conflicts_Title}"
+        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+  <!-- A separate window, not an in-window dialog: it opens from the sync dialog, and both versions need room side by side. -->
+  <Grid ColumnDefinitions="290,*" Margin="20">
+    <Border BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6">
+      <ListBox x:Name="ConflictList" Background="Transparent" />
+    </Border>
+
+    <Grid Grid.Column="1" Margin="20,0,0,0" RowDefinitions="Auto,Auto,*,Auto">
+      <TextBlock x:Name="Heading" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+      <TextBlock x:Name="Explanation" Grid.Row="1" Margin="0,6,0,12" Opacity="0.75" TextWrapping="Wrap" />
+      <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+        <Grid x:Name="Comparison" ColumnDefinitions="150,*,*" />
+      </ScrollViewer>
+      <StackPanel x:Name="Actions" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+        <Button x:Name="KeepBothButton" Content="{x:Static res:Strings.Sync_KeepBoth}" ToolTip.Tip="{x:Static res:Strings.Sync_KeepBothTip}" />
+        <Button x:Name="KeepOtherButton" Content="{x:Static res:Strings.Sync_KeepOther}" />
+        <Button x:Name="KeepMineButton" Classes="accent" Content="{x:Static res:Strings.Sync_KeepMine}" />
+      </StackPanel>
+      <StackPanel x:Name="EmptyState" Grid.RowSpan="4" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="False">
+        <ui:FASymbolIcon Symbol="Accept" FontSize="36" />
+        <TextBlock Text="{x:Static res:Strings.Sync_Conflicts_None}" FontSize="16" HorizontalAlignment="Center" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

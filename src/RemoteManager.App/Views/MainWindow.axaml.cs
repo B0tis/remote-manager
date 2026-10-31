@@ -111,6 +111,7 @@ public partial class MainWindow : Window, IConnectionHost
         MoreButton.Flyout = ImportExportCommands.CreateMenu(this);
         RemoteToolsButton.Click += async (_, _) => await RemoteToolsDialog.ShowAsync();
         RemoteToolsDialog.LibraryChanged += OnLibraryChangedOutside;
+        HookSync();
         toastTimer.Tick += (_, _) =>
         {
             toastTimer.Stop();
@@ -945,6 +946,7 @@ public partial class MainWindow : Window, IConnectionHost
         app.Status.StatusChanged -= OnStatusChanged;
         StopLauncher();
         RemoteToolsDialog.LibraryChanged -= OnLibraryChangedOutside;
+        UnhookSync();
         // Session windows are independent top-levels; closing the overview ends the app, so close them too.
         foreach (Window window in sessionWindows.ToList())
             window.Close();

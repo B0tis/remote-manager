@@ -61,6 +61,13 @@
             <Button x:Name="MoreButton" ToolTip.Tip="{x:Static res:Strings.Action_More}" Padding="9">
               <ui:FASymbolIcon Symbol="More" FontSize="16" />
             </Button>
+            <!-- Device sync (MainWindow.Sync.cs): the count shows open conflicts. -->
+            <Button x:Name="SyncButton" Padding="9">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <ui:FASymbolIcon Symbol="Sync" FontSize="16" />
+                <TextBlock x:Name="SyncConflictCount" IsVisible="False" FontWeight="SemiBold" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
             <Button x:Name="RemoteToolsButton" ToolTip.Tip="{x:Static res:Strings.RemoteTool_Settings_Tip}" Padding="9">
               <ui:FASymbolIcon Symbol="Settings" FontSize="16" />
             </Button>

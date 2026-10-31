@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using RemoteManager.App.Connections;
 using RemoteManager.App.Credentials;
+using RemoteManager.App.Sync;
 using RemoteManager.Core;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Extensibility;
@@ -37,6 +38,7 @@ public sealed class AppHost : IDisposable
         Exporters = PluginCatalog.Create<IExporter>(extensionAssemblies);
         Status = new StatusChecker(ProbeFor);
         History = new ConnectionHistory(report.DatabasePath);
+        Sync = new SyncService(library, report.DatabasePath);
     }
 
     public static AppHost Current => current ?? throw new InvalidOperationException("AppHost.Start has not run.");
@@ -49,6 +51,7 @@ public sealed class AppHost : IDisposable
     public IReadOnlyList<IExporter> Exporters { get; }
     public StatusChecker Status { get; }
     public ConnectionHistory History { get; }
+    public SyncService Sync { get; }
 
     /// <summary>Opens the database in <see cref="AppPaths.Root"/> (migrating connections.json once) and wires the services.</summary>
     public static AppHost Start()
@@ -70,6 +73,7 @@ public sealed class AppHost : IDisposable
     public void Dispose()
     {
         Status.Dispose();
+        Sync.Dispose();
         foreach (KeePassCredentialSource keePass in Credentials.Sources.OfType<KeePassCredentialSource>())
             keePass.LockAll();
     }
