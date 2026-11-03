@@ -54,7 +54,7 @@ Requirements: Windows 10 or 11, x64.
 
 1. Download from the [latest release](https://github.com/B0tis/remote-manager/releases/latest):
    - `Botis.RemoteManager-win-Setup.exe`: installer, recommended (gets updates), or
-   - `Botis.RemoteManager-win-Portable.zip`: unzip and run `RemoteManager.App.exe`.
+   - `Botis.RemoteManager-win-Portable.zip`: unzip and run `Remote-Manager.exe`.
 2. Run it. Setup installs for the current user only, without admin rights, to
    `%LOCALAPPDATA%\Botis.RemoteManager`.
 
