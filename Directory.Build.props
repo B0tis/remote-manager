@@ -8,6 +8,9 @@
     <Deterministic>true</Deterministic>
     <Company>Botis</Company>
     <Product>Remote-Manager</Product>
+    <Copyright>Copyright (c) 2026 Botis</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/B0tis/remote-manager</RepositoryUrl>
     <!-- tools/release.ps1 sets the real version (-p:Version=…); the About dialog shows it. -->
     <Version>0.0.0-dev</Version>
   </PropertyGroup>

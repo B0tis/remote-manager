@@ -21,7 +21,7 @@ installing again picks it up unchanged.
 ## In the app
 
 - **At startup** an installed build checks the update source quietly, at most once every 20 hours (setting
-  `update.lastCheck`). Errors (offline, no token) only go to the trace log. A dev build never checks.
+  `update.lastCheck`). Errors (offline, GitHub rate limit) only go to the trace log. A dev build never checks.
 - **"…" > "Nach Updates suchen"** checks now and reports "ist aktuell", the error, or shows the notice.
 - **Notice** (top right of the overview): "Remote-Manager 0.4.1 ist verfügbar (installiert: 0.4.0)." with
   **Jetzt aktualisieren** and **Später**. "Später" hides it until the next check.
@@ -34,7 +34,7 @@ installing again picks it up unchanged.
 - Velopack's "apply a downloaded update on the next start" is switched off (`SetAutoApplyOnStartup(false)`), so an
   update is only ever applied from the app, after the backup.
 - **"…" > "Über Remote-Manager …"**: version and build (from the assembly version the release script sets; a
-  plain build says `0.0.0-dev`), install and data folder, update source, GitHub token.
+  plain build says `0.0.0-dev`), install and data folder, update source, optional GitHub token.
 
 Code: `Core/Updates` (backup, source parsing, schedule; unit-tested), `App/Updates` (`IAppUpdater`,
 `VelopackUpdater`, `AppUpdates`, `AppVersion`), `Views/MainWindow.Updates.cs`, `Views/AboutView`. The self-test
@@ -55,23 +55,21 @@ One string, in this order:
 | any other `http(s)://` URL | a web folder with the release files | `https://updates.example.org/remote-manager` |
 | a full folder path or `file://` URL | a local or network folder with the release files | `\\fileserver\software\remote-manager` |
 
-### The repository is private: what that means for clients
+### GitHub token (optional)
 
-GitHub only serves releases of a private repository to authenticated requests. Without a token every check
-ends in "404 (Not Found)" plus a hint in the app. Three ways out:
+The repository is public, so clients check GitHub Releases without any credential. A token is optional and
+only helps with GitHub's API rate limit for anonymous requests (60 per hour per IP address, which a larger
+fleet behind one NAT address can hit) or when you point the source at a private repository of your own. If
+GitHub refuses a check (401, 403, or 404), the app's error message suggests trying again later or adding a
+token.
 
-1. **A token on every machine.** A fine-grained personal access token with read access to *Contents* of this
-   repository only. Paste it in "Über Remote-Manager"; it is stored in the Credential Manager
-   (`RemoteManager:update-github-token`), never in the database, a file, or the log, and only sent in the
-   `Authorization` header to GitHub. Downside: every client holds a credential for the source repository, and
-   it has to be rotated on all of them.
-2. **A public release repository** (e.g. `B0tis/remote-manager-releases`) that only holds release assets, not
-   the source. Clients need no token; point them at it with the About dialog or `REMOTE_MANAGER_UPDATE_SOURCE`,
-   and upload there with `tools/release.ps1 -UploadGitHub -RepoUrl https://github.com/B0tis/remote-manager-releases`.
-   Anyone can then download the installer.
-3. **A folder or web server** you control: `tools/release.ps1 -UploadTo \\server\share\remote-manager`, and set
-   the source to that path (or an IIS/nginx URL serving it). No token anywhere; access is whatever the share or
-   server allows. This is what the end-to-end test below used.
+- **Token:** a fine-grained personal access token with read access to *Contents* of the source repository
+  only. Paste it in "Über Remote-Manager"; it is stored in the Credential Manager
+  (`RemoteManager:update-github-token`), never in the database, a file, or the log, and only sent in the
+  `Authorization` header to GitHub.
+- **A folder or web server** you control works too: `tools/release.ps1 -UploadTo \\server\share\remote-manager`, and
+  set the source to that path (or an IIS/nginx URL serving it). No token anywhere; access is whatever the share
+  or server allows. This is what the end-to-end test below used.
 
 ## Releasing
 

@@ -1,4 +1,4 @@
-Project: Remote-Manager, a modern remote connection manager for Windows desktop (alternative to 1Remote / RDCMan). Owner: Botis. Repo: https://github.com/B0tis/remote-manager (private).
+Project: Remote-Manager, a modern remote connection manager for Windows desktop (alternative to 1Remote / RDCMan). Owner: Botis. Repo: https://github.com/B0tis/remote-manager (public).
 
 Full plan (German, canvas source): docs/plan-source.txt. Read it first.
 

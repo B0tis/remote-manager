@@ -5,8 +5,9 @@ using Velopack.Sources;
 namespace RemoteManager.App.Updates;
 
 /// <summary>
-/// Velopack (MIT) behind <see cref="IAppUpdater"/>. GitHub releases (with a token for a private repository; it
-/// only goes into the Authorization header, Velopack logs URLs), a web folder, or a local or network folder.
+/// Velopack (MIT) behind <see cref="IAppUpdater"/>. GitHub releases (with an optional token for rate limits or a
+/// private repository; it only goes into the Authorization header, Velopack logs URLs), a web folder, or a local or
+/// network folder.
 /// </summary>
 public sealed class VelopackUpdater(UpdateSource source, string? gitHubToken) : IAppUpdater
 {

@@ -62,7 +62,7 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            // Offline, source unreachable, private repository without a token: never a dialog at startup.
+            // Offline, source unreachable, GitHub rate limit: never a dialog at startup.
             Trace.WriteLine($"Update check failed: {ex.GetType().Name}: {ex.Message}");
             if (!startup)
                 ShowToast(Strings.Update_Title, AppUpdates.Describe(ex), FAInfoBarSeverity.Error);
