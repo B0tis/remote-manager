@@ -83,15 +83,70 @@ public partial class MainWindow
         AfterGroupChange();
     }
 
-    /// <summary>Delete in the sidebar deletes the selected group (after asking).</summary>
+    /// <summary>Delete in the sidebar deletes the selected group, or removes the selected tag (after asking).</summary>
     private void OnNavigationKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Delete || e.KeyModifiers != KeyModifiers.None
-            || Nav.SelectedItem is not FANavigationViewItem { Tag: string tag } || !tag.StartsWith("group:", StringComparison.Ordinal)
-            || app.Library.FindGroup(tag["group:".Length..]) is not { } group)
+        if (e.Key != Key.Delete || e.KeyModifiers != KeyModifiers.None || Nav.SelectedItem is not FANavigationViewItem { Tag: string tag })
             return;
-        e.Handled = true;
-        _ = DeleteGroupAsync(group);
+        if (tag.StartsWith("group:", StringComparison.Ordinal) && app.Library.FindGroup(tag["group:".Length..]) is { } group)
+        {
+            e.Handled = true;
+            _ = DeleteGroupAsync(group);
+        }
+        else if (tag.StartsWith("tag:", StringComparison.Ordinal))
+        {
+            e.Handled = true;
+            _ = RemoveTagAsync(tag["tag:".Length..]);
+        }
+    }
+
+    /// <summary>
+    /// Asks, then removes a tag from every connection (the connections stay). Imports from 1Remote, which has no
+    /// folders, bring tags instead; in the sidebar they look like folders and are removed the same way.
+    /// </summary>
+    internal async Task RemoveTagAsync(string tag)
+    {
+        int count = items.Count(i => i.Model.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase));
+        var dialog = new FAContentDialog
+        {
+            Title = string.Format(CultureInfo.CurrentCulture, Strings.TagRemove_Title, tag),
+            Content = new TextBlock
+            {
+                Text = string.Format(CultureInfo.CurrentCulture, count == 1 ? Strings.TagRemove_MessageOne : Strings.TagRemove_Message, count),
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                MaxWidth = 460,
+            },
+            PrimaryButtonText = Strings.TagRemove_Action,
+            CloseButtonText = Strings.Action_Cancel,
+            DefaultButton = FAContentDialogButton.Close,
+        };
+        TagRemoveDialog = dialog;
+        FAContentDialogResult result = await dialog.ShowAsync();
+        TagRemoveDialog = null;
+        if (result != FAContentDialogResult.Primary)
+            return;
+
+        app.Library.RemoveTag(tag);
+        if (string.Equals(filter, $"tag:{tag}", StringComparison.OrdinalIgnoreCase))
+            filter = "all";
+        foreach (ConnectionItem item in items)
+            item.Changed();
+        AfterGroupChange();
+    }
+
+    /// <summary>The "remove tag" question while it is shown (self-test).</summary>
+    internal FAContentDialog? TagRemoveDialog { get; private set; }
+
+    private ContextMenu CreateTagMenu(string tag)
+    {
+        var remove = new MenuItem
+        {
+            Header = Strings.Action_RemoveTag,
+            Icon = new FASymbolIcon { Symbol = FASymbol.Delete },
+            InputGesture = new KeyGesture(Key.Delete),
+        };
+        remove.Click += async (_, _) => await RemoveTagAsync(tag);
+        return new ContextMenu { ItemsSource = new object[] { remove } };
     }
 
     /// <summary>Collapses or expands a group section; the state is saved and the sidebar follows.</summary>

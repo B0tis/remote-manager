@@ -83,6 +83,28 @@ internal static partial class SelfTest
                 asked is { HasContent: true } && library.FindGroup(inner.Id) is null && !library.Contains(nested.Model) && !window.Connections.Contains(nested)
                 && SidebarItem(window, inner) is null && reopened.FindGroup(inner.Id) is null && reopened.FindConnection(nested.Id) is null
                 && library.Contains(direct.Model));
+
+            // A tag in the sidebar (1Remote imports bring tags, not folders): right-click, "Tag entfernen …".
+            const string tag = "selftest-tag-entfernen";
+            direct.Model.Tags = [.. direct.Model.Tags, tag];
+            window.Save(direct);
+            window.SyncWithLibrary();
+            await Settle(500);
+            FANavigationViewItem? tagItem = SidebarTag(window, tag);
+            bool menuOpened = await RightClickAsync(window, tagItem);
+            if (tagItem?.ContextMenu?.ItemsSource?.OfType<MenuItem>().FirstOrDefault(m => m.Header as string == Strings.Action_RemoveTag) is { } remove)
+            {
+                remove.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                tagItem.ContextMenu.Close();
+            }
+
+            await Settle(600);
+            bool tagAsked = window.TagRemoveDialog is not null;
+            window.TagRemoveDialog?.Hide(FAContentDialogResult.Primary);
+            await Settle(600);
+            Check("A sidebar tag has a context menu; \"Tag entfernen …\" removes it from its connections, which stay (also on disk)",
+                menuOpened && tagAsked && !direct.Model.Tags.Contains(tag) && library.Contains(direct.Model) && SidebarTag(window, tag) is null
+                && Reopened().FindConnection(direct.Id) is { } saved && !saved.Tags.Contains(tag));
         }
         finally
         {
@@ -102,11 +124,14 @@ internal static partial class SelfTest
             : null;
     }
 
-    /// <summary>Right-clicks <paramref name="owner"/> (routed pointer events), clicks "Gruppe löschen …", returns the open dialog.</summary>
-    private static async Task<GroupDeleteDialog?> OpenGroupDeleteAsync(MainWindow window, Control? owner)
+    private static FANavigationViewItem? SidebarTag(MainWindow window, string tag) =>
+        window.Nav.MenuItemsSource?.OfType<FANavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == $"tag:{tag}");
+
+    /// <summary>Right-clicks <paramref name="owner"/> (routed pointer events); true when its context menu opened.</summary>
+    private static async Task<bool> RightClickAsync(MainWindow window, Control? owner)
     {
         if (owner is null)
-            return null;
+            return false;
         Visual target = owner.GetVisualDescendants().OfType<TextBlock>().FirstOrDefault() ?? (Visual)owner;
         var pointer = new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, true);
         Point position = target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), window) ?? default;
@@ -115,7 +140,19 @@ internal static partial class SelfTest
         ((Interactive)target).RaiseEvent(new PointerReleasedEventArgs(target, pointer, window, position, 2,
             new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.RightButtonReleased), KeyModifiers.None, MouseButton.Right));
         await Settle(400);
-        if (owner.ContextMenu is not { IsOpen: true } menu
+        return owner.ContextMenu is { IsOpen: true };
+    }
+
+    /// <summary>Right-clicks <paramref name="owner"/>, clicks "Gruppe löschen …", returns the open dialog.</summary>
+    private static async Task<GroupDeleteDialog?> OpenGroupDeleteAsync(MainWindow window, Control? owner)
+    {
+        if (!await RightClickAsync(window, owner))
+        {
+            owner?.ContextMenu?.Close();
+            return null;
+        }
+
+        if (owner!.ContextMenu is not { IsOpen: true } menu
             || menu.ItemsSource?.OfType<MenuItem>().FirstOrDefault(m => m.Header as string == Strings.Action_DeleteGroup) is not { IsEnabled: true } delete)
         {
             owner.ContextMenu?.Close();

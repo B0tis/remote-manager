@@ -141,6 +141,27 @@ public sealed partial class ConnectionLibrary
         return (removedGroups, removedConnections);
     }
 
+    /// <summary>
+    /// Removes a tag (any casing) from every connection that has it, in one transaction. The connections stay.
+    /// Returns how many connections changed.
+    /// </summary>
+    public int RemoveTag(string tag)
+    {
+        List<Connection> changed = [.. connections.Where(c => c.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase))];
+        if (changed.Count == 0)
+            return 0;
+        DateTime now = DateTime.UtcNow;
+        foreach (Connection connection in changed)
+        {
+            connection.Tags = [.. connection.Tags.Where(t => !string.Equals(t, tag, StringComparison.OrdinalIgnoreCase))];
+            connection.UpdatedAt = now;
+        }
+
+        store.SaveAll([], changed);
+        Changed?.Invoke(this, EventArgs.Empty);
+        return changed.Count;
+    }
+
     /// <summary>Connections in the group or one of its subgroups.</summary>
     public IEnumerable<Connection> ConnectionsUnder(string groupId) => connections.Where(c => IsInGroup(c, groupId));
 

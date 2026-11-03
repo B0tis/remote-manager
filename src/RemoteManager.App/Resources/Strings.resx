@@ -144,6 +144,9 @@
   <data name="Action_Remove" xml:space="preserve">
     <value>Entfernen</value>
   </data>
+  <data name="Action_RemoveTag" xml:space="preserve">
+    <value>Tag entfernen …</value>
+  </data>
   <data name="Action_Save" xml:space="preserve">
     <value>Speichern</value>
   </data>
@@ -1741,6 +1744,18 @@
   </data>
   <data name="Sync_Value_Yes" xml:space="preserve">
     <value>Ja</value>
+  </data>
+  <data name="TagRemove_Action" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="TagRemove_Message" xml:space="preserve">
+    <value>Der Tag wird von {0} Verbindungen entfernt. Die Verbindungen selbst bleiben erhalten.</value>
+  </data>
+  <data name="TagRemove_MessageOne" xml:space="preserve">
+    <value>Der Tag wird von 1 Verbindung entfernt. Die Verbindung selbst bleibt erhalten.</value>
+  </data>
+  <data name="TagRemove_Title" xml:space="preserve">
+    <value>Tag „{0}“ entfernen?</value>
   </data>
   <data name="Unlock_Button" xml:space="preserve">
     <value>Entsperren</value>
