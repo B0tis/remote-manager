@@ -21,6 +21,11 @@
   <Application.Styles>
     <sty:FluentAvaloniaTheme />
 
+    <!-- App icon for every window (main, sessions, terminals, dialogs, and any new window). -->
+    <Style Selector=":is(Window)">
+      <Setter Property="Icon" Value="/Assets/logo.ico" />
+    </Style>
+
     <!-- Typography: page title, section subtitle, secondary caption (docs/ui.md). -->
     <Style Selector="TextBlock.pageTitle">
       <Setter Property="FontSize" Value="22" />
