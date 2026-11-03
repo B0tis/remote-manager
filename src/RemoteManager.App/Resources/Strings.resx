@@ -55,7 +55,7 @@
     <value>GitHub-Token</value>
   </data>
   <data name="About_TokenHint" xml:space="preserve">
-    <value>Nur für ein privates Repository nötig (Leserecht auf Inhalte genügt). Es wird in der Windows-Anmeldeinformationsverwaltung gespeichert, nicht in der Datenbank.</value>
+    <value>Optional, für Updates nicht nötig: hilft bei GitHub-Ratenlimits oder für eine private Update-Quelle (Leserecht auf Inhalte genügt). Es wird in der Windows-Anmeldeinformationsverwaltung gespeichert, nicht in der Datenbank.</value>
   </data>
   <data name="About_TokenPlaceholder" xml:space="preserve">
     <value>Token einfügen</value>
@@ -1964,8 +1964,8 @@
   <data name="Update_Failed" xml:space="preserve">
     <value>Update fehlgeschlagen: {0}</value>
   </data>
-  <data name="Update_PrivateRepoHint" xml:space="preserve">
-    <value>Das GitHub-Repository ist privat: hinterlege unter „Über Remote-Manager“ ein Token mit Leserecht oder nutze einen Update-Ordner.</value>
+  <data name="Update_GitHubAccessHint" xml:space="preserve">
+    <value>GitHub hat die Anfrage abgelehnt (oft ein Ratenlimit): versuche es später erneut oder hinterlege unter „Über Remote-Manager“ ein optionales GitHub-Token.</value>
   </data>
   <data name="Update_BackupFailed" xml:space="preserve">
     <value>Die Datenbank konnte nicht gesichert werden, das Update wurde nicht gestartet: {0}</value>

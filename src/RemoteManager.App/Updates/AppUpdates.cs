@@ -15,9 +15,9 @@ public sealed record UpdateOffer(IAppUpdater Updater, AvailableUpdate Update)
 
 /// <summary>
 /// The app's update settings and steps. Source: the environment variable <see cref="SourceVariable"/> (for a
-/// fleet), else setting "update.source", else GitHub releases of B0tis/remote-manager. A GitHub token for the
-/// private repository lives in the default credential source (Windows Credential Manager), never in the
-/// database or the log. The database is backed up right before an update is applied (last three kept).
+/// fleet), else setting "update.source", else GitHub releases of B0tis/remote-manager (public, no token needed).
+/// An optional GitHub token (rate limits, a private update source) lives in the default credential source (Windows
+/// Credential Manager), never in the database or the log. The database is backed up right before an update is applied (last three kept).
 /// </summary>
 public static class AppUpdates
 {
@@ -112,6 +112,6 @@ public static class AppUpdates
             denied |= e is HttpRequestException { StatusCode: HttpStatusCode.NotFound or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden };
 
         string message = string.Format(CultureInfo.CurrentCulture, Strings.Update_Failed, ex.Message);
-        return denied && Source.CanUseToken ? $"{message} {Strings.Update_PrivateRepoHint}" : message;
+        return denied && Source.CanUseToken ? $"{message} {Strings.Update_GitHubAccessHint}" : message;
     }
 }
