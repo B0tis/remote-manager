@@ -7,6 +7,11 @@
   <Application.Styles>
     <sty:FluentAvaloniaTheme />
 
+    <!-- App icon for every window (main, sessions, terminals, dialogs, and any new window). -->
+    <Style Selector=":is(Window)">
+      <Setter Property="Icon" Value="/Assets/logo.ico" />
+    </Style>
+
     <!-- Small rounded label: status on the tile preview, type badge. -->
     <Style Selector="Border.pill">
       <Setter Property="Background" Value="#99000000" />
