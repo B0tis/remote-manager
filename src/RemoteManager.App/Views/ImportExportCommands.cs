@@ -22,18 +22,15 @@ internal static class ImportExportCommands
     /// <summary>The summary dialog while open (used by the self-test).</summary>
     public static FAContentDialog? OpenSummary { get; private set; }
 
-    public static MenuFlyout CreateMenu(MainWindow window)
+    /// <summary>"Importieren …" and "Sicherung exportieren (JSON) …" for the "Mehr" menu (MainWindow.Menu.cs).</summary>
+    public static (MenuItem Import, MenuItem Export) CreateMenuItems(MainWindow window)
     {
         var import = new MenuItem { Header = Strings.Action_Import, Icon = new FASymbolIcon { Symbol = FASymbol.Download } };
         var export = new MenuItem { Header = Strings.Action_ExportBackup, Icon = new FASymbolIcon { Symbol = FASymbol.Save } };
         // async void handlers: an exception here would reach the dispatcher and end the app.
         import.Click += async (_, _) => await GuardAsync(window, Strings.Import_Title, () => ShowImportAsync(window));
         export.Click += async (_, _) => await GuardAsync(window, Strings.Export_ToastTitle, () => ExportAsync(window));
-        // Items, not ItemsSource: MainWindow.Updates.cs appends its entries.
-        var menu = new MenuFlyout();
-        menu.Items.Add(import);
-        menu.Items.Add(export);
-        return menu;
+        return (import, export);
     }
 
     public static async Task ShowImportAsync(MainWindow window)

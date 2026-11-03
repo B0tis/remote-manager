@@ -32,17 +32,6 @@ public partial class MainWindow
         UpdateNowButton.Click += async (_, _) => await ApplyUpdateAsync();
         UpdateLaterButton.Click += (_, _) => DismissUpdate();
 
-        if (MoreButton.Flyout is MenuFlyout menu)
-        {
-            var check = new MenuItem { Header = Strings.Update_CheckMenu, Icon = new FASymbolIcon { Symbol = FASymbol.Sync } };
-            var about = new MenuItem { Header = Strings.About_Menu, Icon = new FASymbolIcon { Symbol = FASymbol.Help } };
-            check.Click += async (_, _) => await CheckForUpdatesAsync(startup: false);
-            about.Click += async (_, _) => await AboutView.ShowAsync(this);
-            menu.Items.Add(new Separator());
-            menu.Items.Add(check);
-            menu.Items.Add(about);
-        }
-
         Opened += async (_, _) =>
         {
             if (AppUpdates.RestartedToVersion is { } version)

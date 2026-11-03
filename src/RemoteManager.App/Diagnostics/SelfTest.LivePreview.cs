@@ -163,9 +163,14 @@ internal static partial class SelfTest
     private static async Task SaveLivePreviewSettingsProbesAsync(MainWindow window)
     {
         window.Activate();
-        if (window.More.Flyout is MenuFlyout menu && (menu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Header as string == Strings.LivePreview_Menu)) is { } parent)
+        // "Mehr" > "Ansicht" > "Live-Vorschau" (MainWindow.Menu.cs).
+        if (window.More.Flyout is MenuFlyout menu
+            && menu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Header as string == Strings.Menu_View) is { } view
+            && window.MoreMenuItems().FirstOrDefault(m => m.Header as string == Strings.LivePreview_Menu) is { } parent)
         {
             menu.ShowAt(window.More);
+            await Settle(400);
+            view.Open();
             await Settle(400);
             parent.Open();
             await Settle(600);
@@ -173,6 +178,7 @@ internal static partial class SelfTest
             if (parent.GetVisualDescendants().OfType<Popup>().FirstOrDefault()?.Child is { } submenu)
                 SaveControlProbe(submenu, window, "live-preview-menu.png");
             parent.Close();
+            view.Close();
             menu.Hide();
             await Settle(300);
         }
@@ -209,8 +215,7 @@ internal static partial class SelfTest
     }
 
     private static IReadOnlyList<MenuItem>? LivePreviewMenu(MainWindow window) =>
-        (window.More.Flyout as MenuFlyout)?.Items.OfType<MenuItem>()
-            .FirstOrDefault(m => m.Header as string == Strings.LivePreview_Menu)?.ItemsSource?.OfType<MenuItem>().ToList();
+        window.MoreMenuItems().FirstOrDefault(m => m.Header as string == Strings.LivePreview_Menu)?.ItemsSource?.OfType<MenuItem>().ToList();
 
     private static bool TileShowsLiveBadge(MainWindow window, ConnectionItem connection) =>
         window.Tiles.ContainerFromItem(connection) is { } tile

@@ -80,6 +80,8 @@ public partial class MainWindow : Window, IConnectionHost
                     OpenSelected();
                 else if (e.Key == Key.Delete && SelectedConnections.Count > 0)
                     DeleteConnections(SelectedConnections);
+                else if (e.Key == Key.F2 && Selected is { } single)
+                    EditConnection(single);
             };
             HookDragDrop(list);
         }
@@ -96,22 +98,19 @@ public partial class MainWindow : Window, IConnectionHost
         foreach (Button header in ColumnHeaders.Children.OfType<Button>())
             header.Click += (_, _) => CycleSort(Enum.Parse<OverviewColumn>((string)header.Tag!));
 
-        ListPanel.SizeChanged += (_, e) => ListPanel.Classes.Set("compact", e.NewSize.Width < 900);
         Details.Attach(this);
         TileToggle.Click += (_, _) => SetListView(false);
         ListToggle.Click += (_, _) => SetListView(true);
         DetailsToggle.Click += (_, _) => SetDetailsVisible(DetailsToggle.IsChecked == true);
         SearchBox.TextChanged += (_, _) => ApplyFilter();
-        RefreshButton.Click += (_, _) => RefreshStatus();
         ConnectButton.Click += (_, _) => OpenSelected();
         AddButton.Click += (_, _) => AddConnection();
-        NewGroupButton.Click += async (_, _) => await CreateGroupAsync(CurrentGroupId);
-        LauncherButton.Click += (_, _) => OpenLauncher();
 
-        MoreButton.Flyout = ImportExportCommands.CreateMenu(this);
         InitializeUpdates();
         InitializeLivePreview(); // MainWindow.LivePreview.cs
-        RemoteToolsButton.Click += async (_, _) => await RemoteToolsDialog.ShowAsync();
+        MoreButton.Flyout = CreateMoreMenu(); // MainWindow.Menu.cs
+        InitializeEmptyState(); // MainWindow.EmptyState.cs
+        InitializeLayout(); // MainWindow.Layout.cs
         RemoteToolsDialog.LibraryChanged += OnLibraryChangedOutside;
         HookSync();
         toastTimer.Tick += (_, _) =>
@@ -148,7 +147,6 @@ public partial class MainWindow : Window, IConnectionHost
     public IReadOnlyList<object> RowEntries => rowEntries;
     public IReadOnlyList<Window> SessionWindows => sessionWindows;
     public bool IsListView => ListPanel.IsVisible;
-    public bool IsDetailsVisible => DetailPane.IsVisible;
     public FAInfoBar ToastBar => Toast;
     public ListBox Tiles => TileList;
     public ListBox Rows => RowList;
@@ -316,11 +314,23 @@ public partial class MainWindow : Window, IConnectionHost
         UpdateEmptyState();
     }
 
+    /// <summary>
+    /// Shows or hides the detail column. On a wide window the choice is saved; on a narrow one (see
+    /// MainWindow.Layout.cs) it only lasts until the window gets wide again.
+    /// </summary>
     public void SetDetailsVisible(bool show)
     {
-        DetailPane.IsVisible = show;
-        DetailsToggle.IsChecked = show;
-        app.Library.SetSetting(DetailsSetting, show ? "1" : "0");
+        if (IsWideLayout)
+        {
+            detailsWanted = show;
+            app.Library.SetSetting(DetailsSetting, show ? "1" : "0");
+        }
+        else
+        {
+            detailsOnNarrow = show;
+        }
+
+        ApplyDetailsVisibility();
     }
 
     /// <summary>Sorts the list view by a column (null: group sections in their saved order). The tiles always keep the group order.</summary>
@@ -396,9 +406,8 @@ public partial class MainWindow : Window, IConnectionHost
         TileList.IsVisible = !list;
         TileToggle.IsChecked = !list;
         ListToggle.IsChecked = list;
-        bool details = app.Library.GetSetting(DetailsSetting) != "0";
-        DetailPane.IsVisible = details;
-        DetailsToggle.IsChecked = details;
+        detailsWanted = app.Library.GetSetting(DetailsSetting) != "0";
+        ApplyDetailsVisibility();
     }
 
     /// <summary>After an import: items for new connections, fresh labels for changed ones, sidebar and status.</summary>
@@ -656,8 +665,6 @@ public partial class MainWindow : Window, IConnectionHost
             visible.Count == 1 ? Strings.Subtitle_One : Strings.Subtitle_Many, visible.Count, online);
     }
 
-    private void UpdateEmptyState() =>
-        EmptyState.IsVisible = (IsListView ? rowEntries : tileEntries).Count == 0;
 
     private void OnSelectionChanged(ListBox list)
     {
@@ -728,7 +735,6 @@ public partial class MainWindow : Window, IConnectionHost
     {
         if (StatusRefresh is { IsCompleted: false })
             return;
-        RefreshButton.IsEnabled = false;
         StatusRefresh = app.Status.CheckAsync(items.Select(i => i.Model));
         try
         {
@@ -737,8 +743,6 @@ public partial class MainWindow : Window, IConnectionHost
         catch (OperationCanceledException)
         {
         }
-
-        RefreshButton.IsEnabled = true;
     }
 
     private void OpenSelected()
@@ -860,15 +864,19 @@ public partial class MainWindow : Window, IConnectionHost
 
     private ContextMenu CreateContextMenu()
     {
-        var connect = new MenuItem { Header = Strings.Action_Connect, Icon = new FASymbolIcon { Symbol = FASymbol.Play } };
-        var edit = new MenuItem { Header = Strings.Action_Edit, Icon = new FASymbolIcon { Symbol = FASymbol.Edit } };
-        var favorite = new MenuItem { Icon = new FASymbolIcon { Symbol = FASymbol.Star } };
-        var copyPassword = new MenuItem { Header = Strings.Action_CopyPassword, Icon = new FASymbolIcon { Symbol = FASymbol.Permissions } };
-        var fileTransfer = new MenuItem { Header = Strings.RemoteTool_Action_FileTransfer, Icon = new FASymbolIcon { Symbol = FASymbol.OpenFile } };
-        var duplicate = new MenuItem { Header = Strings.Action_Duplicate, Icon = new FASymbolIcon { Symbol = FASymbol.Copy } };
-        var move = new MenuItem { Header = Strings.Action_MoveToGroup, Icon = new FASymbolIcon { Symbol = FASymbol.MoveToFolder } };
-        var delete = new MenuItem { Header = Strings.Action_DeleteEllipsis, Icon = new FASymbolIcon { Symbol = FASymbol.Delete } };
-        var menu = new ContextMenu { ItemsSource = new object[] { connect, fileTransfer, copyPassword, edit, favorite, duplicate, move, new Separator(), delete } };
+        // Open, then edit and organize, then delete (docs/ui.md). Gestures are handled in the list's KeyDown.
+        var connect = Item(Strings.Action_Connect, FASymbol.Play, new KeyGesture(Key.Enter));
+        var fileTransfer = Item(Strings.RemoteTool_Action_FileTransfer, FASymbol.OpenFile);
+        var copyPassword = Item(Strings.Action_CopyPassword, FASymbol.Permissions);
+        var edit = Item(Strings.Action_Edit, FASymbol.Edit, new KeyGesture(Key.F2));
+        var duplicate = Item(Strings.Action_Duplicate, FASymbol.Copy);
+        var move = Item(Strings.Action_MoveToGroup, FASymbol.MoveToFolder);
+        var favorite = Item("", FASymbol.Star);
+        var delete = Item(Strings.Action_DeleteEllipsis, FASymbol.Delete, new KeyGesture(Key.Delete));
+        var menu = new ContextMenu
+        {
+            ItemsSource = new object[] { connect, fileTransfer, copyPassword, new Separator(), edit, duplicate, move, favorite, new Separator(), delete },
+        };
 
         menu.Opening += (_, e) =>
         {
@@ -933,6 +941,16 @@ public partial class MainWindow : Window, IConnectionHost
                 case Key.K: OpenLauncher(); e.Handled = true; break;
                 case Key.I: SetDetailsVisible(!IsDetailsVisible); e.Handled = true; break;
             }
+        }
+        else if (e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && e.Key == Key.N)
+        {
+            _ = CreateGroupAsync(CurrentGroupId);
+            e.Handled = true;
+        }
+        else if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.F5)
+        {
+            RefreshStatus();
+            e.Handled = true;
         }
 
         base.OnKeyDown(e);

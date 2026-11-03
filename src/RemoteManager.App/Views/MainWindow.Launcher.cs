@@ -104,10 +104,15 @@ public partial class MainWindow
         UpdateLauncherTip();
     }
 
-    private void UpdateLauncherTip() =>
-        ToolTip.SetTip(LauncherButton, Hotkey?.Gesture is { } gesture
-            ? string.Format(CultureInfo.CurrentCulture, Strings.Launcher_ButtonTip, GlobalHotkey.Format(gesture))
-            : Strings.Launcher_Title);
+    private void UpdateLauncherTip()
+    {
+        if (launcherMenuItem is not null)
+        {
+            ToolTip.SetTip(launcherMenuItem, Hotkey?.Gesture is { } gesture
+                ? string.Format(CultureInfo.CurrentCulture, Strings.Launcher_ButtonTip, GlobalHotkey.Format(gesture))
+                : Strings.Launcher_Title);
+        }
+    }
 
     private void StopLauncher()
     {

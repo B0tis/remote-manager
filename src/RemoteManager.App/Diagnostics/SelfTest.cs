@@ -100,6 +100,7 @@ internal static partial class SelfTest
 
         await RunOverviewChecksAsync(window);
         await RunGroupDeleteChecksAsync(window); // SelfTest.GroupDelete.cs
+        await RunLayoutChecksAsync(window); // SelfTest.Layout.cs
         await RunCredentialChecksAsync(window);
         await RunRdpImportChecksAsync(window);
 

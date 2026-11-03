@@ -4,12 +4,62 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="RemoteManager.App.App"
              RequestedThemeVariant="Default">
+  <Application.Resources>
+    <ResourceDictionary>
+      <!-- App colors that are not in the Fluent palette; everything else uses theme resources. -->
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="FavoriteBrush" Color="#D97706" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="FavoriteBrush" Color="#F59E0B" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
   <Application.Styles>
     <sty:FluentAvaloniaTheme />
 
     <!-- App icon for every window (main, sessions, terminals, dialogs, and any new window). -->
     <Style Selector=":is(Window)">
       <Setter Property="Icon" Value="/Assets/logo.ico" />
+    </Style>
+
+    <!-- Typography: page title, section subtitle, secondary caption (docs/ui.md). -->
+    <Style Selector="TextBlock.pageTitle">
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="TextBlock.subtitle">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+
+    <!-- Icon-only header buttons: one size, no border until hovered. -->
+    <Style Selector=":is(Button).icon">
+      <Setter Property="Padding" Value="9" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <!-- A checked icon toggle (detail column) is subtle; the accent stays for the primary action. -->
+    <Style Selector="ToggleButton.icon:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.icon:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    </Style>
+    <!-- Narrow header: the primary buttons drop their text and keep icon and tooltip. -->
+    <Style Selector="Grid.narrow StackPanel#Toolbar TextBlock.label">
+      <Setter Property="IsVisible" Value="False" />
     </Style>
 
     <!-- Small rounded label: status on the tile preview, type badge. -->
@@ -130,8 +180,11 @@
       <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
       <Setter Property="BorderThickness" Value="0,0,0,2" />
     </Style>
-    <!-- Narrow list (detail panel open): group and tag columns give way to the rest. -->
+    <!-- Narrow list: below 900 px the group and tag columns give way, below 640 px also "zuletzt". -->
     <Style Selector="Grid.compact :is(Control).wide">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="Grid.narrow :is(Control).medium">
       <Setter Property="IsVisible" Value="False" />
     </Style>
     <Style Selector="ListBox.launcher ListBoxItem">
