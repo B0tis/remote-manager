@@ -90,6 +90,9 @@
   <data name="Action_ConnectCount" xml:space="preserve">
     <value>Verbinden ({0})</value>
   </data>
+  <data name="Action_ConnectTip" xml:space="preserve">
+    <value>Ausgewählte Verbindungen öffnen (Eingabe)</value>
+  </data>
   <data name="Action_CopyPassword" xml:space="preserve">
     <value>Passwort kopieren</value>
   </data>
@@ -97,7 +100,7 @@
     <value>Löschen</value>
   </data>
   <data name="Action_DeleteEllipsis" xml:space="preserve">
-    <value>Löschen…</value>
+    <value>Löschen …</value>
   </data>
   <data name="Action_DeleteGroup" xml:space="preserve">
     <value>Gruppe löschen …</value>
@@ -106,7 +109,7 @@
     <value>Duplizieren</value>
   </data>
   <data name="Action_Edit" xml:space="preserve">
-    <value>Bearbeiten…</value>
+    <value>Bearbeiten …</value>
   </data>
   <data name="Action_EditGroup" xml:space="preserve">
     <value>Gruppe bearbeiten …</value>
@@ -140,6 +143,9 @@
   </data>
   <data name="Action_NewSubgroup" xml:space="preserve">
     <value>Neue Untergruppe …</value>
+  </data>
+  <data name="Action_NewTip" xml:space="preserve">
+    <value>Neue Verbindung anlegen (Strg+N)</value>
   </data>
   <data name="Action_Remove" xml:space="preserve">
     <value>Entfernen</value>
@@ -309,8 +315,41 @@
   <data name="Editor_TitleNew" xml:space="preserve">
     <value>Neue Verbindung</value>
   </data>
+  <data name="Empty_ClearSearch" xml:space="preserve">
+    <value>Suche löschen</value>
+  </data>
+  <data name="Empty_Favorites_Message" xml:space="preserve">
+    <value>Markiere Verbindungen mit dem Stern auf der Kachel oder im Kontextmenü.</value>
+  </data>
+  <data name="Empty_Favorites_Title" xml:space="preserve">
+    <value>Noch keine Favoriten</value>
+  </data>
+  <data name="Empty_Group_Message" xml:space="preserve">
+    <value>Lege hier eine Verbindung an oder ziehe Verbindungen auf die Gruppe in der Seitenleiste.</value>
+  </data>
+  <data name="Empty_Group_Title" xml:space="preserve">
+    <value>Diese Gruppe ist leer</value>
+  </data>
+  <data name="Empty_NoConnections_Message" xml:space="preserve">
+    <value>Lege eine Verbindung an oder importiere vorhandene, zum Beispiel aus RDCMan, mRemoteNG, 1Remote oder .rdp-Dateien.</value>
+  </data>
+  <data name="Empty_NoConnections_Title" xml:space="preserve">
+    <value>Noch keine Verbindungen</value>
+  </data>
   <data name="Empty_NoMatch" xml:space="preserve">
     <value>Keine passenden Verbindungen.</value>
+  </data>
+  <data name="Empty_NoMatches_Message" xml:space="preserve">
+    <value>Gesucht wird in Name, Host, Tags und Beschreibung der aktuellen Ansicht.</value>
+  </data>
+  <data name="Empty_NoMatches_Title" xml:space="preserve">
+    <value>Keine Treffer für „{0}“</value>
+  </data>
+  <data name="Empty_Recent_Message" xml:space="preserve">
+    <value>Hier erscheinen die zuletzt geöffneten Verbindungen.</value>
+  </data>
+  <data name="Empty_Recent_Title" xml:space="preserve">
+    <value>Noch nichts verbunden</value>
   </data>
   <data name="Export_Done" xml:space="preserve">
     <value>Sicherung gespeichert (ohne Passwörter): {0}</value>
@@ -556,7 +595,7 @@
     <value>Nie</value>
   </data>
   <data name="Launcher_ButtonTip" xml:space="preserve">
-    <value>Quick-Launcher ({0}, in der App auch Strg+K)</value>
+    <value>Schnellstart von überall: {0} (in der App Strg+K)</value>
   </data>
   <data name="Launcher_ChangeHotkey" xml:space="preserve">
     <value>Ändern</value>
@@ -583,7 +622,7 @@
     <value>Neue Tastenkombination drücken (Esc bricht ab) …</value>
   </data>
   <data name="Launcher_Title" xml:space="preserve">
-    <value>Quick-Launcher</value>
+    <value>Schnellstart</value>
   </data>
   <data name="LivePreview_AgeMinutes" xml:space="preserve">
     <value>vor {0} min</value>
@@ -617,6 +656,27 @@
   </data>
   <data name="LivePreview_Off" xml:space="preserve">
     <value>Aus</value>
+  </data>
+  <data name="Menu_Details" xml:space="preserve">
+    <value>Detailbereich</value>
+  </data>
+  <data name="Menu_Launcher" xml:space="preserve">
+    <value>Schnellstart …</value>
+  </data>
+  <data name="Menu_RemoteTools" xml:space="preserve">
+    <value>Remote-Tools …</value>
+  </data>
+  <data name="Menu_Sync" xml:space="preserve">
+    <value>Synchronisierung …</value>
+  </data>
+  <data name="Menu_View" xml:space="preserve">
+    <value>Ansicht</value>
+  </data>
+  <data name="Menu_ViewList" xml:space="preserve">
+    <value>Liste</value>
+  </data>
+  <data name="Menu_ViewTiles" xml:space="preserve">
+    <value>Kacheln</value>
   </data>
   <data name="Move_Title" xml:space="preserve">
     <value>„{0}“ verschieben nach</value>

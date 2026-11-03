@@ -52,6 +52,8 @@ public partial class MainWindow
         SyncConflictCount.Text = conflicts.ToString(CultureInfo.CurrentCulture);
         SyncConflictCount.IsVisible = conflicts > 0;
         SyncButton.Classes.Set("accent", conflicts > 0);
+        // Setup lives in "Mehr"; the header button only shows while sync is on (state, conflicts).
+        SyncButton.IsVisible = app.Sync.IsEnabled || conflicts > 0;
         Avalonia.Controls.ToolTip.SetTip(SyncButton,
             app.Sync.IsRunning ? Strings.Sync_Running
             : conflicts > 0 ? string.Format(CultureInfo.CurrentCulture, Strings.Sync_ShowConflicts, conflicts)

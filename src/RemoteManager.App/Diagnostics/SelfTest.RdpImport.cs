@@ -283,9 +283,9 @@ internal static partial class SelfTest
         try
         {
             // The "more" menu with import and export.
-            Check("The \"more\" button offers import and JSON backup",
-                window.More.Flyout is MenuFlyout menu && menu.Items.OfType<MenuItem>().Select(i => i.Header).Take(2)
-                    .SequenceEqual([Strings.Action_Import, Strings.Action_ExportBackup]));
+            Check("The \"Mehr\" menu offers import and JSON backup next to each other",
+                window.MoreMenuItems().Select(i => i.Header as string).ToList() is var headers
+                && headers.IndexOf(Strings.Action_Import) is >= 0 and var at && headers.ElementAtOrDefault(at + 1) == Strings.Action_ExportBackup);
 
             Task importing = ImportExportCommands.ShowImportAsync(window);
             await Settle(800);

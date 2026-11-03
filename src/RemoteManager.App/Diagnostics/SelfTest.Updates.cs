@@ -61,8 +61,7 @@ internal static partial class SelfTest
         await window.CheckForUpdatesAsync(startup: false);
         Check("\"Nach Updates suchen\" in a dev build says it cannot update", window.ToastBar.IsOpen && window.ToastBar.Message == Strings.Update_NotInstalled);
         Check("The \"more\" menu offers the update check and About",
-            window.More.Flyout is MenuFlyout menu && menu.Items.OfType<MenuItem>().Select(i => (string?)i.Header)
-                .Intersect([Strings.Update_CheckMenu, Strings.About_Menu]).Count() == 2);
+            window.MoreMenuItems().Select(i => i.Header as string).Intersect([Strings.Update_CheckMenu, Strings.About_Menu]).Count() == 2);
 
         string? sourceBefore = app.Library.GetSetting(AppUpdates.SourceSetting);
         string? lastCheckBefore = app.Library.GetSetting(AppUpdates.LastCheckSetting);

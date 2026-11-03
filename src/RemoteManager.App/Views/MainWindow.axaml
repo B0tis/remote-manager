@@ -5,7 +5,7 @@
         xmlns:res="using:RemoteManager.App.Resources"
         x:Class="RemoteManager.App.Views.MainWindow"
         Title="Remote-Manager"
-        Width="1320" Height="840" MinWidth="760" MinHeight="480"
+        Width="1320" Height="840" MinWidth="880" MinHeight="480"
         WindowStartupLocation="CenterScreen"
         TransparencyLevelHint="Mica, AcrylicBlur"
         Background="Transparent">
@@ -29,24 +29,27 @@
     </DataTemplate>
   </Window.DataTemplates>
 
+  <!-- Sidebar: expanded from 1180 px window width, icons only below (MainWindow.Layout.cs, docs/ui.md). -->
   <ui:FANavigationView x:Name="Nav"
-                       PaneDisplayMode="Left" OpenPaneLength="248"
+                       PaneDisplayMode="Auto" OpenPaneLength="240"
+                       ExpandedModeThresholdWidth="1180" CompactModeThresholdWidth="0"
                        IsSettingsVisible="False" IsPaneToggleButtonVisible="True">
-    <Grid ColumnDefinitions="*,Auto">
-      <Grid RowDefinitions="Auto,*" Margin="28,20,20,0" ClipToBounds="True">
-        <!-- Header: title, then search, view toggle, and actions in one row below it. -->
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" Margin="0,0,0,16" RowSpacing="12" ColumnSpacing="8">
-          <StackPanel Grid.ColumnSpan="2">
-            <TextBlock x:Name="PageTitle" Text="{x:Static res:Strings.Nav_All}" FontSize="28" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-            <TextBlock x:Name="PageSubtitle" Opacity="0.6" />
+    <Grid x:Name="ContentGrid" ColumnDefinitions="*,Auto">
+      <Grid x:Name="MainArea" RowDefinitions="Auto,*" Margin="24,14,16,0" ClipToBounds="True">
+        <!-- Header: where you are (filter and count), then search and the primary actions. No logo or app
+             name here: the window title shows them. Everything else is in "Mehr" (MainWindow.Menu.cs). -->
+        <Grid x:Name="Header" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" Margin="0,0,0,12" RowSpacing="10" ColumnSpacing="8">
+          <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
+            <TextBlock x:Name="PageTitle" Classes="pageTitle" Text="{x:Static res:Strings.Nav_All}" />
+            <TextBlock x:Name="PageSubtitle" Classes="caption" VerticalAlignment="Bottom" Margin="0,0,0,3" />
           </StackPanel>
-          <TextBox x:Name="SearchBox" Grid.Row="1" MaxWidth="420" HorizontalAlignment="Stretch" PlaceholderText="{x:Static res:Strings.Search_Placeholder}"
-                   Classes="clearButton">
+          <TextBox x:Name="SearchBox" Grid.Row="1" MinWidth="160" MaxWidth="560" HorizontalAlignment="Stretch"
+                   PlaceholderText="{x:Static res:Strings.Search_Placeholder}" Classes="clearButton">
             <TextBox.InnerLeftContent>
               <ui:FASymbolIcon Symbol="Find" FontSize="14" Margin="10,0,0,0" Opacity="0.6" />
             </TextBox.InnerLeftContent>
           </TextBox>
-          <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <StackPanel x:Name="Toolbar" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
             <Border Classes="segmented">
               <StackPanel Orientation="Horizontal">
                 <ToggleButton x:Name="TileToggle" Classes="segment" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.View_TilesTip}">
@@ -57,43 +60,31 @@
                 </ToggleButton>
               </StackPanel>
             </Border>
-            <!-- Import and JSON backup (ImportExportCommands). -->
-            <Button x:Name="MoreButton" ToolTip.Tip="{x:Static res:Strings.Action_More}" Padding="9">
-              <ui:FASymbolIcon Symbol="More" FontSize="16" />
-            </Button>
-            <!-- Device sync (MainWindow.Sync.cs): the count shows open conflicts. -->
-            <Button x:Name="SyncButton" Padding="9">
+            <ToggleButton x:Name="DetailsToggle" Classes="icon" ToolTip.Tip="{x:Static res:Strings.Details_ToggleTip}" IsChecked="True">
+              <ui:FASymbolIcon Symbol="DockRight" FontSize="16" />
+            </ToggleButton>
+            <!-- Device sync (MainWindow.Sync.cs): only shown while sync is on; the count shows open conflicts. -->
+            <Button x:Name="SyncButton" Classes="icon" IsVisible="False">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <ui:FASymbolIcon Symbol="Sync" FontSize="16" />
                 <TextBlock x:Name="SyncConflictCount" IsVisible="False" FontWeight="SemiBold" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
-            <Button x:Name="RemoteToolsButton" ToolTip.Tip="{x:Static res:Strings.RemoteTool_Settings_Tip}" Padding="9">
-              <ui:FASymbolIcon Symbol="Settings" FontSize="16" />
-            </Button>
-            <Button x:Name="LauncherButton" Padding="9">
-              <ui:FASymbolIcon Symbol="Keyboard" FontSize="16" />
-            </Button>
-            <Button x:Name="RefreshButton" ToolTip.Tip="{x:Static res:Strings.Status_RefreshTip}" Padding="9">
-              <ui:FASymbolIcon Symbol="Refresh" FontSize="16" />
-            </Button>
-            <Button x:Name="NewGroupButton" ToolTip.Tip="{x:Static res:Strings.Action_NewGroup}" Padding="9">
-              <ui:FASymbolIcon Symbol="NewFolder" FontSize="16" />
-            </Button>
-            <ToggleButton x:Name="DetailsToggle" ToolTip.Tip="{x:Static res:Strings.Details_ToggleTip}" Padding="9" IsChecked="True">
-              <ui:FASymbolIcon Symbol="DockRight" FontSize="16" />
-            </ToggleButton>
-            <Button x:Name="ConnectButton" IsEnabled="False" Padding="12,7">
+            <Button x:Name="ConnectButton" IsEnabled="False" Padding="12,7" ToolTip.Tip="{x:Static res:Strings.Action_ConnectTip}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <ui:FASymbolIcon Symbol="Play" FontSize="14" />
-                <TextBlock Text="{x:Static res:Strings.Action_Connect}" />
+                <TextBlock Classes="label" Text="{x:Static res:Strings.Action_Connect}" />
               </StackPanel>
             </Button>
-            <Button x:Name="AddButton" Classes="accent" Padding="12,7">
+            <Button x:Name="AddButton" Classes="accent" Padding="12,7" ToolTip.Tip="{x:Static res:Strings.Action_NewTip}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <ui:FASymbolIcon Symbol="Add" FontSize="14" />
-                <TextBlock Text="{x:Static res:Strings.Action_New}" />
+                <TextBlock Classes="label" Text="{x:Static res:Strings.Action_New}" />
               </StackPanel>
+            </Button>
+            <!-- "Mehr": groups, view, import/export, sync, tools, updates (MainWindow.Menu.cs). -->
+            <Button x:Name="MoreButton" Classes="icon" ToolTip.Tip="{x:Static res:Strings.Action_More}">
+              <ui:FASymbolIcon Symbol="More" FontSize="16" />
             </Button>
           </StackPanel>
         </Grid>
@@ -108,7 +99,8 @@
             </ListBox.ItemsPanel>
             <ListBox.DataTemplates>
               <DataTemplate DataType="app:ConnectionItem">
-                <Border Width="264" CornerRadius="8" ClipToBounds="True" BorderThickness="1"
+                <!-- No fixed width: SectionWrapPanel gives every tile the same width (240 to 320 px). -->
+                <Border CornerRadius="8" ClipToBounds="True" BorderThickness="1"
                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
                   <StackPanel>
@@ -137,7 +129,7 @@
                       <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10"
                               IsVisible="{Binding IsLivePreview}" ToolTip.Tip="{x:Static res:Strings.LivePreview_BadgeTip}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                          <Ellipse Width="8" Height="8" Fill="#EF4444" VerticalAlignment="Center" />
+                          <Ellipse Width="8" Height="8" Fill="{DynamicResource SystemFillColorCriticalBrush}" VerticalAlignment="Center" />
                           <TextBlock Text="{x:Static res:Strings.LivePreview_Badge}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
                           <TextBlock Text="{Binding LivePreviewAge}" FontSize="11" Foreground="White" Opacity="0.8" />
                         </StackPanel>
@@ -151,7 +143,7 @@
                                            IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
                           <Button Classes="star" Tag="{Binding}" ToolTip.Tip="{x:Static res:Strings.Action_ToggleFavorite}">
                             <Panel>
-                              <ui:FASymbolIcon Symbol="StarFilled" FontSize="15" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
+                              <ui:FASymbolIcon Symbol="StarFilled" FontSize="15" Foreground="{DynamicResource FavoriteBrush}" IsVisible="{Binding IsFavorite}" />
                               <ui:FASymbolIcon Classes="starOutline" Symbol="Star" FontSize="15" IsVisible="{Binding !IsFavorite}" />
                             </Panel>
                           </Button>
@@ -185,7 +177,7 @@
             <!-- Column headers; a click sorts (ascending, descending, back to the group order). -->
             <Border Padding="12,0" Height="34" BorderThickness="0,0,0,1"
                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-              <Grid x:Name="ColumnHeaders" ColumnDefinitions="28,190,100,150,Auto,Auto,*,140">
+              <Grid x:Name="ColumnHeaders" ColumnDefinitions="28,190,100,150,Auto,Auto,*,Auto">
                 <Button Grid.Column="0" Classes="column" Tag="Status" ToolTip.Tip="{x:Static res:Strings.Column_Status}" />
                 <Button Grid.Column="1" Classes="column" Tag="Name" />
                 <Button Grid.Column="2" Classes="column" Tag="Type" />
@@ -193,17 +185,17 @@
                 <Button Grid.Column="4" Classes="column wide" Width="130" Tag="Group" />
                 <Button Grid.Column="5" Classes="column wide" Width="170" Tag="Tags" />
                 <Button Grid.Column="6" Classes="column" Tag="Description" />
-                <Button Grid.Column="7" Classes="column" Tag="LastConnected" />
+                <Button Grid.Column="7" Classes="column medium" Width="140" Tag="LastConnected" />
               </Grid>
             </Border>
             <ListBox x:Name="RowList" Grid.Row="1" Classes="rows" Background="Transparent" SelectionMode="Multiple">
               <ListBox.DataTemplates>
                 <DataTemplate DataType="app:ConnectionItem">
-                  <Grid ColumnDefinitions="28,190,100,150,Auto,Auto,*,140" Height="40" Background="Transparent">
+                  <Grid ColumnDefinitions="28,190,100,150,Auto,Auto,*,Auto" Height="40" Background="Transparent">
                     <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" ToolTip.Tip="{Binding StatusTip}" HorizontalAlignment="Left" Margin="4,0,0,0" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                       <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                      <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
+                      <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="{DynamicResource FavoriteBrush}" IsVisible="{Binding IsFavorite}" />
                       <ui:FASymbolIcon Symbol="Permissions" FontSize="12" Opacity="0.7"
                                        IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
                     </StackPanel>
@@ -227,17 +219,23 @@
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <TextBlock Grid.Column="6" Text="{Binding Description}" Opacity="0.6" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
-                    <TextBlock Grid.Column="7" Text="{Binding LastConnectedLabel}" Opacity="0.6" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="7" Classes="medium" Width="140" Text="{Binding LastConnectedLabel}" Opacity="0.6" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                   </Grid>
                 </DataTemplate>
               </ListBox.DataTemplates>
             </ListBox>
           </Grid>
 
-          <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center"
-                      Spacing="8" IsVisible="False">
-            <ui:FASymbolIcon Symbol="Find" FontSize="40" Opacity="0.4" />
-            <TextBlock Text="{x:Static res:Strings.Empty_NoMatch}" HorizontalAlignment="Center" Opacity="0.6" />
+          <!-- Empty states (MainWindow.EmptyState): no connections yet, no search results, empty group, no favorites. -->
+          <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420"
+                      Spacing="8" IsVisible="False" Margin="0,48,0,0">
+            <ui:FASymbolIcon x:Name="EmptyIcon" Symbol="Find" FontSize="40" Opacity="0.4" />
+            <TextBlock x:Name="EmptyTitle" Classes="subtitle" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+            <TextBlock x:Name="EmptyMessage" Classes="caption" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,8,0,0">
+              <Button x:Name="EmptyPrimaryButton" Classes="accent" />
+              <Button x:Name="EmptySecondaryButton" />
+            </StackPanel>
           </StackPanel>
         </Panel>
 
@@ -259,8 +257,8 @@
         </Border>
       </Grid>
 
-      <!-- Detail panel: a column, not an overlay. -->
-      <Border x:Name="DetailPane" Grid.Column="1" Width="340" BorderThickness="1,0,0,0"
+      <!-- Detail panel: a column, not an overlay (docs/plan-source.txt). Collapses by itself on narrow windows. -->
+      <Border x:Name="DetailPane" Grid.Column="1" Width="320" BorderThickness="1,0,0,0"
               BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
               Background="{DynamicResource LayerFillColorDefaultBrush}">
         <app:ConnectionDetailPanel x:Name="Details" />

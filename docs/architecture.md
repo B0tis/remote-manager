@@ -124,13 +124,16 @@ its settings record in `ConnectionSettings.TypeFor`.
 
 ## Overview (`App/Views`)
 
+Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md).
+
 - **Sections:** in "Alle" and in a group, tiles and list show group headers (`GroupHeaderItem`: chevron, count,
   online summary when collapsed), each followed by its own connections, depth-first; ungrouped connections
-  come last under "Keine Gruppe". `SectionWrapPanel` lets a header span a whole tile row. Collapsing is
+  come last under "Keine Gruppe". `SectionWrapPanel` lets a header span a whole tile row and gives tiles one shared width (240 to 320 px). Collapsing is
   `ConnectionGroup.IsCollapsed` (saved; the sidebar tree uses the same flag). Favorites, recent, and tags
   stay flat.
 - **List:** column headers sort ascending, descending, then back to the group order (setting `overview.sort`);
-  a sorted list is flat. Below 900 px the group and tag columns hide. Both views use multi-select.
+  a sorted list is flat. Below 900 px the group and tag columns hide, below 640 px also "zuletzt". Both views use
+  multi-select.
 - **Drag and drop** (`MainWindow.DragDrop.cs`): connections onto a header or sidebar group (into it) or onto a
   connection (before/after it); a group header onto another header (upper part: before it, otherwise into
   it) or onto "Alle" (top level). `MainWindow.Drop` holds the rules; `ConnectionLibrary.MoveConnections` /
@@ -140,7 +143,7 @@ its settings record in `ConnectionSettings.TypeFor`.
   selected sidebar group. `GroupDeleteDialog` asks once for an empty group; for a group with content it offers
   "move content to the parent" (default) or "delete everything" (`GroupRemoval`). `ConnectionLibrary.RemoveGroup`
   writes the change in one transaction; the next sync sends a tombstone for every removed group and connection.
-- **Detail panel** (`ConnectionDetailPanel`): a column, not an overlay. Preview, actions, host, logon (with the
+- **Detail panel** (`ConnectionDetailPanel`): a column, not an overlay; closed by default below 1180 px window width. Preview, actions, host, logon (with the
   group it is inherited from), status with check time, start parameters (`IStartParameterSummary`), notes
   (saved when focus leaves), history; bulk actions for several selected connections. Toggle with Strg+I
   (setting `overview.details`).
@@ -158,7 +161,7 @@ its settings record in `ConnectionSettings.TypeFor`.
 ## Live preview (`Core/Preview`, `Views/MainWindow.LivePreview.cs`)
 
 - While an embedded RDP or VNC session is connected, its tile and the detail panel show a picture refreshed every
-  N seconds with a "Live · vor 20 s" badge. Interval in the "…" menu › Live-Vorschau (Aus, 10 s, 30 s, 1 min,
+  N seconds with a "Live · vor 20 s" badge. Interval in "Mehr" › Ansicht › Live-Vorschau (Aus, 10 s, 30 s, 1 min,
   5 min; setting `preview.live.interval` in seconds, default 30, "0" = off). Per connection:
   `RdpSettings.LivePreview` / `VncSettings.LivePreview` ("Live-Vorschau für diese Verbindung", on by default).
 - `LivePreviewScheduler` (Core, unit-tested with a fake source) holds the open sessions as `ILivePreviewSource`
@@ -217,7 +220,7 @@ Inheritance in the editor: the connection editor shows which group logon applies
   at launch. `RemoteToolLauncher` starts through `ProcessStartInfo.ArgumentList`, never a shell.
 - `RemoteToolLocator`: path from `app_settings` (`tools.path.<Type>`) if the file exists, else registry (App
   Paths, uninstall entries) and Program Files. Missing tool: `MissingToolDialog` with "Pfad festlegen" and the
-  download page. Paths, the TeamViewer token, and the AnyDesk import live in `RemoteToolsDialog` (header button).
+  download page. Paths, the TeamViewer token, and the AnyDesk import live in `RemoteToolsDialog` ("Mehr" › Remote-Tools).
 - TeamViewer Web API: `TeamViewerApiClient` (`/devices`, `/groups`, bearer script token from the Credential
   Manager key `teamviewer-api-token`). `TeamViewerSync` matches by device id, then remote ID; it updates alias
   (and the name while it equals the old alias) and never notes, tags, description, group, or password. New
@@ -267,7 +270,7 @@ private-repository options, and the end-to-end check: `docs/updates.md`.
 
 ## Device sync (`Core/Sync`, `App/Sync`)
 
-Off until the user turns it on (header button "Synchronisierung"). One encrypted file, `remote-manager.sync`, in a
+Off until the user turns it on ("Mehr" › Synchronisierung; while it is on, a header button shows its state and conflicts). One encrypted file, `remote-manager.sync`, in a
 folder the user picks (OneDrive, Syncthing, a share); every PC merges its own records with it.
 
 - **What syncs** (`SyncFieldMap`): groups and connections with name, type, host, port, description, notes, tags,

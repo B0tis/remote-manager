@@ -156,18 +156,15 @@ public partial class MainWindow
     /// <summary>Context menu of a group header or sidebar group; <paramref name="group"/> null is "Ohne Gruppe".</summary>
     private ContextMenu CreateGroupMenu(ConnectionGroup? group)
     {
-        var connectAll = new MenuItem { Header = Strings.Action_ConnectAll, Icon = new FASymbolIcon { Symbol = FASymbol.Play } };
-        var newConnection = new MenuItem { Header = Strings.Action_NewConnectionHere, Icon = new FASymbolIcon { Symbol = FASymbol.Add } };
-        var newGroup = new MenuItem
-        {
-            Header = group is null ? Strings.Action_NewGroup : Strings.Action_NewSubgroup,
-            Icon = new FASymbolIcon { Symbol = FASymbol.NewFolder },
-        };
-        var edit = new MenuItem { Header = Strings.Action_EditGroup, Icon = new FASymbolIcon { Symbol = FASymbol.Edit } };
-        var delete = new MenuItem { Header = Strings.Action_DeleteGroup, Icon = new FASymbolIcon { Symbol = FASymbol.Delete } };
+        var connectAll = Item(Strings.Action_ConnectAll, FASymbol.Play);
+        var newConnection = Item(Strings.Action_NewConnectionHere, FASymbol.Add);
+        var newGroup = Item(group is null ? Strings.Action_NewGroup : Strings.Action_NewSubgroup, FASymbol.NewFolder);
+        var edit = Item(Strings.Action_EditGroup, FASymbol.Edit);
+        // Delete works on the selected sidebar group (OnNavigationKeyDown).
+        var delete = Item(Strings.Action_DeleteGroup, FASymbol.Delete, new KeyGesture(Key.Delete));
         object[] entries = group is null
-            ? [connectAll, newConnection, newGroup]
-            : [connectAll, newConnection, newGroup, edit, new Separator(), delete];
+            ? [connectAll, new Separator(), newConnection, newGroup]
+            : [connectAll, new Separator(), newConnection, newGroup, new Separator(), edit, delete];
         var menu = new ContextMenu { ItemsSource = entries };
 
         List<ConnectionItem> Members() => group is null

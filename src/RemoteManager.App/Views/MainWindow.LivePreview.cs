@@ -46,12 +46,6 @@ public partial class MainWindow
         livePreviewTimer.Tick += async (_, _) => await TickLivePreviewAsync();
         livePreviewTimer.Start();
         Closed += (_, _) => livePreviewTimer.Stop();
-
-        if (MoreButton.Flyout is MenuFlyout menu)
-        {
-            menu.Items.Add(new Separator());
-            menu.Items.Add(CreateLivePreviewMenu());
-        }
     }
 
     private MenuItem CreateLivePreviewMenu()
