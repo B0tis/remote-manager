@@ -128,6 +128,7 @@ public partial class MainWindow : Window, IConnectionHost
             }
         };
         HookNavigationDrop();
+        Nav.KeyDown += OnNavigationKeyDown;
 
         // Results arrive on a thread-pool thread; the items belong to the UI thread.
         app.Status.StatusChanged += OnStatusChanged;
@@ -457,7 +458,7 @@ public partial class MainWindow : Window, IConnectionHost
         if (tags.Length > 0)
         {
             items.Add(new FANavigationViewItemHeader { Content = Strings.Nav_Tags });
-            items.AddRange(tags.Select(t => Item(t, FASymbol.Tag, $"tag:{t}")));
+            items.AddRange(tags.Select(TagItem));
         }
 
         // Clear the selection before replacing the items and select again after layout: FANavigationView
@@ -476,6 +477,13 @@ public partial class MainWindow : Window, IConnectionHost
                 SelectNavigationItem(selected);
         }, DispatcherPriority.Loaded);
         ApplyFilter();
+
+        FANavigationViewItem TagItem(string tag)
+        {
+            FANavigationViewItem item = Item(tag, FASymbol.Tag, $"tag:{tag}");
+            item.ContextMenu = CreateTagMenu(tag);
+            return item;
+        }
 
         FANavigationViewItem GroupItem(ConnectionGroup group)
         {
@@ -801,6 +809,15 @@ public partial class MainWindow : Window, IConnectionHost
     /// <summary>Removes the connection with its window, preview image, and own stored password.</summary>
     internal async Task RemoveConnectionAsync(ConnectionItem connection)
     {
+        await DiscardConnectionAsync(connection);
+        if (app.Library.Contains(connection.Model))
+            app.Library.Remove(connection.Model);
+        BuildNavigation();
+    }
+
+    /// <summary>Closes the connection's window and drops its item, preview image, and own stored password (not the library entry).</summary>
+    private async Task DiscardConnectionAsync(ConnectionItem connection)
+    {
         sessionWindows.FirstOrDefault(w => ((ISessionWindow)w).Connection == connection)?.Close();
         openHistory.Remove(connection);
         items.Remove(connection);
@@ -815,10 +832,6 @@ public partial class MainWindow : Window, IConnectionHost
         {
             ShowToast(connection.Name, string.Format(CultureInfo.CurrentCulture, Strings.Password_RemoveFailed, ex.Message), FAInfoBarSeverity.Error);
         }
-
-        if (app.Library.Contains(connection.Model))
-            app.Library.Remove(connection.Model);
-        BuildNavigation();
     }
 
     /// <summary>After an add or edit: rebuild the sidebar (groups, tags), select the connection, check the status.</summary>

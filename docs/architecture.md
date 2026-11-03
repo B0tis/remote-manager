@@ -136,7 +136,10 @@ its settings record in `ConnectionSettings.TypeFor`.
   it) or onto "Alle" (top level). `MainWindow.Drop` holds the rules; `ConnectionLibrary.MoveConnections` /
   `MoveGroup` renumber and save the order.
 - **Groups** (`MainWindow.Groups.cs`, `GroupEditor`): create, edit (name, parent, description, inherited logon
-  with password in the Credential Manager), delete (content moves up); context menu on headers and sidebar groups.
+  with password in the Credential Manager), delete; context menu on headers and sidebar groups, Delete on a
+  selected sidebar group. `GroupDeleteDialog` asks once for an empty group; for a group with content it offers
+  "move content to the parent" (default) or "delete everything" (`GroupRemoval`). `ConnectionLibrary.RemoveGroup`
+  writes the change in one transaction; the next sync sends a tombstone for every removed group and connection.
 - **Detail panel** (`ConnectionDetailPanel`): a column, not an overlay. Preview, actions, host, logon (with the
   group it is inherited from), status with check time, start parameters (`IStartParameterSummary`), notes
   (saved when focus leaves), history; bulk actions for several selected connections. Toggle with Strg+I

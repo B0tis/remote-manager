@@ -159,6 +159,22 @@ public sealed class SqliteConnectionStore : IConnectionStore
         transaction.Commit();
     }
 
+    public void SaveAndDelete(IEnumerable<ConnectionGroup> groups, IEnumerable<Connection> connections,
+        IEnumerable<string> deletedGroupIds, IEnumerable<string> deletedConnectionIds)
+    {
+        using SqliteConnection db = Open();
+        using SqliteTransaction transaction = db.BeginTransaction();
+        foreach (ConnectionGroup group in groups)
+            WriteGroup(db, transaction, group);
+        foreach (Connection connection in connections)
+            WriteConnection(db, transaction, connection);
+        foreach (string id in deletedConnectionIds)
+            Execute(db, transaction, "DELETE FROM connections WHERE id = $id", ("$id", id));
+        foreach (string id in deletedGroupIds)
+            Execute(db, transaction, "DELETE FROM connection_groups WHERE id = $id", ("$id", id));
+        transaction.Commit();
+    }
+
     public string? GetSetting(string key)
     {
         using SqliteConnection db = Open();

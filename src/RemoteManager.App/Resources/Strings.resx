@@ -144,6 +144,9 @@
   <data name="Action_Remove" xml:space="preserve">
     <value>Entfernen</value>
   </data>
+  <data name="Action_RemoveTag" xml:space="preserve">
+    <value>Tag entfernen …</value>
+  </data>
   <data name="Action_Save" xml:space="preserve">
     <value>Speichern</value>
   </data>
@@ -357,8 +360,41 @@
   <data name="Group_None" xml:space="preserve">
     <value>Keine Gruppe</value>
   </data>
-  <data name="GroupDelete_Message" xml:space="preserve">
-    <value>Untergruppen und Verbindungen wandern nach „{0}“. Ein gespeichertes Gruppenpasswort wird aus der Windows-Anmeldeinformationsverwaltung gelöscht.</value>
+  <data name="GroupDelete_And" xml:space="preserve">
+    <value> und </value>
+  </data>
+  <data name="GroupDelete_Connections" xml:space="preserve">
+    <value>{0} Verbindungen</value>
+  </data>
+  <data name="GroupDelete_Contains" xml:space="preserve">
+    <value>Die Gruppe enthält {0}. Was soll damit passieren?</value>
+  </data>
+  <data name="GroupDelete_DeleteOption" xml:space="preserve">
+    <value>Alles mit löschen</value>
+  </data>
+  <data name="GroupDelete_DeleteWarning" xml:space="preserve">
+    <value>Untergruppen, Verbindungen, ihre Vorschaubilder und gespeicherten Passwörter werden entfernt. Das lässt sich nicht rückgängig machen.</value>
+  </data>
+  <data name="GroupDelete_EmptyMessage" xml:space="preserve">
+    <value>Die Gruppe ist leer.</value>
+  </data>
+  <data name="GroupDelete_MoveOption" xml:space="preserve">
+    <value>Inhalt nach „{0}“ verschieben (empfohlen)</value>
+  </data>
+  <data name="GroupDelete_MoveToTopOption" xml:space="preserve">
+    <value>Inhalt auf die oberste Ebene verschieben (empfohlen)</value>
+  </data>
+  <data name="GroupDelete_OneConnection" xml:space="preserve">
+    <value>1 Verbindung</value>
+  </data>
+  <data name="GroupDelete_OneSubgroup" xml:space="preserve">
+    <value>1 Untergruppe</value>
+  </data>
+  <data name="GroupDelete_PasswordNote" xml:space="preserve">
+    <value>Ein gespeichertes Gruppenpasswort wird aus der Windows-Anmeldeinformationsverwaltung gelöscht.</value>
+  </data>
+  <data name="GroupDelete_Subgroups" xml:space="preserve">
+    <value>{0} Untergruppen</value>
   </data>
   <data name="GroupDelete_Title" xml:space="preserve">
     <value>Gruppe „{0}“ löschen?</value>
@@ -1708,6 +1744,18 @@
   </data>
   <data name="Sync_Value_Yes" xml:space="preserve">
     <value>Ja</value>
+  </data>
+  <data name="TagRemove_Action" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="TagRemove_Message" xml:space="preserve">
+    <value>Der Tag wird von {0} Verbindungen entfernt. Die Verbindungen selbst bleiben erhalten.</value>
+  </data>
+  <data name="TagRemove_MessageOne" xml:space="preserve">
+    <value>Der Tag wird von 1 Verbindung entfernt. Die Verbindung selbst bleibt erhalten.</value>
+  </data>
+  <data name="TagRemove_Title" xml:space="preserve">
+    <value>Tag „{0}“ entfernen?</value>
   </data>
   <data name="Unlock_Button" xml:space="preserve">
     <value>Entsperren</value>
