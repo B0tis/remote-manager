@@ -71,6 +71,9 @@ Entries that do not apply (several selected, no stored password, no file transfe
 Verbinden (n) — Neue Verbindung hier … · Neue Untergruppe … — Gruppe bearbeiten … · Gruppe löschen … (Entf on a
 selected sidebar group). "Keine Gruppe" has only the first three.
 
+**Tag** (right-click on a sidebar tag): Tag entfernen … (Entf on a selected tag). It removes the tag from every
+connection; the connections stay. 1Remote imports bring tags instead of folders, so this is how they go away.
+
 **Other shortcuts:** Strg+N new connection, Strg+F search.
 
 ## Empty states
