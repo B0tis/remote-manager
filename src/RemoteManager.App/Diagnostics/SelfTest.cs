@@ -67,6 +67,7 @@ internal static partial class SelfTest
         Log($"Window RenderScaling {window.RenderScaling}, transparency {window.ActualTransparencyLevel}");
         foreach (Screen screen in window.Screens.All)
             Log($"Screen {screen.DisplayName}: bounds {screen.Bounds}, scaling {screen.Scaling}, primary {screen.IsPrimary}");
+        CheckAppIcon(window);
 
         // --- Overview: store, tile view, list view ------------------------------------------------
         AppHost app = AppHost.Current;
@@ -120,6 +121,7 @@ internal static partial class SelfTest
         Check("Both session windows get a ready RDP client",
             await WaitFor(() => first.Rdp.IsClientReady && second.Rdp.IsClientReady, TimeSpan.FromSeconds(20)));
         Check("Window titles are the connection names", first.Title == a.Name && second.Title == b.Name);
+        Check("Session windows carry the app icon", first.Icon is not null && HasWindowIcon(HandleOf(first)));
         Check("Opening the same connection again reuses its window",
             window.OpenSession(a) == first && window.SessionWindows.Count == 2);
 
@@ -730,4 +732,27 @@ internal static partial class SelfTest
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetWindowRect(nint window, out Rect rect);
+
+    /// <summary>App icon: embedded in the exe (ApplicationIcon), set on the main window, and given to any new window by the App style.</summary>
+    private static void CheckAppIcon(MainWindow window)
+    {
+        string exe = Environment.ProcessPath ?? "";
+        Check($"The exe embeds the app icon ({Path.GetFileName(exe)})", ExtractIconExW(exe, -1, 0, 0, 0) > 0);
+        Check("The main window has the app icon (Avalonia and Win32)", window.Icon is not null && HasWindowIcon(HandleOf(window)));
+        var probe = new Window();
+        probe.ApplyStyling();
+        Check("A new window gets the app icon from the App style", probe.Icon is not null);
+    }
+
+    private static bool HasWindowIcon(nint window) =>
+        SendMessageW(window, WmGetIcon, IconSmall, 0) != 0 && SendMessageW(window, WmGetIcon, IconBig, 0) != 0;
+
+    private const uint WmGetIcon = 0x007F;
+    private const nint IconSmall = 0, IconBig = 1;
+
+    [DllImport("user32.dll")]
+    private static extern nint SendMessageW(nint window, uint message, nint wParam, nint lParam);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint ExtractIconExW(string file, int index, nint large, nint small, uint count);
 }

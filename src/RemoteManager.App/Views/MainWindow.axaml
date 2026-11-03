@@ -32,6 +32,12 @@
   <ui:FANavigationView x:Name="Nav"
                        PaneDisplayMode="Left" OpenPaneLength="248"
                        IsSettingsVisible="False" IsPaneToggleButtonVisible="True">
+    <ui:FANavigationView.PaneHeader>
+      <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="4,0,0,0">
+        <Image Source="/Assets/logo-48.png" Width="20" Height="20" RenderOptions.BitmapInterpolationMode="HighQuality" />
+        <TextBlock Text="Remote-Manager" FontWeight="SemiBold" VerticalAlignment="Center" Opacity="0.85" />
+      </StackPanel>
+    </ui:FANavigationView.PaneHeader>
     <Grid ColumnDefinitions="*,Auto">
       <Grid RowDefinitions="Auto,*" Margin="28,20,20,0" ClipToBounds="True">
         <!-- Header: title, then search, view toggle, and actions in one row below it. -->
