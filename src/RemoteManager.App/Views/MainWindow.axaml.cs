@@ -467,7 +467,7 @@ public partial class MainWindow : Window, IConnectionHost
         if (tags.Length > 0)
         {
             items.Add(new FANavigationViewItemHeader { Content = Strings.Nav_Tags });
-            items.AddRange(tags.Select(t => Item(t, FASymbol.Tag, $"tag:{t}")));
+            items.AddRange(tags.Select(TagItem));
         }
 
         // Clear the selection before replacing the items and select again after layout: FANavigationView
@@ -486,6 +486,13 @@ public partial class MainWindow : Window, IConnectionHost
                 SelectNavigationItem(selected);
         }, DispatcherPriority.Loaded);
         ApplyFilter();
+
+        FANavigationViewItem TagItem(string tag)
+        {
+            FANavigationViewItem item = Item(tag, FASymbol.Tag, $"tag:{tag}");
+            item.ContextMenu = CreateTagMenu(tag);
+            return item;
+        }
 
         FANavigationViewItem GroupItem(ConnectionGroup group)
         {

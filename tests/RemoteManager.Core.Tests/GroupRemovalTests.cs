@@ -111,6 +111,28 @@ public sealed class GroupRemovalTests : IDisposable
     }
 
     [Fact]
+    public void RemovingATagKeepsTheConnectionsAndOtherTags()
+    {
+        var a = new Connection { Name = "a", Tags = ["Kunde-A", "prod"] };
+        var b = new Connection { Name = "b", Tags = ["kunde-a"] };
+        var c = new Connection { Name = "c", Tags = ["prod"] };
+        library.Add(a);
+        library.Add(b);
+        library.Add(c);
+
+        int changed = library.RemoveTag("KUNDE-A");
+
+        Assert.Equal(2, changed);
+        Assert.Equal(["prod"], a.Tags);
+        Assert.Empty(b.Tags);
+        Assert.Equal(["prod"], c.Tags);
+        ConnectionLibrary reopened = Reopened();
+        Assert.Equal(3, reopened.Connections.Count);
+        Assert.DoesNotContain(reopened.Connections, x => x.Tags.Contains("kunde-a", StringComparer.OrdinalIgnoreCase));
+        Assert.Equal(0, library.RemoveTag("gibt-es-nicht"));
+    }
+
+    [Fact]
     public void RemovingAGroupThatIsNotInTheLibraryChangesNothing()
     {
         ConnectionGroup kept = library.EnsureGroupPath("A")!;
