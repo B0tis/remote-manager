@@ -4,6 +4,7 @@ using System.Xml;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Microsoft.Data.Sqlite;
+using RemoteManager.App.Diagnostics;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.ImportExport;
 
@@ -66,7 +67,7 @@ public partial class ImportView : UserControl
         }
 
         IImporter importer = Importer;
-        if (files.FirstOrDefault(f => !importer.CanImport(f)) is { } wrong)
+        if (files.FirstOrDefault(f => !CanImport(importer, f)) is { } wrong)
         {
             ShowError(string.Format(CultureInfo.CurrentCulture, Strings.Import_Error_WrongFormat, importer.FormatName) + $" ({Path.GetFileName(wrong)})");
             return null;
@@ -85,12 +86,34 @@ public partial class ImportView : UserControl
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or XmlException or JsonException or SqliteException or FormatException)
             {
+                // Expected problems with the file; the importers word these messages for the user.
                 ShowError(string.Format(CultureInfo.CurrentCulture, Strings.Import_Failed, $"{Path.GetFileName(file)}: {ex.Message}"));
+                return total;
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // Anything else is a bug in an importer; it must not end the app. Logged with the stack for a report.
+                CrashLog.Write(ex, $"import ({importer.Id})");
+                ShowUnexpectedError(ex, file);
                 return total;
             }
         }
 
         return total;
+    }
+
+    /// <summary><see cref="IImporter.CanImport"/> for a plugin that may not honor "never throws".</summary>
+    private static bool CanImport(IImporter importer, string path)
+    {
+        try
+        {
+            return importer.CanImport(path);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            CrashLog.Write(ex, $"import check ({importer.Id})");
+            return false;
+        }
     }
 
     private static ImportSummary Add(ImportSummary a, ImportSummary b) => new(
@@ -112,6 +135,13 @@ public partial class ImportView : UserControl
         List<string> paths = [.. picked.Select(f => f.TryGetLocalPath()).OfType<string>()];
         if (paths.Count > 0)
             SetFiles(paths);
+    }
+
+    /// <summary>Shows an error that is not the file's fault (logged by the caller).</summary>
+    public void ShowUnexpectedError(Exception ex, string? file = null)
+    {
+        string detail = CrashLog.Describe(ex);
+        ShowError(string.Format(CultureInfo.CurrentCulture, Strings.Import_Failed, file is null ? detail : $"{Path.GetFileName(file)}: {detail}"));
     }
 
     private void ShowError(string? message)

@@ -13,6 +13,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        CrashLog.InstallDispatcherHandler();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             AppHost host = AppHost.Start();

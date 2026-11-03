@@ -185,7 +185,7 @@ its settings record in `ConnectionSettings.TypeFor`.
 
 | Importer | Reads | Groups | Passwords |
 | --- | --- | --- | --- |
-| `OneRemoteImporter` | 1Remote/PRemoteM `1Remote.db` (table `Server`, JSON per row) or JSON export (.prma) | none (1Remote has tags) | not taken over (1Remote's own encryption) |
+| `OneRemoteImporter` | 1Remote `1Remote.db` (table `Servers`, column `Json`), PRemoteM (table `Server`, column `JsonConfigString`), or JSON export (.prma); the database is read from a temporary copy (with its `-wal`), so a running 1Remote does not block it; damaged rows are skipped with a warning | none (1Remote has tags) | not taken over (1Remote's own encryption); an encrypted SSH `PrivateKey` is reported, only a real file path becomes the key path |
 | `RdcManImporter` | RDCMan .rdg, schema 1 and 3 | file and groups, nested | DPAPI of the current user, else reported |
 | `MRemoteNgImporter` | confCons.xml (also fully encrypted ones) | containers, nested | with mRemoteNG's default master password (AES-GCM, `MRemoteNgCrypto`), else reported |
 | `RdpFileImporter` | .rdp | none | never (`password 51:b:` is machine-bound) |
@@ -196,7 +196,8 @@ merges an `ImportResult`: groups with the same name under the same parent are re
 place (backup restore), an identical connection in the same group is skipped, passwords go to the default
 credential source. It adds and updates through `ConnectionLibrary.Add/Update` (not `AddRange`, which reloads every
 object) so windows that hold a connection keep a live one. The UI is `Views/ImportView` + `ImportExportCommands`
-(the "…" button in the overview). Sample files for the tests are in `tests/RemoteManager.Core.Tests/Samples`.
+(the "…" button in the overview). The import handlers catch every exception: a file problem is shown in the dialog,
+anything else too, plus a crash report. Sample files for the tests are in `tests/RemoteManager.Core.Tests/Samples`.
 
 Inheritance in the editor: the connection editor shows which group logon applies for the group typed right now
 (inherited, or replaced by the connection's own) and edits the group's logon in a flyout (`Views/GroupLogonPanel`).
@@ -302,6 +303,14 @@ folder the user picks (OneDrive, Syncthing, a share); every PC merges its own re
   and for a connection edited on both PCs "Beide behalten (Kopie)" (the copy gets no password reference).
 - **Self-test** (`SelfTest.Sync.cs`): PC A, B, and C as three data folders with one sync folder under %TEMP%,
   passphrases under per-run Credential Manager keys.
+
+## Crash reports (`Core/Diagnostics/CrashLogFile`, `App/Diagnostics/CrashLog`)
+
+Unhandled exceptions on the UI thread (`Dispatcher.UIThread.UnhandledException`), in the AppDomain, and unobserved
+tasks are written to `<data>\logs\crash-<time>-<pid>.log` (`AppPaths.Logs`, so `REMOTE_MANAGER_DATA` applies): time,
+source, version, OS, runtime, and the exception with its stack. No settings, connection data, or secrets. The last
+20 reports are kept. The handlers only log; they do not keep a crashing app alive. The WebView2 start abort that
+`SshTerminalWindow` marks as handled is not logged.
 
 ## UI text
 
