@@ -25,7 +25,12 @@ internal static class CrashLog
             if (e.ExceptionObject is Exception ex)
                 Write(ex, e.IsTerminating ? "AppDomain (terminating)" : "AppDomain");
         };
-        TaskScheduler.UnobservedTaskException += (_, e) => Write(e.Exception, "unobserved task");
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            // The WebView2 start abort (window closed early) also reaches here from Avalonia's adapter task; not a crash.
+            if (!e.Exception.Flatten().InnerExceptions.All(SshTerminalWindow.IsWebViewStartAbort))
+                Write(e.Exception, "unobserved task");
+        };
     }
 
     public static void InstallDispatcherHandler()
