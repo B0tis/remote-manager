@@ -5,7 +5,7 @@
     <!-- MsRdpEx ships one native MsRdpEx.dll per architecture; the app targets x64. -->
     <PlatformTarget>x64</PlatformTarget>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- Exe icon. Assets/logo.svg is the source; tools/IconGen regenerates logo.ico and the logo PNGs. -->
+    <!-- Exe icon. Assets/logo.svg is the source; tools/IconGen regenerates logo.ico. -->
     <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,8 +31,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Window icon (set for every window in App.axaml) and the in-app logo. -->
-    <AvaloniaResource Include="Assets\logo.ico;Assets\logo-48.png;Assets\logo-96.png" />
+    <!-- Window icon, set for every window in App.axaml. The app UI itself shows no logo (the window frame does). -->
+    <AvaloniaResource Include="Assets\logo.ico" />
   </ItemGroup>
 
   <ItemGroup>

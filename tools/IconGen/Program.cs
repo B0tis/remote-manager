@@ -1,14 +1,13 @@
 // IconGen: renders src/RemoteManager.App/Assets/logo.svg (the source of truth) into
 //   Assets/logo.ico       Windows icon with 16, 20, 24, 32, 40, 48, 64, 128 and 256 px frames, 32-bit with alpha
 //                         (32-bit DIB frames below 256 px, PNG for 256 px). Exe icon, window icons, Velopack Setup.
-//   Assets/logo-48.png    in-app logo, shown at 24 px (title row of the navigation pane), sharp up to 200 % scaling.
-//   Assets/logo-96.png    in-app logo, shown at 48 px (About dialog), sharp up to 200 % scaling.
+// The app UI itself shows no logo (the window frame does), so no PNGs are generated.
 // Every size is rendered directly from the vector with anti-aliasing (no downscaling of a large bitmap); up to 48 px the
 // white strokes are hinted to whole pixels (see SvgLogo.Render) so the small frames stay crisp.
 //
 // Run from the repository root (no global installs; SkiaSharp is the version Avalonia already uses):
 //   dotnet run --project tools/IconGen
-// Optional: dotnet run --project tools/IconGen -- <path-to-logo.svg>   (outputs go next to the SVG)
+// Optional: dotnet run --project tools/IconGen -- <path-to-logo.svg>   (logo.ico goes next to the SVG)
 //
 // The SVG reader only knows what the logo uses: <svg viewBox>, <defs>/<linearGradient> with <stop>, <rect> (rx/ry) and
 // <path> with fill/stroke, stroke-width, stroke-linecap and stroke-linejoin. Anything else fails loudly, so a logo
@@ -31,14 +30,6 @@ string icoPath = Path.Combine(outDir, "logo.ico");
 File.WriteAllBytes(icoPath, IcoWriter.Write(frames));
 Console.WriteLine($"{icoPath} ({string.Join(", ", icoSizes)} px)");
 
-foreach (int size in new[] { 48, 96 })
-{
-    using SKImage image = logo.Render(size);
-    string pngPath = Path.Combine(outDir, $"logo-{size}.png");
-    File.WriteAllBytes(pngPath, Png(image));
-    Console.WriteLine(pngPath);
-}
-
 foreach (var (_, image) in frames)
     image.Dispose();
 return 0;
@@ -51,12 +42,6 @@ static string FindRepoRoot()
             return dir.FullName;
     }
     throw new InvalidOperationException("Run from inside the repository (RemoteManager.slnx not found) or pass the SVG path.");
-}
-
-static byte[] Png(SKImage image)
-{
-    using SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
-    return data.ToArray();
 }
 
 /// <summary>The parsed logo: a list of shapes in viewBox coordinates.</summary>
