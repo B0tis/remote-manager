@@ -98,6 +98,7 @@ internal static partial class SelfTest
         Check("Edit dialog opens and Cancel leaves the connection unchanged", !await editing && edited.Name == nameBefore);
 
         await RunOverviewChecksAsync(window);
+        await RunGroupDeleteChecksAsync(window); // SelfTest.GroupDelete.cs
         await RunCredentialChecksAsync(window);
         await RunRdpImportChecksAsync(window);
 

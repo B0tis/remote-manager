@@ -3,6 +3,15 @@ using RemoteManager.Core.Storage;
 
 namespace RemoteManager.Core.Library;
 
+/// <summary>What <see cref="ConnectionLibrary.RemoveGroup"/> does with the content of the removed group.</summary>
+public enum GroupRemoval
+{
+    /// <summary>Subgroups and connections move to the parent group (or the top level). Nothing else is deleted.</summary>
+    MoveContentUp,
+    /// <summary>Subgroups and all connections in the group or below are deleted with it.</summary>
+    DeleteContent,
+}
+
 /// <summary>
 /// The groups and connections in memory, written through to the <see cref="IConnectionStore"/> on
 /// every change. Not thread-safe: use it from the UI thread.
@@ -84,25 +93,56 @@ public sealed partial class ConnectionLibrary
         return true;
     }
 
-    /// <summary>Removes a group; its subgroups and connections move up to its parent.</summary>
-    public void RemoveGroup(ConnectionGroup group)
+    /// <summary>
+    /// Removes a group in one store transaction. With <see cref="GroupRemoval.MoveContentUp"/> its subgroups and
+    /// connections move to its parent (the top level for a top-level group); with <see cref="GroupRemoval.DeleteContent"/>
+    /// every subgroup and every connection in the group or below is deleted too. Returns the deleted groups (the group
+    /// itself first) and connections, so the caller can drop their stored passwords and preview images. The next sync
+    /// sends a tombstone for each of them.
+    /// </summary>
+    public (IReadOnlyList<ConnectionGroup> Groups, IReadOnlyList<Connection> Connections) RemoveGroup(
+        ConnectionGroup group, GroupRemoval removal = GroupRemoval.MoveContentUp)
     {
-        foreach (ConnectionGroup child in groups.Where(g => g.ParentId == group.Id).ToList())
+        if (!groups.Contains(group))
+            return ([], []);
+
+        List<ConnectionGroup> removedGroups = [group];
+        List<Connection> removedConnections = [];
+        var moved = new List<ConnectionGroup>();
+        var movedConnections = new List<Connection>();
+        DateTime now = DateTime.UtcNow;
+        if (removal == GroupRemoval.DeleteContent)
         {
-            child.ParentId = group.ParentId;
-            store.SaveGroup(child);
+            removedGroups.AddRange(DescendantsOf(group.Id));
+            var ids = removedGroups.Select(g => g.Id).ToHashSet();
+            removedConnections.AddRange(connections.Where(c => c.GroupId is { } id && ids.Contains(id)));
+        }
+        else
+        {
+            foreach (ConnectionGroup child in groups.Where(g => g.ParentId == group.Id))
+            {
+                child.ParentId = group.ParentId;
+                child.UpdatedAt = now;
+                moved.Add(child);
+            }
+
+            foreach (Connection connection in connections.Where(c => c.GroupId == group.Id))
+            {
+                connection.GroupId = group.ParentId;
+                connection.UpdatedAt = now;
+                movedConnections.Add(connection);
+            }
         }
 
-        foreach (Connection connection in connections.Where(c => c.GroupId == group.Id).ToList())
-        {
-            connection.GroupId = group.ParentId;
-            store.SaveConnection(connection);
-        }
-
-        groups.Remove(group);
-        store.DeleteGroup(group.Id);
+        store.SaveAndDelete(moved, movedConnections, removedGroups.Select(g => g.Id), removedConnections.Select(c => c.Id));
+        groups.RemoveAll(removedGroups.Contains);
+        connections.RemoveAll(removedConnections.Contains);
         Changed?.Invoke(this, EventArgs.Empty);
+        return (removedGroups, removedConnections);
     }
+
+    /// <summary>Connections in the group or one of its subgroups.</summary>
+    public IEnumerable<Connection> ConnectionsUnder(string groupId) => connections.Where(c => IsInGroup(c, groupId));
 
     /// <summary>Adds many groups and connections at once (import); existing ids are replaced.</summary>
     public void AddRange(IReadOnlyList<ConnectionGroup> newGroups, IReadOnlyList<Connection> newConnections)

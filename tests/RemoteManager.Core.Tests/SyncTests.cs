@@ -198,6 +198,64 @@ public sealed class SyncTests : IDisposable
     }
 
     [Fact]
+    public async Task DeletingAFolderWithItsContentSendsATombstoneForEachRecord()
+    {
+        Pc a = await PcAsync("A"), b = await PcAsync("B");
+        ConnectionGroup top = a.Library.EnsureGroupPath("Kunde")!;
+        ConnectionGroup site = a.Library.EnsureGroupPath("Kunde / Standort")!;
+        var inTop = new Connection { Name = "fw", Host = "fw.local", GroupId = top.Id };
+        var inSite = new Connection { Name = "dc01", Host = "dc01.local", GroupId = site.Id };
+        a.Library.Add(inTop);
+        a.Library.Add(inSite);
+        a.Library.Add(new Connection { Name = "bleibt", Host = "x.local" });
+        await a.SyncAsync();
+        await b.SyncAsync();
+
+        a.Library.RemoveGroup(top, GroupRemoval.DeleteContent);
+        await a.SyncAsync();
+
+        Dictionary<SyncKey, SyncRecord> bases = new SyncStateStore(a.DatabasePath).LoadBases();
+        SyncKey[] deleted =
+        [
+            new(SyncKey.Group, top.Id), new(SyncKey.Group, site.Id),
+            new(SyncKey.Connection, inTop.Id), new(SyncKey.Connection, inSite.Id),
+        ];
+        Assert.All(deleted, key => Assert.True(bases[key].IsDeleted));
+
+        await b.SyncAsync();
+        Assert.Empty(b.Library.Groups);
+        Assert.Equal("bleibt", Assert.Single(b.Library.Connections).Name);
+        Assert.Empty(b.Engine.LoadConflicts());
+    }
+
+    [Fact]
+    public async Task DeletingANestedFolderMovesItsContentUpOnEveryPc()
+    {
+        Pc a = await PcAsync("A"), b = await PcAsync("B");
+        ConnectionGroup top = a.Library.EnsureGroupPath("Kunde")!;
+        ConnectionGroup site = a.Library.EnsureGroupPath("Kunde / Standort")!;
+        ConnectionGroup room = a.Library.EnsureGroupPath("Kunde / Standort / Keller")!;
+        a.Library.Add(new Connection { Name = "dc01", Host = "dc01.local", GroupId = site.Id });
+        a.Library.Add(new Connection { Name = "nas", Host = "nas.local", GroupId = room.Id });
+        await a.SyncAsync();
+        await b.SyncAsync();
+
+        a.Library.RemoveGroup(site, GroupRemoval.MoveContentUp);
+        await a.SyncAsync();
+        await b.SyncAsync();
+        await a.SyncAsync();
+
+        Assert.True(new SyncStateStore(a.DatabasePath).LoadBases()[new SyncKey(SyncKey.Group, site.Id)].IsDeleted);
+        foreach (Pc pc in new[] { a, b })
+        {
+            Assert.Equal(["Kunde", "Kunde / Keller"], pc.Library.Groups.Select(g => pc.Library.PathOf(g.Id)).Order());
+            Assert.Equal(top.Id, pc.Library.Connections.Single(c => c.Name == "dc01").GroupId);
+            Assert.Equal(room.Id, pc.Library.Connections.Single(c => c.Name == "nas").GroupId);
+            Assert.Empty(pc.Engine.LoadConflicts());
+        }
+    }
+
+    [Fact]
     public async Task ConnectionAddedToAGroupDeletedElsewhereMovesToTheTop()
     {
         Pc a = await PcAsync("A"), b = await PcAsync("B");
