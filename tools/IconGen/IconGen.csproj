@@ -1,0 +1,16 @@
+<!--
+  Regenerates the app icon (.ico) and the in-app logo PNGs from src/RemoteManager.App/Assets/logo.svg.
+  Usage and details: see Program.cs. Not part of RemoteManager.slnx, so it never affects the solution build or tests.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Same SkiaSharp the app already gets through Avalonia.Skia; the Win32 native assets come with it. -->
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+  </ItemGroup>
+</Project>

@@ -47,6 +47,8 @@ $PackId = 'Botis.RemoteManager'   # Setup installs to %LOCALAPPDATA%\Botis.Remot
 $MainExe = 'RemoteManager.App.exe'
 $Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $Project = Join-Path $Root 'src\RemoteManager.App\RemoteManager.App.csproj'
+# Setup.exe icon; the same file is the exe and window icon (generated from Assets\logo.svg by tools/IconGen).
+$SetupIcon = Join-Path $Root 'src\RemoteManager.App\Assets\logo.ico'
 
 function Step([string] $text) { Write-Host "==> $text" -ForegroundColor Cyan }
 
@@ -189,7 +191,7 @@ try {
     # --- 5. Pack ------------------------------------------------------------------------------------------------
     Step "Packing $PackId $Version into $OutputDir"
     $packArgs = @('vpk', 'pack', '--packId', $PackId, '--packVersion', $Version, '--packDir', $PublishDir, '--runtime', 'win-x64',
-        '--mainExe', $MainExe, '--packTitle', 'Remote-Manager', '--packAuthors', 'Botis', '-o', $OutputDir) + $signArgs
+        '--mainExe', $MainExe, '--packTitle', 'Remote-Manager', '--packAuthors', 'Botis', '--icon', $SetupIcon, '-o', $OutputDir) + $signArgs
     if ($ReleaseNotes) { $packArgs += @('--releaseNotes', (Resolve-Path $ReleaseNotes).Path) }
     Invoke-Checked dotnet $packArgs
 

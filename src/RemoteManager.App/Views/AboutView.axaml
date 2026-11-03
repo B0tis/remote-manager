@@ -4,17 +4,9 @@
              x:Class="RemoteManager.App.Views.AboutView"
              Width="460">
   <StackPanel Spacing="10">
-    <!-- Name and version (AppVersion: stamped by tools/release.ps1). -->
-    <StackPanel Orientation="Horizontal" Spacing="14">
-      <Border Width="48" Height="48" CornerRadius="10" Background="{DynamicResource AccentFillColorDefaultBrush}">
-        <TextBlock Text="RM" FontSize="18" FontWeight="SemiBold" Foreground="White"
-                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-      </Border>
-      <StackPanel VerticalAlignment="Center" Spacing="2">
-        <TextBlock Text="Remote-Manager" FontSize="20" FontWeight="SemiBold" />
-        <TextBlock x:Name="VersionText" Opacity="0.75" />
-      </StackPanel>
-    </StackPanel>
+    <!-- Version (AppVersion: stamped by tools/release.ps1). No logo or app name in the content: the dialog title
+         and the window frame already show them. -->
+    <TextBlock x:Name="VersionText" Opacity="0.75" />
     <TextBlock x:Name="InstallText" Opacity="0.65" FontSize="12" TextWrapping="Wrap" />
     <TextBlock x:Name="DataText" Opacity="0.65" FontSize="12" TextWrapping="Wrap" />
 
