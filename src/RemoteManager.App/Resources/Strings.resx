@@ -183,6 +183,9 @@
   <data name="Common_Ok" xml:space="preserve">
     <value>OK</value>
   </data>
+  <data name="Common_UnexpectedError" xml:space="preserve">
+    <value>Unerwarteter Fehler ({0}). Details stehen im Protokoll unter {1}.</value>
+  </data>
   <data name="Delete_Message" xml:space="preserve">
     <value>Die Verbindung, ihr Vorschaubild und ihr gespeichertes Passwort werden entfernt. Das lässt sich nicht rückgängig machen.</value>
   </data>

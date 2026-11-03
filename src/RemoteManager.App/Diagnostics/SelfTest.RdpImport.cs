@@ -43,6 +43,7 @@ internal static partial class SelfTest
         await RunExternalStartChecksAsync();
         await RunInheritanceEditorChecksAsync(window);
         await RunImportExportChecksAsync(window);
+        await RunOneRemoteDatabaseImportChecksAsync(window);
     }
 
     /// <summary>Every start parameter survives load and save in the RDP part of the editor.</summary>

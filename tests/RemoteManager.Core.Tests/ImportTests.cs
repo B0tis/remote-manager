@@ -46,24 +46,9 @@ public sealed class ImportTests : IDisposable
     [Fact]
     public async Task OneRemoteDatabaseIsLossless()
     {
-        // The 1Remote database: table Server with one JSON document per connection.
+        // The 1Remote database: table Servers with one JSON document per connection (next to Configs and Credentials).
         string db = folder.File("1Remote.db");
-        using (var connection = new SqliteConnection($"Data Source={db};Pooling=False"))
-        {
-            connection.Open();
-            using SqliteCommand create = connection.CreateCommand();
-            create.CommandText = "CREATE TABLE Server (Id VARCHAR(64) PRIMARY KEY NOT NULL, Protocol VARCHAR(32) NOT NULL, ClassVersion VARCHAR(32) NOT NULL, Json TEXT NOT NULL)";
-            create.ExecuteNonQuery();
-            foreach (JsonNode? item in JsonNode.Parse(File.ReadAllText(Sample("1remote.prma")))!.AsArray())
-            {
-                using SqliteCommand insert = connection.CreateCommand();
-                insert.CommandText = "INSERT INTO Server VALUES ($id, $protocol, '1', $json)";
-                insert.Parameters.AddWithValue("$id", (string)item!["Id"]!);
-                insert.Parameters.AddWithValue("$protocol", (string)item["Protocol"]!);
-                insert.Parameters.AddWithValue("$json", item.ToJsonString());
-                insert.ExecuteNonQuery();
-            }
-        }
+        OneRemoteFixture.CreateDatabase(db, JsonNode.Parse(File.ReadAllText(Sample("1remote.prma")))!.AsArray().Select(item => item!.ToJsonString()));
 
         var importer = new OneRemoteImporter();
         Assert.True(importer.CanImport(db));

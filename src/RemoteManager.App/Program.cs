@@ -24,6 +24,9 @@ internal static class Program
             .OnRestarted(version => Updates.AppUpdates.RestartedToVersion = version.ToString())
             .Run();
 
+        // Crash reports in <data>\logs; the UI thread's handler follows in App once Avalonia runs.
+        Diagnostics.CrashLog.InstallProcessHandlers();
+
         AppOptions.Parse(args);
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 using FluentAvalonia.UI.Controls;
+using RemoteManager.App.Diagnostics;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.ImportExport;
 
@@ -25,8 +26,9 @@ internal static class ImportExportCommands
     {
         var import = new MenuItem { Header = Strings.Action_Import, Icon = new FASymbolIcon { Symbol = FASymbol.Download } };
         var export = new MenuItem { Header = Strings.Action_ExportBackup, Icon = new FASymbolIcon { Symbol = FASymbol.Save } };
-        import.Click += async (_, _) => await ShowImportAsync(window);
-        export.Click += async (_, _) => await ExportAsync(window);
+        // async void handlers: an exception here would reach the dispatcher and end the app.
+        import.Click += async (_, _) => await GuardAsync(window, Strings.Import_Title, () => ShowImportAsync(window));
+        export.Click += async (_, _) => await GuardAsync(window, Strings.Export_ToastTitle, () => ExportAsync(window));
         // Items, not ItemsSource: MainWindow.Updates.cs appends its entries.
         var menu = new MenuFlyout();
         menu.Items.Add(import);
@@ -49,9 +51,23 @@ internal static class ImportExportCommands
         dialog.PrimaryButtonClick += async (_, e) =>
         {
             var deferral = e.GetDeferral();
-            summary = await view.RunAsync();
-            e.Cancel = summary is null;
-            deferral.Complete();
+            try
+            {
+                summary = await view.RunAsync();
+                e.Cancel = summary is null;
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // RunAsync reports file problems itself; this is the last line so the dialog stays usable.
+                CrashLog.Write(ex, "import dialog");
+                view.ShowUnexpectedError(ex);
+                summary = null;
+                e.Cancel = true;
+            }
+            finally
+            {
+                deferral.Complete();
+            }
         };
 
         OpenDialog = dialog;
@@ -64,6 +80,20 @@ internal static class ImportExportCommands
         {
             window.SyncWithLibrary();
             await ShowSummaryAsync(summary);
+        }
+    }
+
+    /// <summary>Runs a menu command; an unexpected error is logged and shown as a toast instead of ending the app.</summary>
+    private static async Task GuardAsync(MainWindow window, string title, Func<Task> command)
+    {
+        try
+        {
+            await command();
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            CrashLog.Write(ex, title);
+            window.ShowToast(title, CrashLog.Describe(ex), FAInfoBarSeverity.Error);
         }
     }
 

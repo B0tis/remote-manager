@@ -22,6 +22,9 @@ public static class AppPaths
     /// <summary>Database copies taken before an update (see Updates/DatabaseBackup).</summary>
     public static string Backups => Path.Combine(Root, "backups");
 
+    /// <summary>Crash reports (Core/Diagnostics/CrashLogFile), created on the first report.</summary>
+    public static string Logs => Path.Combine(Root, "logs");
+
     private static string Ensure(string path)
     {
         Directory.CreateDirectory(path);

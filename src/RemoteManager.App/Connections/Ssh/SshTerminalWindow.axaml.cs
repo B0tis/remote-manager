@@ -46,14 +46,18 @@ public partial class SshTerminalWindow : Window, ISessionWindow
         // Nothing is lost then (the window is gone), so only that case is marked handled.
         Dispatcher.UIThread.UnhandledException += (_, e) =>
         {
-            if (e.Exception is COMException { HResult: unchecked((int)0x80004004) } abort
-                && abort.StackTrace?.Contains("WebView2", StringComparison.Ordinal) == true)
+            if (IsWebViewStartAbort(e.Exception))
             {
                 Trace.WriteLine("SSH terminal: WebView2 start aborted (window closed early).");
                 e.Handled = true;
             }
         };
     }
+
+    /// <summary>The E_ABORT that WebView2 raises when the window closes during its start (also used by the crash log).</summary>
+    internal static bool IsWebViewStartAbort(Exception exception) =>
+        exception is COMException { HResult: unchecked((int)0x80004004) } abort
+        && abort.StackTrace?.Contains("WebView2", StringComparison.Ordinal) == true;
 
     // Required by the XAML loader; the app always uses the ConnectionItem overload.
     public SshTerminalWindow() : this(new ConnectionItem(new Connection { Name = "SSH", Type = ConnectionType.Ssh }, AppHost.Current))

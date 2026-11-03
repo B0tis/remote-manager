@@ -53,8 +53,26 @@
   <data name="MRemoteNg_PasswordNotDecrypted" xml:space="preserve">
     <value>{0}: Das Passwort ließ sich nicht entschlüsseln und wurde nicht übernommen.</value>
   </data>
+  <data name="OneRemote_DatabaseUnreadable" xml:space="preserve">
+    <value>Die 1Remote-Datenbank ließ sich nicht lesen ({0}). Bitte 1Remote beenden und erneut versuchen.</value>
+  </data>
   <data name="OneRemote_EncryptedPasswords" xml:space="preserve">
     <value>Bei {0} Verbindung(en) ist das Passwort mit dem eigenen Schlüssel von 1Remote verschlüsselt und wurde nicht übernommen; bitte einmal im Editor oder beim ersten Verbinden eingeben.</value>
+  </data>
+  <data name="OneRemote_ExportNotAnArray" xml:space="preserve">
+    <value>Die Datei ist kein 1Remote-Export (erwartet wird eine JSON-Liste).</value>
+  </data>
+  <data name="OneRemote_FileLocked" xml:space="preserve">
+    <value>Die 1Remote-Datei ist gerade von einem anderen Programm gesperrt. Bitte 1Remote beenden und erneut versuchen.</value>
+  </data>
+  <data name="OneRemote_NotADatabase" xml:space="preserve">
+    <value>Die Datei ist keine 1Remote-Datenbank (Tabelle „Servers“ bzw. „Server“ fehlt).</value>
+  </data>
+  <data name="OneRemote_PrivateKeyNotAPath" xml:space="preserve">
+    <value>{0}: Der private Schlüssel ist in 1Remote verschlüsselt gespeichert und wurde nicht übernommen; bitte die Schlüsseldatei im Editor wählen.</value>
+  </data>
+  <data name="OneRemote_UnreadableEntry" xml:space="preserve">
+    <value>Eintrag {0}: kein lesbarer 1Remote-Eintrag, übersprungen.</value>
   </data>
   <data name="RdcMan_PasswordOfOtherUser" xml:space="preserve">
     <value>{0}: Das Passwort wurde von einem anderen Windows-Benutzer oder auf einem anderen PC gespeichert und ließ sich nicht entschlüsseln; bitte neu eingeben.</value>
