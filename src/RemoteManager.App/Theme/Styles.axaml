@@ -439,6 +439,16 @@
     <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="Margin" Value="12,2,0,0" />
   </Style>
+  <!-- "Passwort gespeichert" in an editor: a lit key while it stays, a dark one once it is marked for removal. -->
+  <Style Selector="Grid.storedPassword ui|FASymbolIcon">
+    <Setter Property="Foreground" Value="{DynamicResource RmOnlineBrush}" />
+  </Style>
+  <Style Selector="Grid.storedPassword.removing ui|FASymbolIcon">
+    <Setter Property="Foreground" Value="{DynamicResource RmTextTertiaryBrush}" />
+  </Style>
+  <Style Selector="Grid.storedPassword.removing TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+  </Style>
   <!-- Fields that are one unit, set into the surface: a password and where it comes from, a command line. -->
   <Style Selector="Border.well">
     <Setter Property="Background" Value="{DynamicResource RmInsetBrush}" />

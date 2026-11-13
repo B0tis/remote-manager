@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -9,9 +10,12 @@ using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections;
 using RemoteManager.App.Connections.Rdp;
+using RemoteManager.App.Connections.RemoteTools;
+using RemoteManager.App.Credentials;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Services;
 using RemoteManager.App.Views;
+using RemoteManager.Core.Credentials;
 using RemoteManager.Core.ImportExport;
 using RemoteManager.Core.Library;
 using RemoteManager.Core.Model;
@@ -37,10 +41,12 @@ internal static partial class SelfTest
             look.SetTheme(AppTheme.Dark);
             await Settle(500);
             await RunEditorFormChecksAsync(window, look);
+            await RunPasswordAreaChecksAsync(window, look);
             RunRdpTopicChecks();
             await RunEditorErrorChecksAsync(window);
             await RunGroupFormChecksAsync(window, look);
             await RunImportFormChecksAsync(window, look);
+            await RunFormMinimumSizeChecksAsync(window);
         }
         finally
         {
@@ -65,6 +71,7 @@ internal static partial class SelfTest
         int inputs = 0;
         bool selectorComplete = false;
         int listedChips = 0;
+        bool warningNote = false;
 
         foreach (IConnectionHandler handler in handlers)
         {
@@ -125,6 +132,16 @@ internal static partial class SelfTest
                 await SaveFormProbesAsync(editor, window, look, "form-editor-rdp-open");
             }
 
+            // TeamViewer can take the password on the command line: switched on, the warning shows as a warning note.
+            if (editor.SettingsEditor is RemoteToolSettingsEditor { CommandLineCredentialBox.IsVisible: true } tool && handler.Type == ConnectionType.TeamViewer)
+            {
+                tool.CommandLineCredentialBox.IsChecked = true;
+                await Settle(300);
+                warningNote = tool.IsPasswordWarningShown
+                    && tool.GetLogicalDescendants().OfType<Border>().Any(b => b.Classes.Contains("note") && b.Classes.Contains("warning") && b.IsEffectivelyVisible);
+                await SaveFormProbesAsync(tool, window, look, "form-remote-tool-warning");
+            }
+
             (int count, List<string> unlabelled) = CheckLabels(editor);
             inputs += count;
             problems.AddRange(unlabelled.Select(p => $"{handler.Type}: {p}"));
@@ -138,8 +155,67 @@ internal static partial class SelfTest
             inputs > handlers.Count * 8 && problems.Count == 0);
         Check($"Editor: every type has the sections Verbindung, Einordnung, Anmeldung, Startparameter, Notizen{Problems(sectionProblems)}",
             sectionProblems.Count == 0);
+        Check("TeamViewer with the password on the command line shows the warning as a warning note", warningNote);
         Check($"The type selector lists every handler as a lettered chip in its color with a name ({string.Join(", ", chips)}; {listedChips} chips in the open list)",
             selectorComplete && chips.Count == handlers.Count && listedChips == handlers.Count);
+    }
+
+    /// <summary>
+    /// The password area in its states: a stored password, one that will be removed, KeePass, 1Password. Nothing is
+    /// written: the connection only claims to have a stored password, and the dialog is cancelled.
+    /// </summary>
+    private static async Task RunPasswordAreaChecksAsync(MainWindow window, Appearance look)
+    {
+        string id = TestId("form-password");
+        var model = new Connection
+        {
+            Id = id, Name = "Formular Passwort", Host = "10.0.0.10", UserName = "administrator",
+            Credential = new CredentialRef(WindowsCredentialSource.SourceId, id),
+        };
+        Task<bool> editing = ConnectionEditor.ShowAsync(model, isNew: false);
+        await Settle(700);
+        ConnectionEditor editor = ConnectionEditor.OpenEditor!;
+        Border? unit = editor.Source.FindLogicalAncestorOfType<Border>();
+        if (unit is null)
+        {
+            Fail("Editor: the password source is not inside a frame of its own");
+            ConnectionEditor.OpenDialog?.Hide();
+            await editing;
+            return;
+        }
+
+        // One unit: the source, the stored-password row, the box for a new password, "Passwort speichern", the hint.
+        List<Control> parts = [.. unit.GetLogicalDescendants().OfType<Control>()];
+        bool together = unit.Classes.Contains("well") && parts.Contains(editor.Source.Source) && parts.Contains(editor.Password)
+            && parts.Contains(editor.SavePassword) && parts.Contains(editor.RemovePassword)
+            && parts.OfType<TextBlock>().Any(t => t.Classes.Contains("hint") && t.IsEffectivelyVisible && t.Text?.Length > 0);
+        bool stored = editor.IsStoredPasswordShown && string.IsNullOrEmpty(editor.Password.Text);
+        await SaveFormProbesAsync(unit, window, look, "form-password-stored");
+
+        editor.RemovePassword.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await Settle(300);
+        bool removal = !editor.IsStoredPasswordShown && editor.SavePassword.IsChecked == false;
+        await SaveFormProbesAsync(unit, window, look, "form-password-remove");
+
+        editor.Source.Source.SelectedIndex = (int)PasswordSourceKind.KeePass;
+        editor.Source.Database.Text = @"C:\Tresor\Firma.kdbx";
+        editor.Source.KeyFile.Text = "";
+        editor.Source.Entry.Text = "Server/dc01";
+        await Settle(300);
+        bool keePass = !editor.Password.IsEffectivelyVisible && editor.Source.Entry.IsEffectivelyVisible;
+        await SaveFormProbesAsync(unit, window, look, "form-password-keepass");
+
+        editor.Source.Source.SelectedIndex = (int)PasswordSourceKind.OnePassword;
+        editor.Source.OpReference.Text = "op://Firma/dc01/password";
+        await Settle(300);
+        bool onePassword = !editor.Password.IsEffectivelyVisible && editor.Source.OpReference.IsEffectivelyVisible;
+        await SaveFormProbesAsync(unit, window, look, "form-password-1password");
+        (_, List<string> problems) = CheckLabels(unit);
+
+        ConnectionEditor.OpenDialog?.Hide();
+        Check($"Editor: password source, stored password, new password, \"Passwort speichern\" and hint are one unit in every state{Problems(problems)}",
+            together && stored && removal && keePass && onePassword && problems.Count == 0
+            && !await editing && model.Credential?.Key == id && !WindowsCredentialSource.Exists(id));
     }
 
     /// <summary>A closed topic of the RDP start parameters says in its header what it holds.</summary>
@@ -282,6 +358,60 @@ internal static partial class SelfTest
         await shown;
         Check($"Import summary: five counters ({string.Join(", ", figures)}) and the importer's remarks as a list ({remarks})",
             figures.SequenceEqual(["12", "1", "3", "2", "5"]) && remarks == summary.Warnings.Count);
+    }
+
+    /// <summary>
+    /// The other dialogs at the minimum window size (the connection editor is checked in SelfTest.Layout.cs): the
+    /// group editor in its tallest state, the import dialog, and the wide import summary lie inside the window.
+    /// </summary>
+    private static async Task RunFormMinimumSizeChecksAsync(MainWindow window)
+    {
+        double width = window.Width, height = window.Height;
+        WindowState state = window.WindowState;
+        var group = new ConnectionGroup { Name = "Selftest Formular klein" };
+        var sizes = new List<string>();
+        try
+        {
+            window.WindowState = WindowState.Normal;
+            await ResizeAsync(window, window.MinWidth, window.MinHeight);
+
+            Task<(bool Saved, string? ParentId)> editing = GroupEditor.ShowAsync(group, isNew: true);
+            await Settle(700);
+            GroupEditor.OpenEditor!.Source.Source.SelectedIndex = (int)PasswordSourceKind.KeePass;
+            await Settle(400);
+            bool groupFits = DialogFits(window, GroupEditor.OpenDialog!, out string bounds);
+            sizes.Add(bounds);
+            SaveRenderProbe(window, "form-minimum-group-editor.png");
+            GroupEditor.OpenDialog?.Hide();
+            await editing;
+
+            Task importing = ImportExportCommands.ShowImportAsync(window);
+            await Settle(700);
+            bool importFits = DialogFits(window, ImportExportCommands.OpenDialog!, out bounds);
+            sizes.Add(bounds);
+            ImportExportCommands.OpenDialog?.Hide();
+            await importing;
+
+            Task shown = ImportExportCommands.ShowSummaryAsync(new ImportSummary(128, 0, 14, 9, 31, [.. Enumerable.Range(1, 12).Select(i => $"Hinweis {i}: Eintrag übersprungen.")], []));
+            await Settle(700);
+            bool summaryFits = DialogFits(window, ImportExportCommands.OpenSummary!, out bounds);
+            sizes.Add(bounds);
+            SaveRenderProbe(window, "form-minimum-import-summary.png");
+            ImportExportCommands.OpenSummary?.Hide();
+            await shown;
+
+            Check($"Group editor, import dialog and import summary fit the minimum window ({string.Join("; ", sizes)})", groupFits && importFits && summaryFits);
+        }
+        finally
+        {
+            GroupEditor.OpenDialog?.Hide();
+            ImportExportCommands.OpenDialog?.Hide();
+            ImportExportCommands.OpenSummary?.Hide();
+            window.Width = width;
+            window.Height = height;
+            window.WindowState = state;
+            await Settle(400);
+        }
     }
 
     /// <summary>The visible section headings of a form, top to bottom.</summary>

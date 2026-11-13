@@ -51,9 +51,8 @@
         <StackPanel Spacing="12">
           <cred:PasswordSourcePanel x:Name="SourcePanel" />
           <StackPanel x:Name="OwnPasswordPanel" Spacing="8">
-            <Grid x:Name="StoredRow" ColumnDefinitions="Auto,*,Auto" IsVisible="False">
-              <ui:FASymbolIcon x:Name="StoredIcon" Symbol="Permissions" FontSize="14" Margin="1,0,8,0"
-                               Foreground="{DynamicResource RmOnlineBrush}" />
+            <Grid x:Name="StoredRow" Classes="storedPassword" ColumnDefinitions="Auto,*,Auto" IsVisible="False">
+              <ui:FASymbolIcon x:Name="StoredIcon" Symbol="Permissions" FontSize="14" Margin="1,0,8,0" />
               <TextBlock x:Name="StoredText" Grid.Column="1" VerticalAlignment="Center" FontSize="12.5" Text="{x:Static res:Strings.Password_Stored}" />
               <Button x:Name="RemovePasswordButton" Grid.Column="2" Classes="link" Content="{x:Static res:Strings.Action_Remove}" />
             </Grid>
