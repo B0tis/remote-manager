@@ -1,8 +1,6 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
-using Avalonia.Layout;
 using Avalonia.Media;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Resources;
@@ -39,7 +37,7 @@ public sealed class GroupDeleteDialog
             move = new RadioButton { GroupName = "groupDelete", Content = target, IsChecked = true };
             deleteAll = new RadioButton { GroupName = "groupDelete", Content = Strings.GroupDelete_DeleteOption };
             // Starts where the option's text starts, so it reads as part of that option.
-            Border warning = Note(Strings.GroupDelete_DeleteWarning, warning: true);
+            Border warning = FormFields.Note(Strings.GroupDelete_DeleteWarning, NoteKind.Warning);
             warning.Margin = new Thickness(28, 4, 0, 0);
             warning.IsVisible = false;
             deleteAll.IsCheckedChanged += (_, _) => warning.IsVisible = deleteAll.IsChecked == true;
@@ -50,7 +48,7 @@ public sealed class GroupDeleteDialog
 
         // Only said when there is one: the group's own password in the Credential Manager goes with the group.
         if (group.Credential?.Source == AppHost.Current.Credentials.DefaultSource.Id)
-            content.Children.Add(Note(Strings.GroupDelete_PasswordNote, warning: false));
+            content.Children.Add(FormFields.Note(Strings.GroupDelete_PasswordNote, NoteKind.Secret));
 
         Dialog = new FAContentDialog
         {
@@ -110,28 +108,4 @@ public sealed class GroupDeleteDialog
     }
 
     private static TextBlock Text(string text) => new() { Text = text, TextWrapping = TextWrapping.Wrap };
-
-    /// <summary>A remark in the form language of the editors (Border.note), with its sign in front.</summary>
-    private static Border Note(string text, bool warning)
-    {
-        var icon = new FASymbolIcon
-        {
-            Symbol = warning ? FASymbol.ImportantFilled : FASymbol.Permissions,
-            FontSize = 15,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, 2, 0, 0),
-        };
-        // Follows the theme like a DynamicResource in XAML.
-        icon.Bind(TextElement.ForegroundProperty, icon.GetResourceObservable(warning ? "SystemFillColorCautionBrush" : "RmTextSecondaryBrush"));
-        var message = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = 12.5 };
-        Grid.SetColumn(message, 1);
-        var note = new Border
-        {
-            Child = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 10, Children = { icon, message } },
-        };
-        note.Classes.Add("note");
-        if (warning)
-            note.Classes.Add("warning");
-        return note;
-    }
 }
