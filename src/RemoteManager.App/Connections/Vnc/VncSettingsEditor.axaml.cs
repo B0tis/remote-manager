@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using RemoteManager.App.Connections.Ssh;
+using RemoteManager.App.Views;
 using RemoteManager.Core.Model.Settings;
 
 namespace RemoteManager.App.Connections.Vnc;
@@ -9,7 +10,11 @@ public partial class VncSettingsEditor : UserControl, ISettingsEditor
 {
     private VncSettings loaded = new();
 
-    public VncSettingsEditor() => InitializeComponent();
+    public VncSettingsEditor()
+    {
+        InitializeComponent();
+        FormFields.LinkLabels(this);
+    }
 
     public Control View => this;
 

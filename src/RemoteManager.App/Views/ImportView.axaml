@@ -1,23 +1,41 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:res="using:RemoteManager.App.Resources"
              x:Class="RemoteManager.App.Views.ImportView"
              Width="480">
   <!-- Import dialog: format (one IImporter each), file, optional target group. -->
   <StackPanel Spacing="12">
-    <StackPanel Spacing="4">
-      <TextBlock Text="{x:Static res:Strings.Import_Format}" FontSize="12" Opacity="0.7" />
+    <StackPanel>
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Import_Format}" />
       <ComboBox x:Name="FormatBox" HorizontalAlignment="Stretch" />
+      <!-- Where the chosen program keeps the file to pick. -->
+      <TextBlock x:Name="FormatHint" Classes="hint" Margin="1,6,0,0" />
     </StackPanel>
-    <StackPanel Spacing="4">
-      <TextBlock Text="{x:Static res:Strings.Import_File}" FontSize="12" Opacity="0.7" />
-      <Grid ColumnDefinitions="*,8,Auto">
-        <TextBox x:Name="FileBox" IsReadOnly="True" PlaceholderText="{x:Static res:Strings.Import_FilePlaceholder}" />
-        <Button x:Name="BrowseButton" Grid.Column="2" Content="{x:Static res:Strings.Import_Browse}" />
+    <StackPanel>
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Import_File}" />
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBox x:Name="FileBox" Classes="mono" IsReadOnly="True" PlaceholderText="{x:Static res:Strings.Import_FilePlaceholder}" />
+        <Button x:Name="BrowseButton" Grid.Column="1" Content="{x:Static res:Strings.Import_Browse}" />
       </Grid>
     </StackPanel>
-    <AutoCompleteBox x:Name="TargetBox" PlaceholderText="{x:Static res:Strings.Import_TargetGroup}" FilterMode="Contains" MinimumPrefixLength="0" />
-    <TextBlock Text="{x:Static res:Strings.Import_Hint}" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
-    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource SystemFillColorCriticalBrush}" IsVisible="False" TextWrapping="Wrap" />
+    <StackPanel>
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Import_TargetGroup}" />
+      <AutoCompleteBox x:Name="TargetBox" PlaceholderText="{x:Static res:Strings.Import_TargetGroupExample}" FilterMode="Contains" MinimumPrefixLength="0" />
+    </StackPanel>
+    <Border Classes="note" Margin="0,4,0,0">
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+        <ui:FASymbolIcon Symbol="Permissions" FontSize="15" VerticalAlignment="Top" Margin="0,2,0,0"
+                         Foreground="{DynamicResource RmTextSecondaryBrush}" />
+        <TextBlock Grid.Column="1" Classes="hint" Text="{x:Static res:Strings.Import_PasswordHint}" />
+      </Grid>
+    </Border>
+    <Border x:Name="ErrorNote" Classes="note error" IsVisible="False">
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+        <ui:FASymbolIcon Symbol="ImportantFilled" FontSize="15" VerticalAlignment="Top" Margin="0,2,0,0"
+                         Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+        <TextBlock x:Name="ErrorText" Grid.Column="1" TextWrapping="Wrap" />
+      </Grid>
+    </Border>
   </StackPanel>
 </UserControl>

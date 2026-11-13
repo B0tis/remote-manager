@@ -30,12 +30,14 @@ public partial class GroupLogonPanel : UserControl
         UserBox.Text = group.UserName;
         DomainBox.Text = group.Domain;
         hasStoredPassword = group.Credential?.Source == AppHost.Current.Credentials.DefaultSource.Id;
-        PasswordBox.PlaceholderText = hasStoredPassword ? Strings.Password_NewPlaceholder : Strings.Field_Password;
+        PasswordLabel.Text = hasStoredPassword ? Strings.Password_New : Strings.Field_Password;
+        PasswordBox.PlaceholderText = hasStoredPassword ? Strings.Password_NewPlaceholder : "";
         RemovePasswordBox.IsVisible = hasStoredPassword;
         SourcePanel.Load(group.Credential);
         OwnPasswordPanel.IsVisible = !SourcePanel.IsExternal;
         SourcePanel.KindChanged += (_, _) => OwnPasswordPanel.IsVisible = !SourcePanel.IsExternal;
         ApplyButton.Click += async (_, _) => await ApplyAsync();
+        FormFields.LinkLabels(this);
     }
 
     /// <summary>Raised after the group was saved.</summary>
@@ -52,7 +54,7 @@ public partial class GroupLogonPanel : UserControl
         if (SourcePanel.IsExternal && SourcePanel.Validate() is { } invalid)
         {
             ErrorText.Text = invalid;
-            ErrorText.IsVisible = true;
+            ErrorNote.IsVisible = true;
             return false;
         }
 
@@ -69,7 +71,7 @@ public partial class GroupLogonPanel : UserControl
         catch (Win32Exception ex)
         {
             ErrorText.Text = string.Format(CultureInfo.CurrentCulture, Strings.Password_SaveFailed, ex.Message);
-            ErrorText.IsVisible = true;
+            ErrorNote.IsVisible = true;
             return false;
         }
         finally

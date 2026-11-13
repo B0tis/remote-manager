@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Credentials.KeePass;
 using RemoteManager.Core.Model;
@@ -37,8 +38,12 @@ public partial class PasswordSourcePanel : UserControl
         PickEntryButton.Click += async (_, _) => await PickEntryAsync();
         CheckButton.Click += async (_, _) => await CheckAsync();
         foreach (TextBox box in new[] { DatabaseBox, KeyFileBox, EntryBox, OpReferenceBox })
-            box.TextChanged += (_, _) => ShowCheck(null, false);
+            box.TextChanged += (_, _) => ShowCheck(null);
+        FormFields.LinkLabels(this);
     }
+
+    /// <summary>What the line next to "Prüfen" reports: progress, success, or a failure.</summary>
+    private enum CheckOutcome { Pending, Ok, Failed }
 
     /// <summary>Raised when the user switches the source (the editor shows or hides its password box).</summary>
     public event EventHandler? KindChanged;
@@ -117,21 +122,24 @@ public partial class PasswordSourcePanel : UserControl
     {
         if (Validate() is { } error)
         {
-            ShowCheck(error, false);
+            ShowCheck(error, CheckOutcome.Failed);
             return;
         }
 
         CredentialRef reference = BuildReference()!;
         CheckButton.IsEnabled = false;
-        ShowCheck(Strings.Vault_Checking, false);
+        ShowCheck(Strings.Vault_Checking);
         try
         {
             string? secret = await app.Credentials.ReadAsync(reference);
-            ShowCheck(secret is not null ? Strings.Vault_Check_Ok : string.Format(CultureInfo.CurrentCulture, Strings.Vault_Err_UnknownSource, reference.Source), secret is not null);
+            if (secret is not null)
+                ShowCheck(Strings.Vault_Check_Ok, CheckOutcome.Ok);
+            else
+                ShowCheck(string.Format(CultureInfo.CurrentCulture, Strings.Vault_Err_UnknownSource, reference.Source), CheckOutcome.Failed);
         }
         catch (Exception ex) when (CredentialErrors.IsCredentialFailure(ex))
         {
-            ShowCheck(CredentialErrors.Describe(ex), false);
+            ShowCheck(CredentialErrors.Describe(ex), CheckOutcome.Failed);
         }
         finally
         {
@@ -146,7 +154,7 @@ public partial class PasswordSourcePanel : UserControl
             return;
         if (string.IsNullOrWhiteSpace(DatabaseBox.Text))
         {
-            ShowCheck(Strings.Vault_Error_DatabaseRequired, false);
+            ShowCheck(Strings.Vault_Error_DatabaseRequired, CheckOutcome.Failed);
             return;
         }
 
@@ -160,7 +168,7 @@ public partial class PasswordSourcePanel : UserControl
         }
         catch (Exception ex) when (CredentialErrors.IsCredentialFailure(ex))
         {
-            ShowCheck(CredentialErrors.Describe(ex), false);
+            ShowCheck(CredentialErrors.Describe(ex), CheckOutcome.Failed);
         }
     }
 
@@ -183,13 +191,14 @@ public partial class PasswordSourcePanel : UserControl
         OnePasswordPanel.IsVisible = Kind == PasswordSourceKind.OnePassword;
         OnePasswordMissing.IsVisible = Kind == PasswordSourceKind.OnePassword && OnePassword?.FindExecutable() is null;
         CheckRow.IsVisible = IsExternal;
-        ShowCheck(null, false);
+        ShowCheck(null);
         KindChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private void ShowCheck(string? text, bool ok)
+    private void ShowCheck(string? text, CheckOutcome outcome = CheckOutcome.Pending)
     {
         CheckText.Text = text;
-        CheckIcon.IsVisible = ok;
+        CheckIcon.IsVisible = outcome == CheckOutcome.Ok;
+        CheckText.Classes.Set("failed", outcome == CheckOutcome.Failed);
     }
 }

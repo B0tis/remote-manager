@@ -1,5 +1,9 @@
 using System.Globalization;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
+using Avalonia.Layout;
+using Avalonia.Media;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Resources;
 using RemoteManager.Core.Library;
@@ -21,12 +25,11 @@ public sealed class GroupDeleteDialog
         int connections = library.ConnectionsUnder(group.Id).Count();
         int subgroups = library.DescendantsOf(group.Id).Count();
         HasContent = connections + subgroups > 0;
-        string password = Strings.GroupDelete_PasswordNote;
 
-        var content = new StackPanel { Spacing = 12, MaxWidth = 460 };
+        var content = new StackPanel { Spacing = 12, Width = 440 };
         if (!HasContent)
         {
-            content.Children.Add(Text(Strings.GroupDelete_EmptyMessage + " " + password));
+            content.Children.Add(Text(Strings.GroupDelete_EmptyMessage));
         }
         else
         {
@@ -35,18 +38,19 @@ public sealed class GroupDeleteDialog
                 : Strings.GroupDelete_MoveToTopOption;
             move = new RadioButton { GroupName = "groupDelete", Content = target, IsChecked = true };
             deleteAll = new RadioButton { GroupName = "groupDelete", Content = Strings.GroupDelete_DeleteOption };
-            var warning = Text(Strings.GroupDelete_DeleteWarning);
-            warning.Opacity = 0.75;
-            warning.Margin = new Avalonia.Thickness(28, -6, 0, 0);
+            // Starts where the option's text starts, so it reads as part of that option.
+            Border warning = Note(Strings.GroupDelete_DeleteWarning, warning: true);
+            warning.Margin = new Thickness(28, 4, 0, 0);
             warning.IsVisible = false;
             deleteAll.IsCheckedChanged += (_, _) => warning.IsVisible = deleteAll.IsChecked == true;
 
             content.Children.Add(Text(string.Format(CultureInfo.CurrentCulture, Strings.GroupDelete_Contains, Describe(connections, subgroups))));
-            content.Children.Add(move);
-            content.Children.Add(deleteAll);
-            content.Children.Add(warning);
-            content.Children.Add(Text(password));
+            content.Children.Add(new StackPanel { Children = { move, deleteAll, warning } });
         }
+
+        // Only said when there is one: the group's own password in the Credential Manager goes with the group.
+        if (group.Credential?.Source == AppHost.Current.Credentials.DefaultSource.Id)
+            content.Children.Add(Note(Strings.GroupDelete_PasswordNote, warning: false));
 
         Dialog = new FAContentDialog
         {
@@ -105,5 +109,29 @@ public sealed class GroupDeleteDialog
         return string.Join(Strings.GroupDelete_And, parts);
     }
 
-    private static TextBlock Text(string text) => new() { Text = text, TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+    private static TextBlock Text(string text) => new() { Text = text, TextWrapping = TextWrapping.Wrap };
+
+    /// <summary>A remark in the form language of the editors (Border.note), with its sign in front.</summary>
+    private static Border Note(string text, bool warning)
+    {
+        var icon = new FASymbolIcon
+        {
+            Symbol = warning ? FASymbol.ImportantFilled : FASymbol.Permissions,
+            FontSize = 15,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 2, 0, 0),
+        };
+        // Follows the theme like a DynamicResource in XAML.
+        icon.Bind(TextElement.ForegroundProperty, icon.GetResourceObservable(warning ? "SystemFillColorCautionBrush" : "RmTextSecondaryBrush"));
+        var message = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = 12.5 };
+        Grid.SetColumn(message, 1);
+        var note = new Border
+        {
+            Child = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 10, Children = { icon, message } },
+        };
+        note.Classes.Add("note");
+        if (warning)
+            note.Classes.Add("warning");
+        return note;
+    }
 }

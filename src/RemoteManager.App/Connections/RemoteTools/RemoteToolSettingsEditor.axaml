@@ -3,39 +3,66 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:res="using:RemoteManager.App.Resources"
              x:Class="RemoteManager.App.Connections.RemoteTools.RemoteToolSettingsEditor">
-  <StackPanel Spacing="10">
-    <TextBlock Text="{x:Static res:Strings.RemoteTool_StartOptions}" FontWeight="SemiBold" Margin="0,6,0,0" />
-    <Grid ColumnDefinitions="*,12,*">
-      <TextBox x:Name="AliasBox" PlaceholderText="{x:Static res:Strings.RemoteTool_AliasPlaceholder}" />
-      <!-- Filled with the modes of the tool (RemoteToolCommandLine.ModesOf). -->
-      <ComboBox x:Name="ModeBox" Grid.Column="2" HorizontalAlignment="Stretch" />
+  <!-- Start options of TeamViewer, AnyDesk, or RustDesk: what the tool really has, free arguments, the resulting call. -->
+  <StackPanel Spacing="12">
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+      <StackPanel>
+        <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.RemoteTool_Alias}" />
+        <TextBox x:Name="AliasBox" PlaceholderText="{x:Static res:Strings.RemoteTool_AliasPlaceholder}" />
+      </StackPanel>
+      <StackPanel Grid.Column="1">
+        <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.RemoteTool_Mode}" />
+        <!-- Filled with the modes of the tool (RemoteToolCommandLine.ModesOf). -->
+        <ComboBox x:Name="ModeBox" HorizontalAlignment="Stretch" />
+      </StackPanel>
     </Grid>
 
     <!-- TeamViewer: -q and -a -->
-    <Grid x:Name="TeamViewerRow" ColumnDefinitions="*,12,*">
-      <ComboBox x:Name="QualityBox" HorizontalAlignment="Stretch" />
-      <ComboBox x:Name="AccessBox" Grid.Column="2" HorizontalAlignment="Stretch" />
+    <Grid x:Name="TeamViewerRow" ColumnDefinitions="*,*" ColumnSpacing="12">
+      <StackPanel>
+        <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.RemoteTool_Quality}" />
+        <ComboBox x:Name="QualityBox" HorizontalAlignment="Stretch" />
+      </StackPanel>
+      <StackPanel Grid.Column="1">
+        <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.RemoteTool_Access}" />
+        <ComboBox x:Name="AccessBox" HorizontalAlignment="Stretch" />
+      </StackPanel>
     </Grid>
 
     <!-- AnyDesk: full screen and plain window -->
-    <StackPanel x:Name="AnyDeskRow" Orientation="Horizontal" Spacing="16">
+    <UniformGrid x:Name="AnyDeskRow" Columns="2" Margin="0,-4">
       <CheckBox x:Name="FullScreenBox" Content="{x:Static res:Strings.RemoteTool_FullScreen}" />
       <CheckBox x:Name="PlainBox" Content="{x:Static res:Strings.RemoteTool_Plain}" />
-    </StackPanel>
+    </UniformGrid>
 
     <!-- Password on the command line (TeamViewer, RustDesk): off by default, warns when on. -->
-    <CheckBox x:Name="PasswordOnLineBox" />
-    <ui:FAInfoBar x:Name="PasswordWarning" Severity="Warning" IsClosable="False" IsOpen="False"
-                  Title="{x:Static res:Strings.RemoteTool_PasswordWarning_Title}" />
-    <TextBlock x:Name="PasswordInfo" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
+    <StackPanel Spacing="6">
+      <CheckBox x:Name="PasswordOnLineBox" Margin="0,-4" />
+      <Border x:Name="PasswordWarning" Classes="note warning" IsVisible="False">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+          <ui:FASymbolIcon Symbol="ImportantFilled" FontSize="15" VerticalAlignment="Top" Margin="0,2,0,0"
+                           Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+          <StackPanel Grid.Column="1" Spacing="2">
+            <TextBlock FontWeight="SemiBold" TextWrapping="Wrap" Text="{x:Static res:Strings.RemoteTool_PasswordWarning_Title}" />
+            <TextBlock x:Name="PasswordWarningText" FontSize="12.5" TextWrapping="Wrap" />
+          </StackPanel>
+        </Grid>
+      </Border>
+      <TextBlock x:Name="PasswordInfo" Classes="hint" Margin="1,0,0,0" />
+    </StackPanel>
 
-    <TextBox x:Name="ArgumentsBox" PlaceholderText="{x:Static res:Strings.RemoteTool_ArgumentsPlaceholder}" />
-    <Border Padding="10,8" CornerRadius="4" Background="{DynamicResource ControlFillColorSecondaryBrush}">
-      <StackPanel Spacing="2">
-        <TextBlock Text="{x:Static res:Strings.RemoteTool_Preview}" FontSize="11" Opacity="0.6" />
-        <SelectableTextBlock x:Name="PreviewText" FontFamily="Cascadia Mono,Consolas,monospace" FontSize="12" TextWrapping="Wrap" />
-      </StackPanel>
-    </Border>
-    <TextBlock Opacity="0.55" FontSize="12" TextWrapping="Wrap" Text="{x:Static res:Strings.RemoteTool_Hint}" />
+    <StackPanel>
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.RemoteTool_Arguments}" />
+      <TextBox x:Name="ArgumentsBox" Classes="mono" PlaceholderText="{x:Static res:Strings.RemoteTool_ArgumentsPlaceholder}" />
+      <TextBlock Classes="hint" Margin="1,6,0,0" Text="{x:Static res:Strings.RemoteTool_Hint}" />
+    </StackPanel>
+
+    <!-- The call as it will run, with the password masked. -->
+    <StackPanel>
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.RemoteTool_Preview}" />
+      <Border Classes="well" Padding="12,9">
+        <SelectableTextBlock x:Name="PreviewText" Classes="mono" TextWrapping="Wrap" />
+      </Border>
+    </StackPanel>
   </StackPanel>
 </UserControl>

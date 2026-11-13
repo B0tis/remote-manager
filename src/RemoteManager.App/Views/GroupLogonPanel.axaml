@@ -5,19 +5,37 @@
              x:Class="RemoteManager.App.Views.GroupLogonPanel"
              Width="340">
   <!-- Logon of a group, inherited by its connections without their own. Shown in a flyout of the connection editor. -->
-  <StackPanel Spacing="10">
-    <TextBlock x:Name="TitleText" FontWeight="SemiBold" TextWrapping="Wrap" />
-    <TextBlock Text="{x:Static res:Strings.GroupLogon_Hint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
-    <Grid ColumnDefinitions="*,8,*">
-      <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Field_User}" />
-      <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_DomainOptional}" />
-    </Grid>
-    <cred:PasswordSourcePanel x:Name="SourcePanel" />
-    <StackPanel x:Name="OwnPasswordPanel" Spacing="10">
-      <TextBox x:Name="PasswordBox" PasswordChar="●" Classes="revealPasswordButton" />
-      <CheckBox x:Name="RemovePasswordBox" Content="{x:Static res:Strings.GroupLogon_RemovePassword}" IsVisible="False" />
+  <StackPanel Spacing="12">
+    <StackPanel Spacing="4">
+      <TextBlock x:Name="TitleText" Classes="name" TextWrapping="Wrap" />
+      <TextBlock Classes="hint" Text="{x:Static res:Strings.GroupLogon_Hint}" />
     </StackPanel>
-    <TextBlock x:Name="ErrorText" Foreground="{DynamicResource SystemFillColorCriticalBrush}" IsVisible="False" TextWrapping="Wrap" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+      <StackPanel>
+        <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Field_User}" />
+        <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Editor_UserExample}" />
+      </StackPanel>
+      <StackPanel Grid.Column="1">
+        <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Field_DomainOptional}" />
+        <TextBox x:Name="DomainBox" PlaceholderText="{x:Static res:Strings.Editor_DomainExample}" />
+      </StackPanel>
+    </Grid>
+    <!-- The password as one unit, as in the editors. -->
+    <Border Classes="well">
+      <StackPanel Spacing="12">
+        <cred:PasswordSourcePanel x:Name="SourcePanel" />
+        <StackPanel x:Name="OwnPasswordPanel" Spacing="4">
+          <StackPanel>
+            <TextBlock x:Name="PasswordLabel" Classes="fieldLabel" Text="{x:Static res:Strings.Field_Password}" />
+            <TextBox x:Name="PasswordBox" PasswordChar="●" Classes="revealPasswordButton" />
+          </StackPanel>
+          <CheckBox x:Name="RemovePasswordBox" Content="{x:Static res:Strings.GroupLogon_RemovePassword}" IsVisible="False" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+    <Border x:Name="ErrorNote" Classes="note error" IsVisible="False">
+      <TextBlock x:Name="ErrorText" TextWrapping="Wrap" />
+    </Border>
     <Button x:Name="ApplyButton" Classes="accent" HorizontalAlignment="Right" Content="{x:Static res:Strings.GroupLogon_Apply}" />
   </StackPanel>
 </UserControl>

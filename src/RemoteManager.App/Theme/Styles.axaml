@@ -424,4 +424,27 @@
   <Style Selector="Expander">
     <Setter Property="CornerRadius" Value="{StaticResource RmRadiusControl}" />
   </Style>
+
+  <!-- ===== Forms (connection editor, group editor, import; redesign part "forms") ===== -->
+  <!-- A form section starts with its heading (TextBlock.section) and a hairline that runs to the right edge. -->
+  <Style Selector="Grid.sectionHead">
+    <Setter Property="Margin" Value="0,24,0,12" />
+  </Style>
+  <Style Selector="Grid.sectionHead.first">
+    <Setter Property="Margin" Value="0,0,0,12" />
+  </Style>
+  <Style Selector="Border.rule">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Background" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="12,2,0,0" />
+  </Style>
+  <!-- Fields that are one unit, set into the surface: a password and where it comes from, a command line. -->
+  <Style Selector="Border.well">
+    <Setter Property="Background" Value="{DynamicResource RmInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RmRadiusCard}" />
+    <Setter Property="Padding" Value="12" />
+  </Style>
 </Styles>
