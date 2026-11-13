@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Resources;
+using RemoteManager.Core.Model;
 using RemoteManager.Core.Sync;
 
 namespace RemoteManager.App.Sync;
@@ -47,6 +48,11 @@ public partial class SyncConflictsWindow : Window
 
     /// <summary>True while the "nothing left to decide" view shows (self-test).</summary>
     public bool ShowsEmptyState => EmptyState.IsVisible;
+
+    /// <summary>What the two decisions of the selected conflict are called, and whether "keep both" is offered (self-test).</summary>
+    internal string? KeepMineLabel => KeepMineButton.Content as string;
+    internal string? KeepOtherLabel => KeepOtherButton.Content as string;
+    internal bool OffersKeepBoth => KeepBothButton.IsVisible;
 
     /// <summary>Selects a conflict by its position in the list (self-test).</summary>
     internal void Select(int index) => ConflictList.SelectedIndex = index;
@@ -140,11 +146,14 @@ public partial class SyncConflictsWindow : Window
         KeepOtherButton.Classes.Set("danger", deletedThere);
         KeepBothButton.IsVisible = !conflict.IsDeleteConflict && conflict.Key.Kind == SyncKey.Connection;
 
-        // Edited on both: the fields in conflict. Edit against delete: every field of the version that still exists.
+        // Edited on both: the fields in conflict. Edit against delete: what identifies the version that still
+        // exists, so its filled fields only. Both in the order of the edit dialog, not of the field keys.
         SyncFields? shown = conflict.Local ?? conflict.Remote.Fields;
         IEnumerable<string> fields = conflict.IsDeleteConflict
-            ? shown?.Keys.Where(f => !f.StartsWith(SyncFieldMap.SettingsPrefix, StringComparison.Ordinal)) ?? []
+            ? shown?.Keys.Where(f => !f.StartsWith(SyncFieldMap.SettingsPrefix, StringComparison.Ordinal) && SaysSomething(f, shown.Get(f))) ?? []
             : conflict.Fields;
+        fields = fields.OrderBy(f => Array.IndexOf(FieldOrder, f) is >= 0 and int position ? position : FieldOrder.Length)
+            .ThenBy(f => f, StringComparer.Ordinal);
 
         foreach (string field in fields)
         {
@@ -160,6 +169,20 @@ public partial class SyncConflictsWindow : Window
                 deletedHere ? Strings.Sync_Conflict_DeletedHereNote : string.Format(CultureInfo.CurrentCulture, Strings.Sync_Conflict_DeletedThereNote, other));
         }
     }
+
+    /// <summary>Fields in the order a person reads a connection or group; settings and unknown fields follow.</summary>
+    private static readonly string[] FieldOrder =
+        ["name", "type", "host", "port", "userName", "domain", "credential", "group", "parent", "description", "tags", "notes", "favorite", "sortOrder"];
+
+    /// <summary>False for a field that is empty or at its default: it would not help to recognize the record.</summary>
+    private static bool SaysSomething(string field, string? json) => field switch
+    {
+        "sortOrder" => false,
+        "favorite" => json == "true",
+        "port" => json is not (null or "0" or "null"),
+        "group" or "parent" => true,
+        _ => json is not (null or "null" or "\"\"" or "[]"),
+    };
 
     /// <summary>One field: its name, the value on this PC, the value on the other PC. Null is a deleted side.</summary>
     private void AddRow(string field, string? mine, string? theirs)
@@ -267,6 +290,12 @@ public partial class SyncConflictsWindow : Window
                     : service.Library.PathOf(id);
             case "favorite":
                 return json == "true" ? Strings.Sync_Value_Yes : Strings.Sync_Value_No;
+            case "type":
+                // The name the rest of the app uses ("RDP"); a type of a newer build stays as it was written.
+                string? type = SyncFieldMap.Display(json);
+                return Enum.TryParse(type, out ConnectionType known) && AppHost.Current.Handlers.Supports(known)
+                    ? AppHost.Current.Handlers[known].DisplayName
+                    : type ?? "";
             case "credential":
                 return json == "null" ? Strings.Sync_Value_None : Strings.Sync_Value_CredentialRef;
         }

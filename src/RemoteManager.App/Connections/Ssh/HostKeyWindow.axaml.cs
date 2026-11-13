@@ -26,6 +26,13 @@ public partial class HostKeyWindow : Window
 
     public HostKeyStatus Status { get; private set; }
 
+    /// <summary>Which of the two pictures shows, and how the buttons are weighted (self-test).</summary>
+    internal bool ShowsUnknownPicture => UnknownHeader.IsVisible && FingerprintText.IsVisible && !CompareCard.IsVisible;
+    internal bool ShowsChangedPicture => ChangedHeader.IsVisible && CompareCard.IsVisible && !FingerprintText.IsVisible;
+    internal bool CancelIsDefault => CancelButton.IsDefault && !AcceptButton.IsDefault;
+    internal bool AcceptIsRecommended => AcceptButton.Classes.Contains("accent");
+    internal (string? Known, string? New) ComparedFingerprints => (StoredText.Text, NewText.Text);
+
     /// <summary>Shows the prompt for <paramref name="problem"/>; true when the user trusts the key.</summary>
     public static async Task<bool> AskAsync(Window owner, SshHostKeyException problem)
     {

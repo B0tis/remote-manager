@@ -68,6 +68,8 @@ public partial class RemoteToolsDialog : UserControl
             DefaultButton = FAContentDialogButton.Primary,
         };
         dialog.PrimaryButtonClick += (_, e) => e.Cancel = !content.TrySavePaths();
+        // Three cards: on a window with the room they all show at once.
+        DialogKit.AllowHeight(dialog, 920);
         if (focus is { } type)
             dialog.Opened += (_, _) => content.paths[type].Box.Focus();
 

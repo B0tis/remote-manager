@@ -44,16 +44,17 @@
     </Border>
 
     <Border Classes="card" Padding="16,14">
-      <Grid Classes="facts" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,10,Auto,10,Auto,6,Auto">
+      <!-- The rows keep their distance with margins, so the card closes up when the fingerprint row is hidden. -->
+      <Grid Classes="facts" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
         <TextBlock Classes="factLabel" Text="{x:Static res:Strings.HostKey_Server}" />
         <SelectableTextBlock x:Name="ServerText" Grid.Column="1" Grid.ColumnSpan="2" Classes="mono" TextWrapping="Wrap" VerticalAlignment="Center" />
-        <TextBlock Grid.Row="2" Classes="factLabel" Text="{x:Static res:Strings.HostKey_Algorithm}" />
-        <SelectableTextBlock x:Name="AlgorithmText" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Classes="mono" VerticalAlignment="Center" />
+        <TextBlock Grid.Row="1" Classes="factLabel" Margin="0,10,16,0" Text="{x:Static res:Strings.HostKey_Algorithm}" />
+        <SelectableTextBlock x:Name="AlgorithmText" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="mono" Margin="0,10,0,0" VerticalAlignment="Center" />
 
         <!-- Unknown key: one fingerprint to check against the server. -->
-        <TextBlock x:Name="FingerprintLabel" Grid.Row="4" Classes="factLabel" Text="{x:Static res:Strings.HostKey_Fingerprint}" />
-        <SelectableTextBlock x:Name="FingerprintText" Grid.Row="4" Grid.Column="1" Classes="fingerprint" />
-        <Button x:Name="CopyButton" Grid.Row="4" Grid.Column="2" Classes="icon" Width="28" Height="28" Margin="8,-4,-6,-4"
+        <TextBlock x:Name="FingerprintLabel" Grid.Row="2" Classes="factLabel" Margin="0,10,16,0" Text="{x:Static res:Strings.HostKey_Fingerprint}" />
+        <SelectableTextBlock x:Name="FingerprintText" Grid.Row="2" Grid.Column="1" Classes="fingerprint" Margin="0,10,0,0" />
+        <Button x:Name="CopyButton" Grid.Row="2" Grid.Column="2" Classes="icon" Width="28" Height="28" Margin="8,6,-6,-4"
                 ToolTip.Tip="{x:Static res:Strings.HostKey_CopyFingerprint}">
           <ui:FASymbolIcon Symbol="Copy" FontSize="13" Opacity="0.75" />
         </Button>

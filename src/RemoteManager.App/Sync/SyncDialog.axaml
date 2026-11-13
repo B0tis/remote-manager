@@ -16,6 +16,43 @@
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
+    <!--
+      On / off as an instrument of the state row: a switch as tall as the readings beside it (FluentAvalonia's
+      ToggleSwitch reserves room for a header and does not fit a row of 22 px).
+    -->
+    <Style Selector="ToggleButton.switch">
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <StackPanel Orientation="Horizontal" Spacing="9" Background="Transparent">
+            <Border x:Name="Track" Width="38" Height="20" CornerRadius="10" BorderThickness="1" VerticalAlignment="Center"
+                    Background="{DynamicResource RmInsetBrush}" BorderBrush="{DynamicResource RmStrokeStrongBrush}">
+              <Ellipse x:Name="Knob" Width="12" Height="12" Margin="3,0" HorizontalAlignment="Left"
+                       Fill="{DynamicResource RmTextSecondaryBrush}" />
+            </Border>
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+          </StackPanel>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="ToggleButton.switch:pointerover /template/ Border#Track">
+      <Setter Property="BorderBrush" Value="{DynamicResource RmTextTertiaryBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.switch:checked /template/ Border#Track">
+      <Setter Property="Background" Value="{DynamicResource RmAccentBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RmAccentBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.switch:checked /template/ Ellipse#Knob">
+      <Setter Property="Fill" Value="{DynamicResource RmOnAccentBrush}" />
+      <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+    <Style Selector="ToggleButton.switch TextBlock.on, ToggleButton.switch:checked TextBlock.off">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="ToggleButton.switch:checked TextBlock.on">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
     <Style Selector="Border.divider">
       <Setter Property="Width" Value="1" />
       <Setter Property="Background" Value="{DynamicResource RmStrokeBrush}" />
@@ -32,10 +69,13 @@
       <Border Classes="card">
         <Grid ColumnDefinitions="*,Auto,1.2*,Auto,*">
           <StackPanel Classes="gauge">
-            <TextBlock Classes="caption" Text="{x:Static res:Strings.Sync_Title}" />
-            <ToggleSwitch x:Name="EnabledSwitch" MinWidth="0" MinHeight="0" Height="22" Padding="0"
-                          FontFamily="{StaticResource RmDisplayFont}" FontSize="15" FontWeight="SemiBold"
-                          OnContent="{x:Static res:Strings.Sync_On}" OffContent="{x:Static res:Strings.Sync_Off}" />
+            <TextBlock Classes="caption" Text="{x:Static res:Strings.Sync_ThisPcLabel}" />
+            <ToggleButton x:Name="EnabledSwitch" Classes="switch" Height="22">
+              <Panel>
+                <TextBlock Classes="reading on" Text="{x:Static res:Strings.Sync_On}" />
+                <TextBlock Classes="reading off" Text="{x:Static res:Strings.Sync_Off}" />
+              </Panel>
+            </ToggleButton>
           </StackPanel>
           <Border Grid.Column="1" Classes="divider" />
           <StackPanel Grid.Column="2" Classes="gauge">
@@ -75,7 +115,8 @@
         </Button>
         <TextBlock Grid.Column="2" Classes="hint" VerticalAlignment="Center" Text="{x:Static res:Strings.Sync_NowHint}" />
       </Grid>
-      <ui:FAInfoBar x:Name="ResultBar" IsOpen="False" IsClosable="False" />
+      <!-- Hidden while closed: a closed bar would keep its place in the spacing. -->
+      <ui:FAInfoBar x:Name="ResultBar" IsOpen="False" IsClosable="False" IsVisible="{Binding $self.IsOpen}" />
     </StackPanel>
 
     <!-- The scroll bar runs in the dialog's padding, so the fields end on the same edge as the rows above and below. -->
@@ -95,7 +136,13 @@
         <StackPanel>
           <Grid ColumnDefinitions="*,12,*">
             <StackPanel>
-              <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Sync_Passphrase}" />
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Sync_Passphrase}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,0,1,5">
+                  <Ellipse x:Name="PassphraseLamp" Classes="lamp idle" Width="7" Height="7" />
+                  <TextBlock x:Name="PassphraseState" Classes="caption" />
+                </StackPanel>
+              </Grid>
               <TextBox x:Name="PassphraseBox" PasswordChar="●" Classes="revealPasswordButton" />
             </StackPanel>
             <StackPanel Grid.Column="2">

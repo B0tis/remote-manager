@@ -100,18 +100,22 @@ internal static class DialogKit
         }, DispatcherPriority.Loaded);
     }
 
+    /// <summary>Distance a dialog taller than FluentAvalonia's limit keeps to the window's edge.</summary>
+    private const double WindowMargin = 24;
+
     /// <summary>
     /// Keeps a tall dialog content inside the window: its height follows the window, so a part of it can scroll
     /// while the rest (status, actions) stays in view. Without this the whole dialog scrolls and a scrolling part
-    /// inside it gets a second scroll bar.
+    /// inside it gets a second scroll bar. <paramref name="height"/> is the dialog's limit when it was raised with
+    /// <see cref="AllowHeight"/>.
     /// </summary>
-    public static void FitToWindow(Control content)
+    public static void FitToWindow(Control content, double height = DialogMaxHeight)
     {
         TopLevel? top = null;
         void Update(object? sender, SizeChangedEventArgs? e)
         {
             if (top is not null)
-                content.MaxHeight = Math.Max(240, Math.Min(DialogMaxHeight, top.ClientSize.Height) - DialogChrome);
+                content.MaxHeight = Math.Max(240, Math.Min(FrameLimit(top, height), top.ClientSize.Height) - DialogChrome);
         }
 
         content.AttachedToVisualTree += (_, _) =>
@@ -129,6 +133,29 @@ internal static class DialogKit
             top = null;
         };
     }
+
+    /// <summary>
+    /// Lets a dialog with much content grow up to <paramref name="height"/> while the window has the room, instead
+    /// of scrolling at FluentAvalonia's fixed limit. On a low window it keeps a margin to the window's edge.
+    /// </summary>
+    public static void AllowHeight(FAContentDialog dialog, double height)
+    {
+        dialog.Opened += (_, _) =>
+        {
+            if (TopLevel.GetTopLevel(dialog) is not { } top
+                || dialog.GetVisualDescendants().OfType<Border>().FirstOrDefault(b => b.Name == "BackgroundElement" && b.TemplatedParent == dialog) is not { } frame)
+                return;
+
+            void Update(object? sender, SizeChangedEventArgs? e) => frame.MaxHeight = FrameLimit(top, height);
+            top.SizeChanged += Update;
+            dialog.Closed += (_, _) => top.SizeChanged -= Update;
+            Update(null, null);
+        };
+    }
+
+    /// <summary>How tall a dialog that may grow to <paramref name="height"/> gets in this window.</summary>
+    private static double FrameLimit(TopLevel top, double height) =>
+        Math.Max(DialogMaxHeight, Math.Min(height, top.ClientSize.Height - 2 * WindowMargin));
 
     /// <summary>Switches a state lamp (Ellipse.lamp): "ok" (green), "fault" (red), or "idle" (dark).</summary>
     public static void SetLamp(Ellipse lamp, string state)

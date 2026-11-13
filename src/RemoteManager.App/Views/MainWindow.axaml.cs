@@ -723,9 +723,10 @@ public partial class MainWindow : Window, IConnectionHost
         if (!one)
         {
             string names = string.Join(", ", connections.Take(namesShown).Select(c => c.Name));
-            more.Add(DialogKit.Note(connections.Count > namesShown
+            // "und 1 weitere" would hide a name that takes no more room than the words do.
+            more.Add(DialogKit.Note(connections.Count > namesShown + 1
                 ? string.Format(CultureInfo.CurrentCulture, Strings.Delete_AndMore, names, connections.Count - namesShown)
-                : names));
+                : string.Join(", ", connections.Select(c => c.Name))));
         }
 
         int open = connections.Count(c => sessionWindows.Any(w => ((ISessionWindow)w).Connection == c));

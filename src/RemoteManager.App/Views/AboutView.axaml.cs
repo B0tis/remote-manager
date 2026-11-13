@@ -25,25 +25,15 @@ public partial class AboutView : UserControl
         BuildTag.IsVisible = AppVersion.Commit is not null;
         BuildText.Text = string.Format(CultureInfo.CurrentCulture, Strings.About_Build, AppVersion.Commit);
 
-        string? installed = AppUpdates.InstallFolder;
-        DataText.Text = AppPaths.Root;
-        InstallText.Text = installed ?? Strings.About_NotInstalledShort;
-        if (installed is null)
-        {
-            InstallText.Classes.Remove("mono");
-            InstallText.Classes.Add("muted");
-        }
-
-        NotInstalledNote.IsVisible = installed is null;
-        CopyInstallButton.IsVisible = OpenInstallButton.IsVisible = installed is not null;
+        // The program folder is where this copy runs from, installed by Setup or not.
+        string program = AppUpdates.InstallFolder ?? AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
+        DataText.Text = Breakable(AppPaths.Root);
+        InstallText.Text = Breakable(program);
+        InstallHint.IsVisible = AppUpdates.InstallFolder is null;
         CopyDataButton.Click += async (_, _) => await CopyAsync(AppPaths.Root);
         OpenDataButton.Click += (_, _) => MissingToolDialog.OpenUrl(AppPaths.Root);
-        CopyInstallButton.Click += async (_, _) => await CopyAsync(installed);
-        OpenInstallButton.Click += (_, _) =>
-        {
-            if (installed is not null)
-                MissingToolDialog.OpenUrl(installed);
-        };
+        CopyInstallButton.Click += async (_, _) => await CopyAsync(program);
+        OpenInstallButton.Click += (_, _) => MissingToolDialog.OpenUrl(program);
 
         SourceBox.Text = AppUpdates.SourceText;
         SourceBox.PlaceholderText = UpdateSource.DefaultRepository;
@@ -170,9 +160,15 @@ public partial class AboutView : UserControl
         SourceNote.IsVisible = true;
     }
 
-    private async Task CopyAsync(string? path)
+    private async Task CopyAsync(string path)
     {
-        if (path is not null && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
             await clipboard.SetTextAsync(path);
     }
+
+    /// <summary>
+    /// A path that may wrap after every folder (zero-width spaces). Without them a long path breaks wherever the
+    /// text engine finds a hyphen. Only for display: "Pfad kopieren" copies the real path.
+    /// </summary>
+    private static string Breakable(string path) => path.Replace("\\", "\\\u200B", StringComparison.Ordinal);
 }

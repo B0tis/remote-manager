@@ -27,6 +27,7 @@ public static class MissingToolDialog
             Content = new TextBlock { Text = info.DownloadUrl, Classes = { "mono" }, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
             NavigateUri = new Uri(info.DownloadUrl),
             Padding = new Avalonia.Thickness(0),
+            MinHeight = 0,
             HorizontalAlignment = HorizontalAlignment.Left,
         };
         var label = new TextBlock { Text = Strings.RemoteTool_Missing_DownloadLabel, Classes = { "fieldLabel" } };

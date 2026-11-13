@@ -17,6 +17,9 @@ public partial class SyncDialog : UserControl
 {
     public const int MinPassphraseLength = 10;
 
+    /// <summary>With the choice of the first sync the form is taller than a dialog usually gets; it may use the window's room.</summary>
+    private const double MaxDialogHeight = 860;
+
     private readonly SyncService service;
 
     public SyncDialog() : this(AppHost.Current.Sync)
@@ -40,7 +43,7 @@ public partial class SyncDialog : UserControl
         };
         service.StateChanged += OnServiceStateChanged;
         DetachedFromVisualTree += (_, _) => service.StateChanged -= OnServiceStateChanged;
-        DialogKit.FitToWindow(this);
+        DialogKit.FitToWindow(this, MaxDialogHeight);
         UpdateState();
     }
 
@@ -49,6 +52,12 @@ public partial class SyncDialog : UserControl
     public static SyncDialog? OpenContent { get; private set; }
 
     public FAInfoBar Result => ResultBar;
+
+    /// <summary>True while the state row counts open conflicts and the note offers to decide them (self-test).</summary>
+    internal bool ShowsConflicts => ConflictsNote.IsVisible && ConflictsLamp.IsVisible && ConflictsButton.IsEffectivelyVisible;
+
+    /// <summary>True while the choice between merging and replacing shows (self-test).</summary>
+    internal bool ShowsJoinChoice => JoinPanel.IsVisible && JoinMerge.IsChecked == true;
 
     public static async Task ShowAsync(SyncService service)
     {
@@ -61,6 +70,7 @@ public partial class SyncDialog : UserControl
             CloseButtonText = Strings.Action_Cancel,
             DefaultButton = FAContentDialogButton.Primary,
         };
+        DialogKit.AllowHeight(dialog, MaxDialogHeight);
         dialog.PrimaryButtonClick += async (_, e) =>
         {
             var deferral = e.GetDeferral();
@@ -165,6 +175,8 @@ public partial class SyncDialog : UserControl
         PassphraseBox.PlaceholderText = service.HasPassphrase
             ? Strings.Sync_PassphraseStored
             : string.Format(CultureInfo.CurrentCulture, Strings.Sync_PassphrasePlaceholder, MinPassphraseLength);
+        PassphraseState.Text = service.HasPassphrase ? Strings.Sync_PassphraseStoredShort : Strings.Sync_PassphraseNotStored;
+        DialogKit.SetLamp(PassphraseLamp, service.HasPassphrase ? "ok" : "idle");
         JoinPanel.IsVisible = !service.HasSynced;
         SyncNowButton.IsEnabled = !service.IsRunning;
 

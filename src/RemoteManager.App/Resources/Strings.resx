@@ -1716,7 +1716,7 @@
     <value>Dieser PC (gelöscht)</value>
   </data>
   <data name="Sync_Conflicts_None" xml:space="preserve">
-    <value>Keine offenen Konflikte.</value>
+    <value>Keine offenen Konflikte</value>
   </data>
   <data name="Sync_Conflicts_Title" xml:space="preserve">
     <value>Sync-Konflikte</value>
@@ -1878,7 +1878,7 @@
     <value>Passphrase wiederholen</value>
   </data>
   <data name="Sync_PassphraseStored" xml:space="preserve">
-    <value>Gespeichert. Leer lassen, um sie zu behalten</value>
+    <value>Leer lassen, um sie zu behalten</value>
   </data>
   <data name="Sync_PickFolder" xml:space="preserve">
     <value>Ordner wählen …</value>
@@ -2014,6 +2014,15 @@
   </data>
   <data name="Sync_NowHint" xml:space="preserve">
     <value>Speichert die Einstellungen und gleicht sofort ab.</value>
+  </data>
+  <data name="Sync_PassphraseStoredShort" xml:space="preserve">
+    <value>Gespeichert</value>
+  </data>
+  <data name="Sync_PassphraseNotStored" xml:space="preserve">
+    <value>Noch keine gespeichert</value>
+  </data>
+  <data name="Sync_ThisPcLabel" xml:space="preserve">
+    <value>Auf diesem PC</value>
   </data>
   <data name="TagRemove_Action" xml:space="preserve">
     <value>Entfernen</value>

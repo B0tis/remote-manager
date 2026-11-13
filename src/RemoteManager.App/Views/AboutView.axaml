@@ -8,7 +8,7 @@
     <Style Selector="Grid.folders > TextBlock.factLabel">
       <Setter Property="Margin" Value="0,7,12,0" />
     </Style>
-    <Style Selector="Grid.folders SelectableTextBlock.mono">
+    <Style Selector="Grid.folders TextBlock.mono">
       <Setter Property="TextWrapping" Value="Wrap" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Margin" Value="0,6,8,6" />
@@ -38,9 +38,9 @@
 
     <!-- Where things are: the data folder (kept by updates) and the program folder. -->
     <Border Classes="card" Padding="14,8,8,10">
-      <Grid Classes="folders" ColumnDefinitions="78,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+      <Grid Classes="folders" ColumnDefinitions="78,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
         <TextBlock Classes="factLabel" Text="{x:Static res:Strings.About_DataLabel}" />
-        <SelectableTextBlock x:Name="DataText" Grid.Column="1" Classes="mono" />
+        <TextBlock x:Name="DataText" Grid.Column="1" Classes="mono" />
         <Button x:Name="CopyDataButton" Grid.Column="2" Classes="icon" ToolTip.Tip="{x:Static res:Strings.About_CopyPath}">
           <ui:FASymbolIcon Symbol="Copy" FontSize="13" Opacity="0.75" />
         </Button>
@@ -51,19 +51,17 @@
                    Text="{x:Static res:Strings.About_DataHint}" />
 
         <TextBlock Grid.Row="2" Classes="factLabel" Text="{x:Static res:Strings.About_InstallLabel}" />
-        <SelectableTextBlock x:Name="InstallText" Grid.Row="2" Grid.Column="1" Classes="mono" />
+        <TextBlock x:Name="InstallText" Grid.Row="2" Grid.Column="1" Classes="mono" />
         <Button x:Name="CopyInstallButton" Grid.Row="2" Grid.Column="2" Classes="icon" ToolTip.Tip="{x:Static res:Strings.About_CopyPath}">
           <ui:FASymbolIcon Symbol="Copy" FontSize="13" Opacity="0.75" />
         </Button>
         <Button x:Name="OpenInstallButton" Grid.Row="2" Grid.Column="3" Classes="icon" ToolTip.Tip="{x:Static res:Strings.About_OpenFolder}">
           <ui:FASymbolIcon Symbol="OpenFolder" FontSize="14" Opacity="0.75" />
         </Button>
+        <!-- A copy that Setup did not install cannot update itself. -->
+        <TextBlock x:Name="InstallHint" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Classes="hint" Margin="0,0,8,4"
+                   Text="{x:Static res:Strings.About_NotInstalled}" IsVisible="False" />
       </Grid>
-    </Border>
-
-    <!-- A copy that Setup did not install cannot update itself. -->
-    <Border x:Name="NotInstalledNote" Classes="note" IsVisible="False">
-      <TextBlock Classes="hint" Text="{x:Static res:Strings.About_NotInstalled}" />
     </Border>
 
     <!-- Update source and the optional token for GitHub. -->

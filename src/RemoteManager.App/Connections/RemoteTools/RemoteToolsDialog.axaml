@@ -13,7 +13,7 @@
     </Style>
   </UserControl.Styles>
 
-  <!-- Three topics, a card each. The dialog scrolls as a whole when the window is low. -->
+  <!-- Three topics, a card each. They show at once on a window with the room (DialogKit.AllowHeight); on a low window the dialog scrolls. -->
   <StackPanel Spacing="12">
     <!-- Tool paths: detected automatically; a path set here wins. The lamp shows whether the tool can start. -->
     <Border Classes="card topic">
@@ -47,7 +47,8 @@
             <TextBlock Text="{x:Static res:Strings.RemoteTool_Sync_Now}" />
           </StackPanel>
         </Button>
-        <ui:FAInfoBar x:Name="SyncResult" IsOpen="False" IsClosable="False" Margin="0,10,0,0" />
+        <!-- Hidden while closed: a closed bar would keep its margin. -->
+        <ui:FAInfoBar x:Name="SyncResult" IsOpen="False" IsClosable="False" Margin="0,10,0,0" IsVisible="{Binding $self.IsOpen}" />
       </StackPanel>
     </Border>
 
@@ -62,7 +63,7 @@
             <TextBlock Text="{x:Static res:Strings.RemoteTool_Csv_Import}" />
           </StackPanel>
         </Button>
-        <ui:FAInfoBar x:Name="CsvResult" IsOpen="False" IsClosable="False" Margin="0,10,0,0" />
+        <ui:FAInfoBar x:Name="CsvResult" IsOpen="False" IsClosable="False" Margin="0,10,0,0" IsVisible="{Binding $self.IsOpen}" />
       </StackPanel>
     </Border>
   </StackPanel>

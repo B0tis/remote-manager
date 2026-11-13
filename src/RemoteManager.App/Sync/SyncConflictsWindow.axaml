@@ -8,7 +8,8 @@
         Title="{x:Static res:Strings.Sync_Conflicts_Title}"
         Background="{DynamicResource RmPanelBrush}">
   <Window.Styles>
-    <Style Selector="ListBox#ConflictList ListBoxItem">
+    <!-- With the class in the selector: the shared "rows" style sets a padding too, and a selector with a class outranks one without. -->
+    <Style Selector="ListBox.rows#ConflictList ListBoxItem">
       <Setter Property="Padding" Value="12,9" />
       <Setter Property="Margin" Value="0,1" />
     </Style>
@@ -26,7 +27,7 @@
 
   <!-- A separate window, not an in-window dialog: it opens from the sync dialog, and both versions need room side by side. -->
   <Panel>
-    <Grid x:Name="Workspace" ColumnDefinitions="290,*">
+    <Grid x:Name="Workspace" ColumnDefinitions="272,*">
       <!-- What is open: on the base surface, like the sidebar of the main window. -->
       <Border Background="{DynamicResource RmBaseBrush}" BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="0,0,1,0">
         <DockPanel>
@@ -57,7 +58,7 @@
           <DockPanel>
             <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="0,0,0,1"
                     Background="{DynamicResource RmInsetBrush}">
-              <Grid ColumnDefinitions="160,*,*">
+              <Grid ColumnDefinitions="148,*,*">
                 <StackPanel Classes="version">
                   <TextBlock Classes="section" Text="{x:Static res:Strings.Sync_Conflict_Field}" VerticalAlignment="Top"
                              Foreground="{DynamicResource RmTextSecondaryBrush}" />
@@ -73,13 +74,13 @@
               </Grid>
             </Border>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-              <Grid x:Name="Comparison" ColumnDefinitions="160,*,*" />
+              <Grid x:Name="Comparison" ColumnDefinitions="148,*,*" />
             </ScrollViewer>
           </DockPanel>
         </Border>
 
         <!-- The same columns as the table (the card's frame is 1 px), so each decision sits under its version. -->
-        <Grid x:Name="Actions" Grid.Row="2" ColumnDefinitions="160,*,*" Margin="1,14,1,0">
+        <Grid x:Name="Actions" Grid.Row="2" ColumnDefinitions="148,*,*" Margin="1,14,1,0">
           <Button x:Name="KeepBothButton" Classes="link" Margin="6,0,0,0" HorizontalAlignment="Left" Height="NaN"
                   Content="{x:Static res:Strings.Sync_KeepBoth}" ToolTip.Tip="{x:Static res:Strings.Sync_KeepBothTip}" />
           <Button x:Name="KeepMineButton" Grid.Column="1" Classes="accent" Content="{x:Static res:Strings.Sync_KeepMine}" />
