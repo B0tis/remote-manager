@@ -3,43 +3,67 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:res="using:RemoteManager.App.Resources"
              x:Class="RemoteManager.App.Connections.RemoteTools.RemoteToolsDialog"
-             Width="480">
-  <ScrollViewer MaxHeight="620" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Spacing="10" Margin="0,0,14,0">
-      <!-- Tool paths: detected automatically; a path set here wins. -->
-      <TextBlock Text="{x:Static res:Strings.RemoteTool_Paths_Title}" FontWeight="SemiBold" />
-      <TextBlock Text="{x:Static res:Strings.RemoteTool_Paths_Hint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
-      <StackPanel x:Name="PathRows" Spacing="10" />
+             Width="500">
+  <UserControl.Styles>
+    <Style Selector="Border.topic">
+      <Setter Property="Padding" Value="16,14,16,16" />
+    </Style>
+    <Style Selector="Border.topic TextBlock.intro">
+      <Setter Property="Margin" Value="0,4,0,12" />
+    </Style>
+  </UserControl.Styles>
 
-      <!-- TeamViewer Web API -->
-      <TextBlock Text="{x:Static res:Strings.RemoteTool_Sync_Title}" FontWeight="SemiBold" Margin="0,10,0,0" />
-      <TextBlock Text="{x:Static res:Strings.RemoteTool_Sync_Hint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
-      <Grid ColumnDefinitions="*,8,Auto,8,Auto">
-        <TextBox x:Name="TokenBox" PasswordChar="●" Classes="revealPasswordButton" />
-        <Button x:Name="SaveTokenButton" Grid.Column="2" Content="{x:Static res:Strings.RemoteTool_Sync_SaveToken}" />
-        <Button x:Name="DeleteTokenButton" Grid.Column="4" Content="{x:Static res:Strings.Action_Remove}" />
-      </Grid>
-      <Grid ColumnDefinitions="Auto,8,*">
-        <Button x:Name="SyncButton" Classes="accent">
+  <!-- Three topics, a card each. The dialog scrolls as a whole when the window is low. -->
+  <StackPanel Spacing="12">
+    <!-- Tool paths: detected automatically; a path set here wins. The lamp shows whether the tool can start. -->
+    <Border Classes="card topic">
+      <StackPanel>
+        <TextBlock Classes="section" Text="{x:Static res:Strings.RemoteTool_Paths_Title}" />
+        <TextBlock Classes="hint intro" Text="{x:Static res:Strings.RemoteTool_Paths_Hint}" />
+        <StackPanel x:Name="PathRows" Spacing="14" />
+      </StackPanel>
+    </Border>
+
+    <!-- TeamViewer Web API -->
+    <Border Classes="card topic">
+      <StackPanel>
+        <TextBlock Classes="section" Text="{x:Static res:Strings.RemoteTool_Sync_Title}" />
+        <TextBlock Classes="hint intro" Text="{x:Static res:Strings.RemoteTool_Sync_Hint}" />
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.RemoteTool_Token_Label}" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,0,1,5">
+            <Ellipse x:Name="TokenLamp" Classes="lamp idle" Width="7" Height="7" />
+            <TextBlock x:Name="TokenState" Classes="caption" />
+          </StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="*,8,Auto,8,Auto">
+          <TextBox x:Name="TokenBox" PasswordChar="●" Classes="revealPasswordButton" />
+          <Button x:Name="SaveTokenButton" Grid.Column="2" Content="{x:Static res:Strings.RemoteTool_Sync_SaveToken}" />
+          <Button x:Name="DeleteTokenButton" Grid.Column="4" Content="{x:Static res:Strings.Action_Remove}" />
+        </Grid>
+        <Button x:Name="SyncButton" Margin="0,12,0,0">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <ui:FASymbolIcon Symbol="Sync" FontSize="14" />
             <TextBlock Text="{x:Static res:Strings.RemoteTool_Sync_Now}" />
           </StackPanel>
         </Button>
-        <TextBlock x:Name="TokenState" Grid.Column="2" VerticalAlignment="Center" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
-      </Grid>
-      <ui:FAInfoBar x:Name="SyncResult" IsOpen="False" IsClosable="False" />
+        <ui:FAInfoBar x:Name="SyncResult" IsOpen="False" IsClosable="False" Margin="0,10,0,0" />
+      </StackPanel>
+    </Border>
 
-      <!-- AnyDesk CSV -->
-      <TextBlock Text="{x:Static res:Strings.RemoteTool_Csv_Title}" FontWeight="SemiBold" Margin="0,10,0,0" />
-      <TextBlock Text="{x:Static res:Strings.RemoteTool_Csv_Hint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
-      <Button x:Name="CsvButton">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <ui:FASymbolIcon Symbol="Import" FontSize="14" />
-          <TextBlock Text="{x:Static res:Strings.RemoteTool_Csv_Import}" />
-        </StackPanel>
-      </Button>
-      <ui:FAInfoBar x:Name="CsvResult" IsOpen="False" IsClosable="False" />
-    </StackPanel>
-  </ScrollViewer>
+    <!-- AnyDesk CSV -->
+    <Border Classes="card topic">
+      <StackPanel>
+        <TextBlock Classes="section" Text="{x:Static res:Strings.RemoteTool_Csv_Title}" />
+        <TextBlock Classes="hint intro" Text="{x:Static res:Strings.RemoteTool_Csv_Hint}" />
+        <Button x:Name="CsvButton">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <ui:FASymbolIcon Symbol="Import" FontSize="14" />
+            <TextBlock Text="{x:Static res:Strings.RemoteTool_Csv_Import}" />
+          </StackPanel>
+        </Button>
+        <ui:FAInfoBar x:Name="CsvResult" IsOpen="False" IsClosable="False" Margin="0,10,0,0" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
 </UserControl>

@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.RemoteTools;
 
@@ -20,35 +21,23 @@ public static class MissingToolDialog
     public static async void Show(ConnectionType type, IConnectionHost host)
     {
         RemoteToolInfo info = RemoteToolLocator.InfoFor(type);
+        // The address "Herunterladen" opens, so the user sees where the browser will go.
         var link = new HyperlinkButton
         {
-            Content = info.DownloadUrl,
+            Content = new TextBlock { Text = info.DownloadUrl, Classes = { "mono" }, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
             NavigateUri = new Uri(info.DownloadUrl),
             Padding = new Avalonia.Thickness(0),
             HorizontalAlignment = HorizontalAlignment.Left,
         };
-        var dialog = new FAContentDialog
-        {
-            Title = string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Missing_Title, info.ProductName),
-            Content = new StackPanel
-            {
-                Spacing = 10,
-                MaxWidth = 440,
-                Children =
-                {
-                    new TextBlock
-                    {
-                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                        Text = string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Missing_Message, info.ProductName, info.ExeName),
-                    },
-                    link,
-                },
-            },
-            PrimaryButtonText = Strings.RemoteTool_Missing_SetPath,
-            SecondaryButtonText = Strings.RemoteTool_Missing_Download,
-            CloseButtonText = Strings.Action_Cancel,
-            DefaultButton = FAContentDialogButton.Primary,
-        };
+        var label = new TextBlock { Text = Strings.RemoteTool_Missing_DownloadLabel, Classes = { "fieldLabel" } };
+
+        FAContentDialog dialog = DialogKit.Question(
+            string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Missing_Title, info.ProductName),
+            string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Missing_Message, info.ProductName, info.ExeName),
+            Strings.RemoteTool_Missing_SetPath,
+            destructive: false,
+            DialogKit.Note(new StackPanel { Children = { label, link } }));
+        dialog.SecondaryButtonText = Strings.RemoteTool_Missing_Download;
 
         Current = dialog;
         FAContentDialogResult result = await dialog.ShowAsync();

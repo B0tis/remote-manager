@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Controls;
-using Avalonia.Media;
 using FluentAvalonia.UI.Controls;
+using RemoteManager.App.Connections.RemoteTools;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Updates;
 using RemoteManager.Core;
@@ -11,21 +11,38 @@ using RemoteManager.Core.Updates;
 namespace RemoteManager.App.Views;
 
 /// <summary>
-/// "Über Remote-Manager": version and build, install and data folder, and the update settings (source, GitHub
-/// token in the Credential Manager). "Speichern und suchen" saves and runs the check in the overview.
+/// "Über Remote-Manager": logo, name, version and build, the data and program folders (copy the path, open the
+/// folder), and the update settings (source, GitHub token in the Credential Manager). "Jetzt suchen" saves and
+/// runs the check in the overview.
 /// </summary>
 public partial class AboutView : UserControl
 {
     public AboutView()
     {
         InitializeComponent();
-        VersionText.Text = AppVersion.Commit is { } commit
-            ? string.Format(CultureInfo.CurrentCulture, Strings.About_VersionBuild, AppVersion.Current, commit)
-            : string.Format(CultureInfo.CurrentCulture, Strings.About_Version, AppVersion.Current);
-        InstallText.Text = AppUpdates.InstallFolder is { } folder
-            ? string.Format(CultureInfo.CurrentCulture, Strings.About_Installed, folder)
-            : Strings.About_NotInstalled;
-        DataText.Text = string.Format(CultureInfo.CurrentCulture, Strings.About_Data, AppPaths.Root);
+        VersionText.Text = string.Format(CultureInfo.CurrentCulture, Strings.About_Version, AppVersion.Current);
+        BuildTag.IsVisible = AppVersion.Commit is not null;
+        BuildText.Text = string.Format(CultureInfo.CurrentCulture, Strings.About_Build, AppVersion.Commit);
+
+        string? installed = AppUpdates.InstallFolder;
+        DataText.Text = AppPaths.Root;
+        InstallText.Text = installed ?? Strings.About_NotInstalledShort;
+        if (installed is null)
+        {
+            InstallText.Classes.Remove("mono");
+            InstallText.Classes.Add("muted");
+        }
+
+        NotInstalledNote.IsVisible = installed is null;
+        CopyInstallButton.IsVisible = OpenInstallButton.IsVisible = installed is not null;
+        CopyDataButton.Click += async (_, _) => await CopyAsync(AppPaths.Root);
+        OpenDataButton.Click += (_, _) => MissingToolDialog.OpenUrl(AppPaths.Root);
+        CopyInstallButton.Click += async (_, _) => await CopyAsync(installed);
+        OpenInstallButton.Click += (_, _) =>
+        {
+            if (installed is not null)
+                MissingToolDialog.OpenUrl(installed);
+        };
 
         SourceBox.Text = AppUpdates.SourceText;
         SourceBox.PlaceholderText = UpdateSource.DefaultRepository;
@@ -52,7 +69,7 @@ public partial class AboutView : UserControl
     public static AboutView? OpenContent { get; private set; }
 
     public string VersionLabel => VersionText.Text ?? "";
-    public string? SourceError => SourceMessage.IsVisible ? SourceMessage.Text : null;
+    public string? SourceError => SourceNote.IsVisible ? SourceMessage.Text : null;
 
     public static async Task ShowAsync(MainWindow window)
     {
@@ -99,10 +116,15 @@ public partial class AboutView : UserControl
     /// <summary>Saves source and token; false (with a message under the box) when the source is not valid.</summary>
     internal async Task<bool> TrySaveAsync()
     {
-        if (!AppUpdates.SourceFromEnvironment && !AppUpdates.TrySetSource(SourceBox.Text))
+        if (!AppUpdates.SourceFromEnvironment)
         {
-            ShowSourceMessage(Strings.About_SourceInvalid, error: true);
-            return false;
+            if (!AppUpdates.TrySetSource(SourceBox.Text))
+            {
+                ShowSourceMessage(Strings.About_SourceInvalid, error: true);
+                return false;
+            }
+
+            SourceNote.IsVisible = false;
         }
 
         if (TokenBox.Text is { Length: > 0 } token && !string.IsNullOrWhiteSpace(token))
@@ -120,6 +142,7 @@ public partial class AboutView : UserControl
     {
         bool stored = await AppUpdates.HasTokenAsync();
         TokenState.Text = stored ? Strings.About_TokenStored : Strings.About_TokenNone;
+        DialogKit.SetLamp(TokenLamp, stored ? "ok" : "idle");
         DeleteTokenButton.IsEnabled = stored;
     }
 
@@ -128,11 +151,13 @@ public partial class AboutView : UserControl
         try
         {
             await action();
+            TokenNote.IsVisible = false;
             return true;
         }
         catch (Win32Exception ex)
         {
-            TokenState.Text = string.Format(CultureInfo.CurrentCulture, Strings.About_TokenSaveFailed, ex.Message);
+            TokenError.Text = string.Format(CultureInfo.CurrentCulture, Strings.About_TokenSaveFailed, ex.Message);
+            TokenNote.IsVisible = true;
             return false;
         }
     }
@@ -140,9 +165,13 @@ public partial class AboutView : UserControl
     private void ShowSourceMessage(string text, bool error)
     {
         SourceMessage.Text = text;
-        SourceMessage.Opacity = error ? 1 : 0.7;
-        if (error && this.TryFindResource("SystemFillColorCriticalBrush", ActualThemeVariant, out object? brush) && brush is IBrush critical)
-            SourceMessage.Foreground = critical;
-        SourceMessage.IsVisible = true;
+        SourceNote.Classes.Set("error", error);
+        SourceNote.IsVisible = true;
+    }
+
+    private async Task CopyAsync(string? path)
+    {
+        if (path is not null && TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+            await clipboard.SetTextAsync(path);
     }
 }

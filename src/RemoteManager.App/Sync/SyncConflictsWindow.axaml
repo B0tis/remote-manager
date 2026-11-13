@@ -3,31 +3,100 @@
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:res="using:RemoteManager.App.Resources"
         x:Class="RemoteManager.App.Sync.SyncConflictsWindow"
-        Width="940" Height="560" MinWidth="720" MinHeight="400"
+        Width="980" Height="580" MinWidth="780" MinHeight="420"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Title="{x:Static res:Strings.Sync_Conflicts_Title}"
-        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
-  <!-- A separate window, not an in-window dialog: it opens from the sync dialog, and both versions need room side by side. -->
-  <Grid ColumnDefinitions="290,*" Margin="20">
-    <Border BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6">
-      <ListBox x:Name="ConflictList" Background="Transparent" />
-    </Border>
+        Background="{DynamicResource RmPanelBrush}">
+  <Window.Styles>
+    <Style Selector="ListBox#ConflictList ListBoxItem">
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="Margin" Value="0,1" />
+    </Style>
+    <!-- The two versions: a column each, with the decision right below it. -->
+    <Style Selector="StackPanel.version">
+      <Setter Property="Margin" Value="14,11,14,10" />
+      <Setter Property="Spacing" Value="2" />
+    </Style>
+    <Style Selector="Grid#Actions > Button">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Margin" Value="14,0,0,0" />
+      <Setter Property="Height" Value="34" />
+    </Style>
+  </Window.Styles>
 
-    <Grid Grid.Column="1" Margin="20,0,0,0" RowDefinitions="Auto,Auto,*,Auto">
-      <TextBlock x:Name="Heading" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
-      <TextBlock x:Name="Explanation" Grid.Row="1" Margin="0,6,0,12" Opacity="0.75" TextWrapping="Wrap" />
-      <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
-        <Grid x:Name="Comparison" ColumnDefinitions="150,*,*" />
-      </ScrollViewer>
-      <StackPanel x:Name="Actions" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
-        <Button x:Name="KeepBothButton" Content="{x:Static res:Strings.Sync_KeepBoth}" ToolTip.Tip="{x:Static res:Strings.Sync_KeepBothTip}" />
-        <Button x:Name="KeepOtherButton" Content="{x:Static res:Strings.Sync_KeepOther}" />
-        <Button x:Name="KeepMineButton" Classes="accent" Content="{x:Static res:Strings.Sync_KeepMine}" />
-      </StackPanel>
-      <StackPanel x:Name="EmptyState" Grid.RowSpan="4" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="False">
-        <ui:FASymbolIcon Symbol="Accept" FontSize="36" />
-        <TextBlock Text="{x:Static res:Strings.Sync_Conflicts_None}" FontSize="16" HorizontalAlignment="Center" />
-      </StackPanel>
+  <!-- A separate window, not an in-window dialog: it opens from the sync dialog, and both versions need room side by side. -->
+  <Panel>
+    <Grid x:Name="Workspace" ColumnDefinitions="290,*">
+      <!-- What is open: on the base surface, like the sidebar of the main window. -->
+      <Border Background="{DynamicResource RmBaseBrush}" BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="0,0,1,0">
+        <DockPanel>
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="20,20,16,10">
+            <TextBlock Classes="section" Text="{x:Static res:Strings.Sync_Conflicts_ListTitle}" />
+            <Border Grid.Column="1" Classes="count">
+              <TextBlock x:Name="CountText" />
+            </Border>
+          </Grid>
+          <ListBox x:Name="ConflictList" Classes="rows" Margin="8,0,8,8" />
+        </DockPanel>
+      </Border>
+
+      <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" Margin="24,18,24,20">
+        <StackPanel Spacing="5">
+          <Grid ColumnDefinitions="Auto,*">
+            <Border x:Name="KindTag" Classes="tag" VerticalAlignment="Center" Margin="0,0,10,0">
+              <TextBlock x:Name="KindText" />
+            </Border>
+            <TextBlock x:Name="Heading" Grid.Column="1" Classes="heading" TextTrimming="CharacterEllipsis" />
+          </Grid>
+          <TextBlock x:Name="Explanation" TextWrapping="Wrap" />
+          <TextBlock Classes="hint" Text="{x:Static res:Strings.Sync_Conflict_Decide}" />
+        </StackPanel>
+
+        <!-- Field by field: this PC on the left, the other PC on the right. What differs is marked. -->
+        <Border Grid.Row="1" Classes="card" Margin="0,16,0,0" ClipToBounds="True">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="0,0,0,1"
+                    Background="{DynamicResource RmInsetBrush}">
+              <Grid ColumnDefinitions="160,*,*">
+                <StackPanel Classes="version">
+                  <TextBlock Classes="section" Text="{x:Static res:Strings.Sync_Conflict_Field}" VerticalAlignment="Top"
+                             Foreground="{DynamicResource RmTextSecondaryBrush}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Classes="version">
+                  <TextBlock Classes="section" Text="{x:Static res:Strings.Sync_Conflict_ThisPc}" VerticalAlignment="Top" />
+                  <TextBlock x:Name="MineCaption" Classes="caption" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Classes="version">
+                  <TextBlock x:Name="OtherTitle" Classes="section" VerticalAlignment="Top" TextTrimming="CharacterEllipsis" />
+                  <TextBlock x:Name="OtherCaption" Classes="caption" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </Grid>
+            </Border>
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+              <Grid x:Name="Comparison" ColumnDefinitions="160,*,*" />
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+
+        <!-- The same columns as the table (the card's frame is 1 px), so each decision sits under its version. -->
+        <Grid x:Name="Actions" Grid.Row="2" ColumnDefinitions="160,*,*" Margin="1,14,1,0">
+          <Button x:Name="KeepBothButton" Classes="link" Margin="6,0,0,0" HorizontalAlignment="Left" Height="NaN"
+                  Content="{x:Static res:Strings.Sync_KeepBoth}" ToolTip.Tip="{x:Static res:Strings.Sync_KeepBothTip}" />
+          <Button x:Name="KeepMineButton" Grid.Column="1" Classes="accent" Content="{x:Static res:Strings.Sync_KeepMine}" />
+          <Button x:Name="KeepOtherButton" Grid.Column="2" Content="{x:Static res:Strings.Sync_KeepOther}" />
+        </Grid>
+      </Grid>
     </Grid>
-  </Grid>
+
+    <!-- Nothing left to decide. -->
+    <StackPanel x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="6" IsVisible="False">
+      <Border Width="64" Height="64" CornerRadius="32" Background="{DynamicResource RmOnlineSoftBrush}" HorizontalAlignment="Center" Margin="0,0,0,10">
+        <ui:FASymbolIcon Symbol="Accept" FontSize="26" Foreground="{DynamicResource RmOnlineBrush}" />
+      </Border>
+      <TextBlock Classes="subtitle" Text="{x:Static res:Strings.Sync_Conflicts_None}" HorizontalAlignment="Center" />
+      <TextBlock Classes="caption" FontSize="13" Text="{x:Static res:Strings.Sync_Conflicts_NoneHint}" HorizontalAlignment="Center" />
+      <Button x:Name="CloseButton" Classes="accent" MinWidth="120" HorizontalAlignment="Center" Margin="0,16,0,0"
+              Content="{x:Static res:Strings.Sync_Conflicts_Close}" />
+    </StackPanel>
+  </Panel>
 </Window>

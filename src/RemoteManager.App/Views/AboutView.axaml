@@ -1,28 +1,104 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:res="using:RemoteManager.App.Resources"
              x:Class="RemoteManager.App.Views.AboutView"
-             Width="460">
-  <StackPanel Spacing="10">
-    <!-- Version (AppVersion: stamped by tools/release.ps1). No logo or app name in the content: the dialog title
-         and the window frame already show them. -->
-    <TextBlock x:Name="VersionText" Opacity="0.75" />
-    <TextBlock x:Name="InstallText" Opacity="0.65" FontSize="12" TextWrapping="Wrap" />
-    <TextBlock x:Name="DataText" Opacity="0.65" FontSize="12" TextWrapping="Wrap" />
+             Width="500">
+  <UserControl.Styles>
+    <Style Selector="Grid.folders > TextBlock.factLabel">
+      <Setter Property="Margin" Value="0,7,12,0" />
+    </Style>
+    <Style Selector="Grid.folders SelectableTextBlock.mono">
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,6,8,6" />
+    </Style>
+    <Style Selector="Grid.folders Button.icon">
+      <Setter Property="Width" Value="28" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+    </Style>
+  </UserControl.Styles>
 
-    <!-- Update source and the token for a private GitHub repository. -->
-    <TextBlock Text="{x:Static res:Strings.About_UpdatesTitle}" FontWeight="SemiBold" Margin="0,10,0,0" />
-    <TextBlock Text="{x:Static res:Strings.About_SourceHint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
-    <TextBox x:Name="SourceBox" />
-    <TextBlock x:Name="SourceMessage" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
-
-    <TextBlock Text="{x:Static res:Strings.About_TokenTitle}" FontWeight="SemiBold" Margin="0,6,0,0" />
-    <TextBlock Text="{x:Static res:Strings.About_TokenHint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
-    <Grid ColumnDefinitions="*,8,Auto">
-      <TextBox x:Name="TokenBox" PasswordChar="●" Classes="revealPasswordButton" />
-      <Button x:Name="DeleteTokenButton" Grid.Column="2" Content="{x:Static res:Strings.Action_Remove}" />
+  <StackPanel Spacing="18">
+    <!-- Who this is: the one place inside the app that shows the logo and the name. Version: stamped by tools/release.ps1. -->
+    <Grid ColumnDefinitions="Auto,16,*">
+      <Image Source="/Assets/logo.ico" Width="56" Height="56" VerticalAlignment="Center" />
+      <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="3">
+        <TextBlock Classes="pageTitle" FontSize="24" Text="{x:Static res:Strings.About_AppName}" />
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock x:Name="VersionText" Classes="display" FontSize="15" Foreground="{DynamicResource RmTextSecondaryBrush}"
+                     VerticalAlignment="Center" />
+          <Border x:Name="BuildTag" Classes="tag" VerticalAlignment="Center">
+            <TextBlock x:Name="BuildText" FontFamily="{StaticResource RmMonoFont}" />
+          </Border>
+        </StackPanel>
+      </StackPanel>
     </Grid>
-    <TextBlock x:Name="TokenState" FontSize="12" Opacity="0.7" />
-    <TextBlock x:Name="LastCheckText" FontSize="12" Opacity="0.7" />
+
+    <!-- Where things are: the data folder (kept by updates) and the program folder. -->
+    <Border Classes="card" Padding="14,8,8,10">
+      <Grid Classes="folders" ColumnDefinitions="78,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
+        <TextBlock Classes="factLabel" Text="{x:Static res:Strings.About_DataLabel}" />
+        <SelectableTextBlock x:Name="DataText" Grid.Column="1" Classes="mono" />
+        <Button x:Name="CopyDataButton" Grid.Column="2" Classes="icon" ToolTip.Tip="{x:Static res:Strings.About_CopyPath}">
+          <ui:FASymbolIcon Symbol="Copy" FontSize="13" Opacity="0.75" />
+        </Button>
+        <Button x:Name="OpenDataButton" Grid.Column="3" Classes="icon" ToolTip.Tip="{x:Static res:Strings.About_OpenFolder}">
+          <ui:FASymbolIcon Symbol="OpenFolder" FontSize="14" Opacity="0.75" />
+        </Button>
+        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Classes="hint" Margin="0,0,8,6"
+                   Text="{x:Static res:Strings.About_DataHint}" />
+
+        <TextBlock Grid.Row="2" Classes="factLabel" Text="{x:Static res:Strings.About_InstallLabel}" />
+        <SelectableTextBlock x:Name="InstallText" Grid.Row="2" Grid.Column="1" Classes="mono" />
+        <Button x:Name="CopyInstallButton" Grid.Row="2" Grid.Column="2" Classes="icon" ToolTip.Tip="{x:Static res:Strings.About_CopyPath}">
+          <ui:FASymbolIcon Symbol="Copy" FontSize="13" Opacity="0.75" />
+        </Button>
+        <Button x:Name="OpenInstallButton" Grid.Row="2" Grid.Column="3" Classes="icon" ToolTip.Tip="{x:Static res:Strings.About_OpenFolder}">
+          <ui:FASymbolIcon Symbol="OpenFolder" FontSize="14" Opacity="0.75" />
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- A copy that Setup did not install cannot update itself. -->
+    <Border x:Name="NotInstalledNote" Classes="note" IsVisible="False">
+      <TextBlock Classes="hint" Text="{x:Static res:Strings.About_NotInstalled}" />
+    </Border>
+
+    <!-- Update source and the optional token for GitHub. -->
+    <StackPanel Spacing="14">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="section" Text="{x:Static res:Strings.About_UpdatesTitle}" />
+        <TextBlock x:Name="LastCheckText" Grid.Column="1" Classes="caption" VerticalAlignment="Center" />
+      </Grid>
+
+      <StackPanel>
+        <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.About_SourceLabel}" />
+        <TextBox x:Name="SourceBox" Classes="mono" />
+        <Border x:Name="SourceNote" Classes="note" Margin="0,8,0,0" IsVisible="False">
+          <TextBlock x:Name="SourceMessage" FontSize="12.5" TextWrapping="Wrap" />
+        </Border>
+        <TextBlock Classes="hint" Margin="1,6,0,0" Text="{x:Static res:Strings.About_SourceHint}" />
+      </StackPanel>
+
+      <StackPanel>
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.About_TokenTitle}" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,0,1,5">
+            <Ellipse x:Name="TokenLamp" Classes="lamp idle" Width="7" Height="7" />
+            <TextBlock x:Name="TokenState" Classes="caption" />
+          </StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="*,8,Auto">
+          <TextBox x:Name="TokenBox" PasswordChar="●" Classes="revealPasswordButton" />
+          <Button x:Name="DeleteTokenButton" Grid.Column="2" Content="{x:Static res:Strings.Action_Remove}" />
+        </Grid>
+        <Border x:Name="TokenNote" Classes="note error" Margin="0,8,0,0" IsVisible="False">
+          <TextBlock x:Name="TokenError" FontSize="12.5" TextWrapping="Wrap" />
+        </Border>
+        <TextBlock Classes="hint" Margin="1,6,0,0" Text="{x:Static res:Strings.About_TokenHint}" />
+      </StackPanel>
+    </StackPanel>
   </StackPanel>
 </UserControl>

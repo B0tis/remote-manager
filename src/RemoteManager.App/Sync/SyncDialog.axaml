@@ -4,50 +4,127 @@
              xmlns:res="using:RemoteManager.App.Resources"
              x:Class="RemoteManager.App.Sync.SyncDialog"
              Width="500">
-  <!-- Settings scroll; "Jetzt synchronisieren", the status, and the result stay below them, always in view. -->
+  <UserControl.Styles>
+    <!-- One instrument of the state row: what it shows, and the reading below. -->
+    <Style Selector="StackPanel.gauge">
+      <Setter Property="Margin" Value="14,11,14,12" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <Style Selector="StackPanel.gauge TextBlock.reading">
+      <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="Border.divider">
+      <Setter Property="Width" Value="1" />
+      <Setter Property="Background" Value="{DynamicResource RmStrokeBrush}" />
+    </Style>
+    <Style Selector="RadioButton.option">
+      <Setter Property="Padding" Value="8,5,0,0" />
+      <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
+  </UserControl.Styles>
+
+  <!-- The state row and "Jetzt synchronisieren" with its result stay in view; the settings between them scroll. -->
   <DockPanel>
-    <StackPanel DockPanel.Dock="Bottom" Spacing="10" Margin="0,12,14,0">
-      <Grid ColumnDefinitions="Auto,8,*">
-        <Button x:Name="SyncNowButton" Classes="accent">
+    <StackPanel DockPanel.Dock="Top" Spacing="10">
+      <Border Classes="card">
+        <Grid ColumnDefinitions="*,Auto,1.2*,Auto,*">
+          <StackPanel Classes="gauge">
+            <TextBlock Classes="caption" Text="{x:Static res:Strings.Sync_Title}" />
+            <ToggleSwitch x:Name="EnabledSwitch" MinWidth="0" MinHeight="0" Height="22" Padding="0"
+                          FontFamily="{StaticResource RmDisplayFont}" FontSize="15" FontWeight="SemiBold"
+                          OnContent="{x:Static res:Strings.Sync_On}" OffContent="{x:Static res:Strings.Sync_Off}" />
+          </StackPanel>
+          <Border Grid.Column="1" Classes="divider" />
+          <StackPanel Grid.Column="2" Classes="gauge">
+            <TextBlock Classes="caption" Text="{x:Static res:Strings.Sync_LastSyncLabel}" />
+            <StackPanel Orientation="Horizontal" Spacing="8" Height="22">
+              <Ellipse x:Name="StateLamp" Classes="lamp idle" />
+              <TextBlock x:Name="StatusText" Classes="reading" VerticalAlignment="Center" />
+            </StackPanel>
+          </StackPanel>
+          <Border Grid.Column="3" Classes="divider" />
+          <StackPanel Grid.Column="4" Classes="gauge">
+            <TextBlock Classes="caption" Text="{x:Static res:Strings.Sync_ConflictsLabel}" />
+            <StackPanel Orientation="Horizontal" Spacing="8" Height="22">
+              <Ellipse x:Name="ConflictsLamp" Classes="lamp fault" IsVisible="False" />
+              <TextBlock x:Name="ConflictsValue" Classes="reading" VerticalAlignment="Center" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Only while conflicts are open: the way to decide them. -->
+      <Border x:Name="ConflictsNote" Classes="note warning" Padding="12,7,7,7" IsVisible="False">
+        <Grid ColumnDefinitions="*,12,Auto">
+          <TextBlock x:Name="ConflictsText" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12.5" />
+          <Button x:Name="ConflictsButton" Grid.Column="2" Content="{x:Static res:Strings.Sync_ResolveConflicts}" />
+        </Grid>
+      </Border>
+    </StackPanel>
+
+    <StackPanel DockPanel.Dock="Bottom" Spacing="10" Margin="0,14,0,0">
+      <Grid ColumnDefinitions="Auto,12,*">
+        <Button x:Name="SyncNowButton">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <ui:FASymbolIcon Symbol="Sync" FontSize="14" />
             <TextBlock Text="{x:Static res:Strings.Sync_Now}" />
           </StackPanel>
         </Button>
-        <TextBlock x:Name="StatusText" Grid.Column="2" VerticalAlignment="Center" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+        <TextBlock Grid.Column="2" Classes="hint" VerticalAlignment="Center" Text="{x:Static res:Strings.Sync_NowHint}" />
       </Grid>
-      <Button x:Name="ConflictsButton" IsVisible="False">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <ui:FASymbolIcon Symbol="Important" FontSize="14" />
-          <TextBlock x:Name="ConflictsText" />
-        </StackPanel>
-      </Button>
       <ui:FAInfoBar x:Name="ResultBar" IsOpen="False" IsClosable="False" />
     </StackPanel>
 
-    <ScrollViewer MaxHeight="360" HorizontalScrollBarVisibility="Disabled">
-      <StackPanel Spacing="10" Margin="0,0,14,0">
-        <TextBlock Text="{x:Static res:Strings.Sync_Hint}" Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
-        <ToggleSwitch x:Name="EnabledSwitch" OnContent="{x:Static res:Strings.Sync_Enabled}" OffContent="{x:Static res:Strings.Sync_Disabled}" />
+    <!-- The scroll bar runs in the dialog's padding, so the fields end on the same edge as the rows above and below. -->
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" Margin="0,16,-16,0">
+      <StackPanel Spacing="16" Margin="0,0,16,2">
+        <TextBlock Classes="hint" Text="{x:Static res:Strings.Sync_Hint}" />
 
-        <TextBlock Text="{x:Static res:Strings.Sync_Folder}" FontWeight="SemiBold" Margin="0,6,0,0" />
-        <Grid ColumnDefinitions="*,8,Auto">
-          <TextBox x:Name="FolderBox" />
-          <Button x:Name="PickFolderButton" Grid.Column="2" Content="{x:Static res:Strings.Sync_PickFolder}" />
-        </Grid>
-        <TextBlock Text="{x:Static res:Strings.Sync_FolderHint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+        <StackPanel>
+          <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Sync_Folder}" />
+          <Grid ColumnDefinitions="*,8,Auto">
+            <TextBox x:Name="FolderBox" Classes="mono" />
+            <Button x:Name="PickFolderButton" Grid.Column="2" Content="{x:Static res:Strings.Sync_PickFolder}" />
+          </Grid>
+          <TextBlock Classes="hint" Margin="1,6,0,0" Text="{x:Static res:Strings.Sync_FolderHint}" />
+        </StackPanel>
 
-        <TextBlock Text="{x:Static res:Strings.Sync_Passphrase}" FontWeight="SemiBold" Margin="0,6,0,0" />
-        <TextBox x:Name="PassphraseBox" PasswordChar="●" Classes="revealPasswordButton" />
-        <TextBox x:Name="RepeatBox" PasswordChar="●" Classes="revealPasswordButton" PlaceholderText="{x:Static res:Strings.Sync_PassphraseRepeat}" />
-        <TextBlock Text="{x:Static res:Strings.Sync_PassphraseHint}" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+        <StackPanel>
+          <Grid ColumnDefinitions="*,12,*">
+            <StackPanel>
+              <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Sync_Passphrase}" />
+              <TextBox x:Name="PassphraseBox" PasswordChar="●" Classes="revealPasswordButton" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+              <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Sync_PassphraseRepeat}" />
+              <TextBox x:Name="RepeatBox" PasswordChar="●" Classes="revealPasswordButton" />
+            </StackPanel>
+          </Grid>
+          <TextBlock Classes="hint" Margin="1,6,0,0" Text="{x:Static res:Strings.Sync_PassphraseHint}" />
+        </StackPanel>
 
         <!-- Only while this PC has never synced with the folder: what happens to its own connections. -->
-        <StackPanel x:Name="JoinPanel" Spacing="4" Margin="0,6,0,0">
-          <TextBlock Text="{x:Static res:Strings.Sync_Join_Title}" FontWeight="SemiBold" />
-          <RadioButton x:Name="JoinMerge" GroupName="join" IsChecked="True" Content="{x:Static res:Strings.Sync_Join_Merge}" />
-          <RadioButton x:Name="JoinReplace" GroupName="join" Content="{x:Static res:Strings.Sync_Join_Replace}" />
-        </StackPanel>
+        <Border x:Name="JoinPanel" Classes="card" Padding="14,12,14,10">
+          <StackPanel>
+            <TextBlock Classes="section" Text="{x:Static res:Strings.Sync_Join_Title}" />
+            <TextBlock Classes="hint" Margin="0,3,0,6" Text="{x:Static res:Strings.Sync_Join_Hint}" />
+            <RadioButton x:Name="JoinMerge" Classes="option" GroupName="join" IsChecked="True">
+              <StackPanel Spacing="1">
+                <TextBlock Text="{x:Static res:Strings.Sync_Join_Merge}" />
+                <TextBlock Classes="hint" Text="{x:Static res:Strings.Sync_Join_MergeHint}" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="JoinReplace" Classes="option" GroupName="join">
+              <StackPanel Spacing="1">
+                <TextBlock Text="{x:Static res:Strings.Sync_Join_Replace}" />
+                <TextBlock Classes="hint" Text="{x:Static res:Strings.Sync_Join_ReplaceHint}" />
+              </StackPanel>
+            </RadioButton>
+          </StackPanel>
+        </Border>
       </StackPanel>
     </ScrollViewer>
   </DockPanel>

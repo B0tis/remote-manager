@@ -107,19 +107,10 @@ public partial class MainWindow
     internal async Task RemoveTagAsync(string tag)
     {
         int count = items.Count(i => i.Model.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase));
-        var dialog = new FAContentDialog
-        {
-            Title = string.Format(CultureInfo.CurrentCulture, Strings.TagRemove_Title, tag),
-            Content = new TextBlock
-            {
-                Text = string.Format(CultureInfo.CurrentCulture, count == 1 ? Strings.TagRemove_MessageOne : Strings.TagRemove_Message, count),
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                MaxWidth = 460,
-            },
-            PrimaryButtonText = Strings.TagRemove_Action,
-            CloseButtonText = Strings.Action_Cancel,
-            DefaultButton = FAContentDialogButton.Close,
-        };
+        FAContentDialog dialog = DialogKit.Question(
+            string.Format(CultureInfo.CurrentCulture, Strings.TagRemove_Title, tag),
+            string.Format(CultureInfo.CurrentCulture, count == 1 ? Strings.TagRemove_MessageOne : Strings.TagRemove_Message, count),
+            Strings.TagRemove_Action, destructive: true);
         TagRemoveDialog = dialog;
         FAContentDialogResult result = await dialog.ShowAsync();
         TagRemoveDialog = null;
@@ -177,24 +168,34 @@ public partial class MainWindow
             ItemsSource = ids.Select(id => id is null ? Strings.Group_None : app.Library.PathOf(id)).ToList(),
             SelectedIndex = Math.Max(0, ids.IndexOf(moving[0].GroupId)),
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
-            MinWidth = 320,
         };
+        bool one = moving.Count == 1;
         var dialog = new FAContentDialog
         {
-            Title = moving.Count == 1
+            Title = one
                 ? string.Format(CultureInfo.CurrentCulture, Strings.Move_Title, connections[0].Name)
                 : string.Format(CultureInfo.CurrentCulture, Strings.Move_TitleMany, moving.Count),
-            Content = picker,
+            Content = new StackPanel
+            {
+                Width = DialogKit.QuestionWidth,
+                Children = { DialogKit.Field(Strings.Move_Target, picker, one ? Strings.Move_Hint : Strings.Move_HintMany) },
+            },
             PrimaryButtonText = Strings.Action_Move,
             CloseButtonText = Strings.Action_Cancel,
             DefaultButton = FAContentDialogButton.Primary,
         };
-        if (await dialog.ShowAsync() != FAContentDialogResult.Primary || picker.SelectedIndex < 0)
+        MoveDialog = dialog;
+        FAContentDialogResult result = await dialog.ShowAsync();
+        MoveDialog = null;
+        if (result != FAContentDialogResult.Primary || picker.SelectedIndex < 0)
             return;
 
         app.Library.MoveConnections(moving, ids[picker.SelectedIndex]);
         AfterGroupChange();
     }
+
+    /// <summary>The "move to group" dialog while it is shown (self-test).</summary>
+    internal FAContentDialog? MoveDialog { get; private set; }
 
     /// <summary>After groups or memberships changed: labels, sidebar, sections, inherited logons.</summary>
     private void AfterGroupChange()

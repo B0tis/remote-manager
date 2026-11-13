@@ -715,20 +715,42 @@ public partial class MainWindow : Window, IConnectionHost
     {
         if (connections.Count == 0)
             return;
-        var dialog = new FAContentDialog
+
+        // What goes with it: which connections (when several), and sessions that end.
+        const int namesShown = 6;
+        bool one = connections.Count == 1;
+        var more = new List<Control>();
+        if (!one)
         {
-            Title = connections.Count == 1
-                ? string.Format(CultureInfo.CurrentCulture, Strings.Delete_Title, connections[0].Name)
+            string names = string.Join(", ", connections.Take(namesShown).Select(c => c.Name));
+            more.Add(DialogKit.Note(connections.Count > namesShown
+                ? string.Format(CultureInfo.CurrentCulture, Strings.Delete_AndMore, names, connections.Count - namesShown)
+                : names));
+        }
+
+        int open = connections.Count(c => sessionWindows.Any(w => ((ISessionWindow)w).Connection == c));
+        if (open > 0)
+        {
+            more.Add(DialogKit.Note(open == 1 ? Strings.Delete_SessionOpen
+                : string.Format(CultureInfo.CurrentCulture, Strings.Delete_SessionsOpen, open), "warning"));
+        }
+
+        FAContentDialog dialog = DialogKit.Question(
+            one ? string.Format(CultureInfo.CurrentCulture, Strings.Delete_Title, connections[0].Name)
                 : string.Format(CultureInfo.CurrentCulture, Strings.Delete_TitleMany, connections.Count),
-            Content = Strings.Delete_Message,
-            PrimaryButtonText = Strings.Action_Delete,
-            CloseButtonText = Strings.Action_Cancel,
-        };
-        if (await dialog.ShowAsync() != FAContentDialogResult.Primary)
+            one ? Strings.Delete_Message : Strings.Delete_MessageMany,
+            Strings.Action_Delete, destructive: true, [.. more]);
+        DeleteDialog = dialog;
+        FAContentDialogResult result = await dialog.ShowAsync();
+        DeleteDialog = null;
+        if (result != FAContentDialogResult.Primary)
             return;
         foreach (ConnectionItem c in connections.ToList())
             await RemoveConnectionAsync(c);
     }
+
+    /// <summary>The "delete connections" question while it is shown (self-test).</summary>
+    internal FAContentDialog? DeleteDialog { get; private set; }
 
     /// <summary>Removes the connection with its window, preview image, and own stored password.</summary>
     internal async Task RemoveConnectionAsync(ConnectionItem connection)

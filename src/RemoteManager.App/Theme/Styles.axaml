@@ -424,4 +424,37 @@
   <Style Selector="Expander">
     <Setter Property="CornerRadius" Value="{StaticResource RmRadiusControl}" />
   </Style>
+
+  <!-- ===== Part "dialogs": small dialogs and windows ===== -->
+  <!-- Every in-window dialog: the title in the display lettering, like the page titles. -->
+  <Style Selector="ui|FAContentDialog /template/ ContentControl#Title">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+    <Setter Property="LetterSpacing" Value="0.2" />
+  </Style>
+  <!-- The verb of a destructive question ("Löschen"): marked as dangerous, never the default button (Views/DialogKit.cs). -->
+  <Style Selector="Button.danger">
+    <Setter Property="Theme" Value="{StaticResource RmGhostButton}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmOfflineBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource RmOfflineBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RmOfflineSoftBrush}" />
+  </Style>
+  <!-- A lamp that reports the state of a setting: working, broken, or off (DialogKit.SetLamp). -->
+  <Style Selector="Ellipse.lamp.ok">
+    <Setter Property="Fill" Value="{DynamicResource RmOnlineBrush}" />
+  </Style>
+  <Style Selector="Ellipse.lamp.fault">
+    <Setter Property="Fill" Value="{DynamicResource RmOfflineBrush}" />
+  </Style>
+  <Style Selector="Ellipse.lamp.idle">
+    <Setter Property="Fill" Value="{DynamicResource RmUnknownBrush}" />
+  </Style>
+  <!-- A label and its value in a row of a dialog: "Server", "Schlüsseltyp". -->
+  <Style Selector="TextBlock.factLabel">
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextTertiaryBrush}" />
+  </Style>
 </Styles>

@@ -3,13 +3,15 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
 using RemoteManager.Core.Sync;
 
 namespace RemoteManager.App.Sync;
 
 /// <summary>
-/// Sync settings: on/off, folder, passphrase (the same on every PC), what a joining PC does with its own
-/// connections, "Jetzt synchronisieren" with the last result, and the way to open conflicts.
+/// Sync settings. On top the state at a glance (on/off, last sync, open conflicts, and the way to decide them),
+/// then folder, passphrase (the same on every PC), and what a joining PC does with its own connections; at the
+/// bottom "Jetzt synchronisieren" with its result. Top and bottom stay in view while the settings scroll.
 /// </summary>
 public partial class SyncDialog : UserControl
 {
@@ -38,6 +40,7 @@ public partial class SyncDialog : UserControl
         };
         service.StateChanged += OnServiceStateChanged;
         DetachedFromVisualTree += (_, _) => service.StateChanged -= OnServiceStateChanged;
+        DialogKit.FitToWindow(this);
         UpdateState();
     }
 
@@ -164,14 +167,23 @@ public partial class SyncDialog : UserControl
             : string.Format(CultureInfo.CurrentCulture, Strings.Sync_PassphrasePlaceholder, MinPassphraseLength);
         JoinPanel.IsVisible = !service.HasSynced;
         SyncNowButton.IsEnabled = !service.IsRunning;
+
+        // The lamp is green only while sync is on and the last run worked; an error of a sync that is off is history.
+        bool failed = service.IsEnabled && service.LastError is not null;
         StatusText.Text = service.IsRunning ? Strings.Sync_Running
-            : !service.IsEnabled ? Strings.Sync_StatusOff
-            : service.LastError is not null ? Strings.Sync_Failed
-            : service.LastSync is { } last ? string.Format(CultureInfo.CurrentCulture, Strings.Sync_LastSync, last.ToLocalTime())
-            : Strings.Sync_Never;
+            : failed ? Strings.Sync_FailedShort
+            : service.LastSync is { } last ? last.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+            : Strings.Sync_NeverShort;
+        DialogKit.SetLamp(StateLamp, failed ? "fault"
+            : service.IsEnabled && !service.IsRunning && service.LastSync is not null ? "ok"
+            : "idle");
+
         int conflicts = service.OpenConflicts;
-        ConflictsButton.IsVisible = conflicts > 0;
-        ConflictsText.Text = string.Format(CultureInfo.CurrentCulture, Strings.Sync_ShowConflicts, conflicts);
+        ConflictsValue.Text = conflicts == 0 ? Strings.Sync_ConflictsNone
+            : string.Format(CultureInfo.CurrentCulture, Strings.Sync_ConflictsOpen, conflicts);
+        ConflictsLamp.IsVisible = ConflictsNote.IsVisible = conflicts > 0;
+        ConflictsText.Text = conflicts == 1 ? Strings.Sync_ConflictWaitingOne
+            : string.Format(CultureInfo.CurrentCulture, Strings.Sync_ConflictsWaiting, conflicts);
     }
 
     private async Task PickFolderAsync()
