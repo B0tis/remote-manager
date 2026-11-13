@@ -229,15 +229,17 @@ public partial class RemoteToolsDialog : UserControl
         // Shown only for a path that cannot be used: the configured one is gone, or the typed one is no .exe.
         var state = new TextBlock
         {
-            FontSize = 12,
+            FontSize = 12.5,
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-            Margin = new Avalonia.Thickness(1, 6, 0, 0),
             IsVisible = location.ConfiguredPathMissing,
             Text = location.ConfiguredPathMissing
                 ? string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Paths_ConfiguredMissing, configured)
                 : "",
         };
-        state[!TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("SystemFillColorCriticalBrush");
+        // The frame shows and hides with its text.
+        Border problem = DialogKit.Note(state, "error");
+        problem.Margin = new Avalonia.Thickness(0, 8, 0, 0);
+        problem[!IsVisibleProperty] = state[!IsVisibleProperty];
         paths[info.Type] = (box, state);
 
         var header = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,8,Auto,10,*,Auto"), Margin = new Avalonia.Thickness(1, 0, 0, 6) };
@@ -248,7 +250,7 @@ public partial class RemoteToolsDialog : UserControl
         var input = new Grid { ColumnDefinitions = new ColumnDefinitions("*,8,Auto") };
         Place(input, box, 0);
         Place(input, browse, 2);
-        return new StackPanel { Children = { header, input, state } };
+        return new StackPanel { Children = { header, input, problem } };
     }
 
     private static void Place(Grid grid, Control control, int column)
