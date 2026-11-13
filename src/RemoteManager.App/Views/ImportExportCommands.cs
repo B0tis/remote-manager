@@ -108,17 +108,17 @@ internal static class ImportExportCommands
         figures.Children.Add(Figure(summary.ReplacedConnections, Strings.Import_Stat_Replaced));
         figures.Children.Add(Figure(summary.SkippedDuplicates, Strings.Import_Stat_Skipped, Strings.Import_Stat_SkippedTip));
         figures.Children.Add(Figure(summary.AddedGroups, Strings.Import_Stat_Groups));
-        figures.Children.Add(Figure(summary.StoredPasswords, Strings.Import_Stat_Passwords, Strings.Import_Stat_PasswordsTip));
+        figures.Children.Add(Figure(summary.StoredPasswords, Strings.Import_Stat_Passwords));
         var counters = new Border { Child = figures, Padding = new Thickness(0, 12) };
         counters.Classes.Add("well");
         // A screen reader gets the figures as one sentence instead of ten loose words.
         AutomationProperties.SetName(counters, string.Format(CultureInfo.CurrentCulture, Strings.Import_Summary, summary.AddedConnections,
             summary.ReplacedConnections, summary.SkippedDuplicates, summary.AddedGroups, summary.StoredPasswords));
 
-        var content = new StackPanel { Width = 480, Children = { counters } };
+        var content = new StackPanel { Width = 520, Children = { counters } };
         if (summary.StoredPasswords > 0)
         {
-            Border stored = FormFields.Note(Strings.Import_PasswordHint, NoteKind.Secret);
+            Border stored = FormFields.Note(Strings.Import_Stat_PasswordsTip, NoteKind.Secret);
             stored.Margin = new Thickness(0, 12, 0, 0);
             content.Children.Add(stored);
         }
@@ -135,6 +135,8 @@ internal static class ImportExportCommands
         }
 
         var dialog = new FAContentDialog { Title = Strings.Import_SummaryTitle, Content = content, CloseButtonText = Strings.Common_Ok };
+        // Five counters side by side need the wide dialog, or "übersprungen" breaks in the middle of the word.
+        dialog.Resources["ContentDialogMaxWidth"] = FormFields.WideDialogWidth;
         OpenSummary = dialog;
         await dialog.ShowAsync();
         OpenSummary = null;

@@ -19,6 +19,12 @@ internal enum NoteKind { Info, Secret, Warning }
 internal static class FormFields
 {
     /// <summary>
+    /// Width of a dialog whose form puts two labelled fields side by side (520) plus the dialog's padding and
+    /// border. The stock width (548) leaves too little; set as the dialog's "ContentDialogMaxWidth".
+    /// </summary>
+    public const double WideDialogWidth = 572;
+
+    /// <summary>
     /// Ties every field label of a form (a TextBlock with the class "fieldLabel") to the input that follows it,
     /// so a screen reader announces the field by its visible name. The self-test uses the same link to prove
     /// that no input is named by its placeholder alone.
@@ -69,7 +75,10 @@ internal static class FormFields
         };
         // Follows the theme like a DynamicResource in XAML.
         icon.Bind(TextElement.ForegroundProperty, icon.GetResourceObservable(kind == NoteKind.Warning ? "SystemFillColorCautionBrush" : "RmTextSecondaryBrush"));
+        // A warning is read as text; a plain remark steps back like every other hint.
         var message = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = 12.5 };
+        if (kind != NoteKind.Warning)
+            message.Classes.Add("hint");
         Grid.SetColumn(message, 1);
         var note = new Border
         {

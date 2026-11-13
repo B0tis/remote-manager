@@ -103,8 +103,7 @@ public partial class ConnectionEditor : UserControl
             CloseButtonText = Strings.Action_Cancel,
             DefaultButton = FAContentDialogButton.Primary,
         };
-        // Two labelled fields side by side need more room than the stock dialog width (548) leaves.
-        dialog.Resources["ContentDialogMaxWidth"] = DialogWidth;
+        dialog.Resources["ContentDialogMaxWidth"] = FormFields.WideDialogWidth;
         dialog.PrimaryButtonClick += async (_, e) =>
         {
             var deferral = e.GetDeferral();
@@ -155,9 +154,6 @@ public partial class ConnectionEditor : UserControl
         Store(c);
         return true;
     }
-
-    /// <summary>The form (520) plus the dialog's padding and border.</summary>
-    private const double DialogWidth = 572;
 
     private IConnectionHandler Handler => handlers[Math.Max(0, TypeBox.SelectedIndex)];
 

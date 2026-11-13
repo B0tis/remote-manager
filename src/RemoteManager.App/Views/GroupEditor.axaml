@@ -64,6 +64,7 @@
                 <CheckBox x:Name="SavePasswordBox" Grid.Column="1" Content="{x:Static res:Strings.Password_Save}" />
               </Grid>
             </StackPanel>
+            <TextBlock Classes="hint" Margin="1,0,0,0" Text="{x:Static res:Strings.Password_StoreHint}" />
           </StackPanel>
         </StackPanel>
       </Border>

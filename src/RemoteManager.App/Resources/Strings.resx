@@ -307,10 +307,10 @@
     <value>Eigene Anmeldung: Sie ersetzt die der Gruppe „{0}“ ({1}).</value>
   </data>
   <data name="Editor_PasswordHint_CopyOnly" xml:space="preserve">
-    <value>Gespeichert im Windows Credential Manager. „Passwort kopieren“ im Kontextmenü legt es für 30 s in die Zwischenablage.</value>
+    <value>Gespeichert in der Windows-Anmeldeinformationsverwaltung. „Passwort kopieren“ im Kontextmenü legt es für 30 s in die Zwischenablage.</value>
   </data>
   <data name="Editor_PasswordHint_Rdp" xml:space="preserve">
-    <value>Gespeichert im Windows Credential Manager. Mit Passwort meldet sich die Sitzung direkt an (NLA); ohne wird es beim Verbinden abgefragt.</value>
+    <value>Gespeichert in der Windows-Anmeldeinformationsverwaltung. Mit Passwort meldet sich die Sitzung direkt an (NLA); ohne wird es beim Verbinden abgefragt.</value>
   </data>
   <data name="Editor_PasswordHint_Ssh" xml:space="preserve">
     <value>Passwort oder Passphrase der Schlüsseldatei; wird in der Windows-Anmeldeinformationsverwaltung gespeichert.</value>
@@ -676,7 +676,7 @@
     <value>Importieren</value>
   </data>
   <data name="Import_Summary" xml:space="preserve">
-    <value>{0} hinzugefügt · {1} ersetzt · {2} schon vorhanden (übersprungen) · {3} neue Gruppen · {4} Passwörter im Windows-Anmeldeinformationsspeicher</value>
+    <value>{0} hinzugefügt, {1} ersetzt, {2} schon vorhanden (übersprungen), {3} neue Gruppen, {4} Passwörter in der Windows-Anmeldeinformationsverwaltung</value>
   </data>
   <data name="Import_SummaryTitle" xml:space="preserve">
     <value>Import abgeschlossen</value>
@@ -694,7 +694,7 @@
     <value>z. B. Import / RDCMan</value>
   </data>
   <data name="Import_PasswordHint" xml:space="preserve">
-    <value>Gefundene Passwörter landen im Windows-Anmeldeinformationsspeicher, nie in der Datenbank.</value>
+    <value>Gefundene Passwörter landen in der Windows-Anmeldeinformationsverwaltung, nie in der Datenbank.</value>
   </data>
   <data name="Import_Where_1remote" xml:space="preserve">
     <value>Die Datenbank von 1Remote liegt unter %APPDATA%\1Remote\1Remote.db. Ein JSON-Export (.prma) geht auch. 1Remote verschlüsselt Passwörter mit einem eigenen Schlüssel: Sie werden nicht übernommen.</value>
@@ -730,7 +730,7 @@
     <value>Passwörter gespeichert</value>
   </data>
   <data name="Import_Stat_PasswordsTip" xml:space="preserve">
-    <value>Im Windows-Anmeldeinformationsspeicher, nie in der Datenbank.</value>
+    <value>Die Passwörter liegen in der Windows-Anmeldeinformationsverwaltung, nie in der Datenbank.</value>
   </data>
   <data name="Key_Ctrl" xml:space="preserve">
     <value>Strg</value>
@@ -891,6 +891,9 @@
   <data name="Password_New" xml:space="preserve">
     <value>Neues Passwort</value>
   </data>
+  <data name="Password_StoreHint" xml:space="preserve">
+    <value>Gespeichert in der Windows-Anmeldeinformationsverwaltung, nie in der Datenbank.</value>
+  </data>
   <data name="Picker_Empty" xml:space="preserve">
     <value>Keine Einträge gefunden.</value>
   </data>
@@ -1012,7 +1015,7 @@
     <value>Mit mstsc öffnen (statt eingebettet)</value>
   </data>
   <data name="Rdp_OpenExternallyHint" xml:space="preserve">
-    <value>Startet die Windows-Remotedesktopverbindung mit einer erzeugten .rdp-Datei. Das gespeicherte Passwort steht nie in der Datei: Es liegt nur während der Sitzung als TERMSRV-Eintrag im Windows-Anmeldeinformationsspeicher.</value>
+    <value>Startet die Windows-Remotedesktopverbindung mit einer erzeugten .rdp-Datei. Das gespeicherte Passwort steht nie in der Datei: Es liegt nur während der Sitzung als TERMSRV-Eintrag in der Windows-Anmeldeinformationsverwaltung.</value>
   </data>
   <data name="Rdp_Redirect_Clipboard" xml:space="preserve">
     <value>Zwischenablage</value>
@@ -1237,7 +1240,7 @@
     <value>VPN</value>
   </data>
   <data name="RemoteTool_PasswordHint" xml:space="preserve">
-    <value>Gespeichert im Windows Credential Manager. AnyDesk bekommt es über stdin, TeamViewer und RustDesk über die Zwischenablage (nach 30 s geleert).</value>
+    <value>Gespeichert in der Windows-Anmeldeinformationsverwaltung. AnyDesk bekommt es über stdin, TeamViewer und RustDesk über die Zwischenablage (nach 30 s geleert).</value>
   </data>
   <data name="RemoteTool_PasswordInfo_AnyDesk" xml:space="preserve">
     <value>Das gespeicherte Passwort geht über stdin an AnyDesk (--with-password) und taucht nicht in der Prozessliste auf.</value>
@@ -2199,7 +2202,7 @@
     <value>Auswählen …</value>
   </data>
   <data name="Vault_Source_App" xml:space="preserve">
-    <value>Remote-Manager (Windows Credential Manager)</value>
+    <value>Eigenes Passwort</value>
   </data>
   <data name="Vault_Source_KeePass" xml:space="preserve">
     <value>KeePass-Datenbank (.kdbx)</value>

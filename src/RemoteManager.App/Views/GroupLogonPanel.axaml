@@ -24,12 +24,13 @@
     <Border Classes="well">
       <StackPanel Spacing="12">
         <cred:PasswordSourcePanel x:Name="SourcePanel" />
-        <StackPanel x:Name="OwnPasswordPanel" Spacing="4">
+        <StackPanel x:Name="OwnPasswordPanel" Spacing="8">
           <StackPanel>
             <TextBlock x:Name="PasswordLabel" Classes="fieldLabel" Text="{x:Static res:Strings.Field_Password}" />
             <TextBox x:Name="PasswordBox" PasswordChar="●" Classes="revealPasswordButton" />
           </StackPanel>
-          <CheckBox x:Name="RemovePasswordBox" Content="{x:Static res:Strings.GroupLogon_RemovePassword}" IsVisible="False" />
+          <CheckBox x:Name="RemovePasswordBox" Margin="0,-4" Content="{x:Static res:Strings.GroupLogon_RemovePassword}" IsVisible="False" />
+          <TextBlock Classes="hint" Margin="1,0,0,0" Text="{x:Static res:Strings.Password_StoreHint}" />
         </StackPanel>
       </StackPanel>
     </Border>
