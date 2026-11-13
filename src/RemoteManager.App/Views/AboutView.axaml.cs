@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections.RemoteTools;
 using RemoteManager.App.Resources;

@@ -2012,6 +2012,9 @@
   <data name="Sync_DeleteHereToo" xml:space="preserve">
     <value>Auch hier löschen</value>
   </data>
+  <data name="Sync_NowHint" xml:space="preserve">
+    <value>Speichert die Einstellungen und gleicht sofort ab.</value>
+  </data>
   <data name="TagRemove_Action" xml:space="preserve">
     <value>Entfernen</value>
   </data>
