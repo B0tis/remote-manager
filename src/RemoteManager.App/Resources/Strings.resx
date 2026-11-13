@@ -630,29 +630,182 @@
   <data name="Launcher_ChangeHotkey" xml:space="preserve">
     <value>Ändern</value>
   </data>
-  <data name="Launcher_Hints" xml:space="preserve">
-    <value>Enter verbinden · Strg+Enter in der Übersicht zeigen · Esc schließen</value>
-  </data>
   <data name="Launcher_HotkeyInvalid" xml:space="preserve">
-    <value>Bitte Strg, Alt oder Win mit einem Buchstaben, einer Ziffer, F-Taste oder Leertaste.</value>
+    <value>Das geht nicht als globaler Hotkey. Nimm Strg, Alt oder Win zusammen mit einem Buchstaben, einer Ziffer, einer F-Taste oder der Leertaste.</value>
   </data>
   <data name="Launcher_HotkeyLabel" xml:space="preserve">
-    <value>Hotkey: {0}</value>
+    <value>Von überall öffnen</value>
   </data>
   <data name="Launcher_HotkeyNone" xml:space="preserve">
-    <value>Kein Hotkey aktiv</value>
+    <value>Kein globaler Hotkey</value>
   </data>
   <data name="Launcher_HotkeyTaken" xml:space="preserve">
-    <value>{0} ist schon von einem anderen Programm belegt.</value>
+    <value>{0} ist schon von einem anderen Programm belegt, deshalb ist der globale Hotkey aus. Im Schnellstart (Strg+K) kannst du einen anderen festlegen.</value>
   </data>
   <data name="Launcher_Placeholder" xml:space="preserve">
-    <value>Verbindung suchen: Name, Host, Tag, Gruppe …</value>
+    <value>Verbindung, Aktion oder Adresse eingeben</value>
   </data>
   <data name="Launcher_PressHotkey" xml:space="preserve">
-    <value>Neue Tastenkombination drücken (Esc bricht ab) …</value>
+    <value>Drück jetzt die neue Tastenkombination.</value>
   </data>
   <data name="Launcher_Title" xml:space="preserve">
     <value>Schnellstart</value>
+  </data>
+  <data name="Launcher_Section_Connections" xml:space="preserve">
+    <value>Verbindungen</value>
+  </data>
+  <data name="Launcher_Section_Direct" xml:space="preserve">
+    <value>Direkt verbinden, ohne zu speichern</value>
+  </data>
+  <data name="Launcher_Section_Commands" xml:space="preserve">
+    <value>Aktionen</value>
+  </data>
+  <data name="Launcher_Direct_Label" xml:space="preserve">
+    <value>Direkt verbinden mit {0} ({1})</value>
+  </data>
+  <data name="Launcher_Direct_Prefix" xml:space="preserve">
+    <value>Direkt verbinden mit</value>
+  </data>
+  <data name="Launcher_Direct_Port" xml:space="preserve">
+    <value>Port {0}</value>
+  </data>
+  <data name="Launcher_Command_ViewTiles" xml:space="preserve">
+    <value>Ansicht: Kacheln</value>
+  </data>
+  <data name="Launcher_Command_ViewList" xml:space="preserve">
+    <value>Ansicht: Liste</value>
+  </data>
+  <data name="Launcher_Command_TileSize" xml:space="preserve">
+    <value>Kachelgröße: {0}</value>
+  </data>
+  <data name="Launcher_Command_Hotkey" xml:space="preserve">
+    <value>Globalen Hotkey ändern</value>
+  </data>
+  <data name="Launcher_Command_Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="Launcher_Keywords_NewConnection" xml:space="preserve">
+    <value>neu anlegen hinzufügen erstellen server host add new connection</value>
+  </data>
+  <data name="Launcher_Keywords_NewGroup" xml:space="preserve">
+    <value>neu ordner anlegen erstellen kunde folder group</value>
+  </data>
+  <data name="Launcher_Keywords_Import" xml:space="preserve">
+    <value>import einlesen rdp rdg rdcman mremoteng 1remote anydesk datei</value>
+  </data>
+  <data name="Launcher_Keywords_Export" xml:space="preserve">
+    <value>export backup sichern json datei</value>
+  </data>
+  <data name="Launcher_Keywords_Sync" xml:space="preserve">
+    <value>sync abgleich geräte onedrive cloud passphrase</value>
+  </data>
+  <data name="Launcher_Keywords_Refresh" xml:space="preserve">
+    <value>status ping prüfen erreichbar refresh neu laden</value>
+  </data>
+  <data name="Launcher_Keywords_ViewTiles" xml:space="preserve">
+    <value>kacheln tiles vorschau raster grid view</value>
+  </data>
+  <data name="Launcher_Keywords_ViewList" xml:space="preserve">
+    <value>liste tabelle zeilen spalten list view</value>
+  </data>
+  <data name="Launcher_Keywords_ThemeLight" xml:space="preserve">
+    <value>hell light theme design darstellung</value>
+  </data>
+  <data name="Launcher_Keywords_ThemeDark" xml:space="preserve">
+    <value>dunkel dark theme nacht design darstellung</value>
+  </data>
+  <data name="Launcher_Keywords_ThemeSystem" xml:space="preserve">
+    <value>windows system automatisch theme design darstellung</value>
+  </data>
+  <data name="Launcher_Keywords_TileSize" xml:space="preserve">
+    <value>kacheln größe tiles size darstellung</value>
+  </data>
+  <data name="Launcher_Keywords_RemoteTools" xml:space="preserve">
+    <value>teamviewer anydesk rustdesk pfad tools einstellungen</value>
+  </data>
+  <data name="Launcher_Keywords_Updates" xml:space="preserve">
+    <value>update aktualisierung version neu</value>
+  </data>
+  <data name="Launcher_Keywords_About" xml:space="preserve">
+    <value>info version lizenz about hilfe</value>
+  </data>
+  <data name="Launcher_Keywords_Hotkey" xml:space="preserve">
+    <value>hotkey tastenkombination tastenkürzel shortcut schnellstart</value>
+  </data>
+  <data name="Launcher_Hint_Connect" xml:space="preserve">
+    <value>Verbinden</value>
+  </data>
+  <data name="Launcher_Hint_Reveal" xml:space="preserve">
+    <value>In der Übersicht zeigen</value>
+  </data>
+  <data name="Launcher_Hint_Run" xml:space="preserve">
+    <value>Ausführen</value>
+  </data>
+  <data name="Launcher_Hint_ConnectOnce" xml:space="preserve">
+    <value>Einmalig verbinden</value>
+  </data>
+  <data name="Launcher_Hint_SaveAs" xml:space="preserve">
+    <value>Als Verbindung anlegen</value>
+  </data>
+  <data name="Launcher_Hint_Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="Launcher_Key_Enter" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="Launcher_Key_Escape" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Launcher_Empty_Title" xml:space="preserve">
+    <value>Wohin soll es gehen?</value>
+  </data>
+  <data name="Launcher_Empty_Text" xml:space="preserve">
+    <value>Tippe einen Namen, einen Host oder ein Tag. Mit „&gt;“ am Anfang siehst du alle Aktionen. Eine Adresse wie 10.0.0.5 oder root@server verbindet direkt, ohne etwas zu speichern.</value>
+  </data>
+  <data name="Launcher_NoMatch_Title" xml:space="preserve">
+    <value>Keine Treffer für „{0}“</value>
+  </data>
+  <data name="Launcher_NoMatch_Text" xml:space="preserve">
+    <value>Gesucht wird in Name, Host, Tags, Gruppe und Beschreibung. Mit „&gt;“ am Anfang findest du Aktionen. Eine Adresse wie 10.0.0.5 oder root@server verbindet direkt.</value>
+  </data>
+  <data name="Launcher_NoCommand_Title" xml:space="preserve">
+    <value>Keine Aktion passt zu „{0}“</value>
+  </data>
+  <data name="Launcher_NoCommand_Text" xml:space="preserve">
+    <value>Lösch den Text hinter „&gt;“, dann siehst du alle Aktionen.</value>
+  </data>
+  <data name="Launcher_Hotkey_Set" xml:space="preserve">
+    <value>Festlegen</value>
+  </data>
+  <data name="Launcher_Hotkey_Title" xml:space="preserve">
+    <value>Globaler Hotkey</value>
+  </data>
+  <data name="Launcher_Hotkey_Explain" xml:space="preserve">
+    <value>Mit dieser Tastenkombination öffnest du den Schnellstart aus jedem Programm, auch wenn Remote-Manager minimiert ist. In der App selbst geht immer Strg+K.</value>
+  </data>
+  <data name="Launcher_Hotkey_Current" xml:space="preserve">
+    <value>Aktuell</value>
+  </data>
+  <data name="Launcher_Hotkey_CurrentNone" xml:space="preserve">
+    <value>Keiner aktiv</value>
+  </data>
+  <data name="Launcher_Hotkey_Rules" xml:space="preserve">
+    <value>Erlaubt sind Strg, Alt oder Win zusammen mit einem Buchstaben, einer Ziffer, einer F-Taste oder der Leertaste. Nutzt schon ein anderes Programm die Kombination, lehnt Windows sie ab. Dann bleibt dein bisheriger Hotkey, und du kannst gleich eine andere probieren.</value>
+  </data>
+  <data name="Launcher_Hotkey_Refused" xml:space="preserve">
+    <value>Windows hat {0} abgelehnt, weil ein anderes Programm diese Kombination schon nutzt. Dein Hotkey bleibt {1}. Drück eine andere Kombination.</value>
+  </data>
+  <data name="Launcher_Hotkey_RefusedNone" xml:space="preserve">
+    <value>Windows hat {0} abgelehnt, weil ein anderes Programm diese Kombination schon nutzt. Im Moment ist kein Hotkey aktiv. Drück eine andere Kombination.</value>
+  </data>
+  <data name="Launcher_Hotkey_Saved" xml:space="preserve">
+    <value>Gespeichert. {0} öffnet ab jetzt den Schnellstart.</value>
+  </data>
+  <data name="Launcher_Hotkey_Reset" xml:space="preserve">
+    <value>Standard wiederherstellen ({0})</value>
+  </data>
+  <data name="Launcher_Hotkey_Done" xml:space="preserve">
+    <value>Fertig</value>
   </data>
   <data name="LivePreview_AgeMinutes" xml:space="preserve">
     <value>vor {0} min</value>

@@ -5,54 +5,241 @@
         xmlns:res="using:RemoteManager.App.Resources"
         x:Class="RemoteManager.App.Views.QuickLauncherWindow"
         Title="{x:Static res:Strings.Launcher_Title}"
-        Width="640" SizeToContent="Height" CanResize="False"
-        WindowDecorations="BorderOnly" ExtendClientAreaToDecorationsHint="True" ExtendClientAreaTitleBarHeightHint="0"
-        ShowInTaskbar="False" Topmost="True" WindowStartupLocation="Manual"
-        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
-  <Border Padding="14,14,14,10">
-    <StackPanel Spacing="10">
-      <TextBox x:Name="QueryBox" FontSize="18" Padding="12,10" PlaceholderText="{x:Static res:Strings.Launcher_Placeholder}">
-        <TextBox.InnerLeftContent>
-          <ui:FASymbolIcon Symbol="Find" FontSize="18" Margin="12,0,0,0" Opacity="0.6" />
-        </TextBox.InnerLeftContent>
-      </TextBox>
+        Width="744" SizeToContent="Height" CanResize="False"
+        WindowDecorations="None" ShowInTaskbar="False" Topmost="True" WindowStartupLocation="Manual"
+        TransparencyLevelHint="Transparent" Background="Transparent">
+  <!--
+    A window of its own (it must open above session windows, whose surfaces are native), without a frame:
+    the card draws the frame, and the transparent margin around it carries the shadow.
+  -->
+  <Window.Styles>
+    <!-- The search field is lettering on the card, not a box: no fill, no frame, no focus line. -->
+    <Style Selector="TextBox.query">
+      <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+      <Setter Property="FontSize" Value="21" />
+      <Setter Property="LetterSpacing" Value="0.2" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="14,0,8,0" />
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="CaretBrush" Value="{DynamicResource RmAccentBrush}" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+    </Style>
+    <Style Selector="TextBox.query /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="TextBox.query:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="TextBox.query:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
 
-      <ListBox x:Name="ResultList" MaxHeight="420" Background="Transparent" Classes="launcher">
-        <ListBox.ItemTemplate>
-          <DataTemplate x:DataType="app:ConnectionItem">
-            <Grid ColumnDefinitions="Auto,*,Auto" Height="46">
-              <Border Width="34" Height="34" CornerRadius="17" Background="{Binding TypeBrush}" VerticalAlignment="Center">
-                <TextBlock Text="{Binding TypeInitials}" Foreground="White" FontSize="10" FontWeight="SemiBold"
-                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+    <!-- Rows never take the keyboard focus: typing always goes to the search field. -->
+    <Style Selector="ListBox.launcher ListBoxItem">
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="Margin" Value="0,1" />
+      <Setter Property="Focusable" Value="False" />
+    </Style>
+    <Style Selector="ListBox.launcher ListBoxItem.section">
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style Selector="ListBox.launcher ListBoxItem.section:selected, ListBox.launcher ListBoxItem.section:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="TextBlock.rowLabel">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="ui|FASymbolIcon.rowIcon">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected ui|FASymbolIcon.rowIcon">
+      <Setter Property="Foreground" Value="{DynamicResource RmAccentTextBrush}" />
+    </Style>
+
+    <!-- The hotkey itself, where it is the subject and not a hint. -->
+    <Style Selector="Border.keycap.large">
+      <Setter Property="Padding" Value="10,4,10,5" />
+      <Setter Property="MinWidth" Value="34" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Border.keycap.large TextBlock">
+      <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource RmTextBrush}" />
+    </Style>
+  </Window.Styles>
+
+  <Panel x:Name="Backdrop" Background="Transparent">
+    <Border x:Name="Card" Margin="32,18,32,46" CornerRadius="12" ClipToBounds="True"
+            Background="{DynamicResource RmCardBrush}" BorderBrush="{DynamicResource RmStrokeStrongBrush}" BorderThickness="1"
+            BoxShadow="{DynamicResource RmRaisedShadow}">
+      <Panel>
+        <!-- ===== Search: the field, the results or what to type, and the keys for the selected row ===== -->
+        <Grid x:Name="SearchView" RowDefinitions="Auto,Auto,Auto">
+          <Grid ColumnDefinitions="Auto,*,Auto" Height="62" Margin="22,0,18,0">
+            <ui:FASymbolIcon Symbol="Find" FontSize="19" VerticalAlignment="Center" Foreground="{DynamicResource RmTextSecondaryBrush}" />
+            <TextBox x:Name="QueryBox" Grid.Column="1" Classes="query" PlaceholderText="{x:Static res:Strings.Launcher_Placeholder}" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <Border Classes="keycap" VerticalAlignment="Center">
+                <TextBlock Text="{x:Static res:Strings.Launcher_Key_Escape}" />
               </Border>
-              <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center" Spacing="1">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center" ToolTip.Tip="{Binding StatusTip}" />
-                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                  <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="#F59E0B" IsVisible="{Binding IsFavorite}" />
-                </StackPanel>
-                <TextBlock Text="{Binding HostLabel}" Opacity="0.6" FontSize="12" TextTrimming="CharacterEllipsis" />
+              <TextBlock Classes="caption" Text="{x:Static res:Strings.Launcher_Hint_Close}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Grid>
+
+          <Border Grid.Row="1" BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="0,1,0,0">
+            <Panel>
+              <ListBox x:Name="ResultList" Classes="launcher" MaxHeight="440" Margin="8,2,8,8" Focusable="False" SelectionMode="Single">
+                <ListBox.DataTemplates>
+                  <DataTemplate DataType="app:LauncherSection">
+                    <TextBlock Classes="caption" Text="{Binding Title}" Margin="0,12,0,5" />
+                  </DataTemplate>
+
+                  <!-- A connection, in the order of the list view: lamp, name, type, host, then its group. -->
+                  <DataTemplate DataType="app:ConnectionItem">
+                    <Grid ColumnDefinitions="24,196,90,*,Auto" Height="40" Background="Transparent">
+                      <Ellipse Classes="lamp" Fill="{Binding StatusBrush}" HorizontalAlignment="Left" Margin="3,0,0,0" ToolTip.Tip="{Binding StatusTip}" />
+                      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <TextBlock Classes="name" FontSize="14.5" Text="{Binding Name}" TextTrimming="CharacterEllipsis" MaxWidth="160" />
+                        <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="{DynamicResource FavoriteBrush}" IsVisible="{Binding IsFavorite}" />
+                      </StackPanel>
+                      <Border Grid.Column="2" Classes="typeChip" Background="{Binding TypeBrush}" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding TypeLabel}" />
+                      </Border>
+                      <TextBlock Grid.Column="3" Classes="mono muted" Text="{Binding HostLabel}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                      <TextBlock Grid.Column="4" Classes="faint" FontSize="12.5" Text="{Binding GroupPath}" VerticalAlignment="Center"
+                                 TextTrimming="CharacterEllipsis" MaxWidth="190" />
+                    </Grid>
+                  </DataTemplate>
+
+                  <!-- A typed address: the same columns, so it reads like a connection that does not exist yet. -->
+                  <DataTemplate DataType="app:LauncherTarget">
+                    <Grid ColumnDefinitions="24,196,90,*,Auto" Height="40" Background="Transparent" ToolTip.Tip="{Binding Label}">
+                      <ui:FASymbolIcon Classes="rowIcon" Symbol="Play" FontSize="14" />
+                      <TextBlock Grid.Column="1" Classes="rowLabel" Text="{x:Static res:Strings.Launcher_Direct_Prefix}" Margin="0,0,10,0" />
+                      <Border Grid.Column="2" Classes="typeChip" Background="{Binding TypeBrush}" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding TypeLabel}" />
+                      </Border>
+                      <TextBlock Grid.Column="3" Classes="mono" Text="{Binding TargetLabel}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                      <TextBlock Grid.Column="4" Classes="faint" FontSize="12.5" Text="{Binding PortLabel}" VerticalAlignment="Center" />
+                    </Grid>
+                  </DataTemplate>
+
+                  <!-- An app command: what it does, whether it is the choice in use, and its shortcut in the overview. -->
+                  <DataTemplate DataType="app:LauncherCommand">
+                    <Grid ColumnDefinitions="24,*,Auto,Auto" Height="40" Background="Transparent">
+                      <ui:FASymbolIcon Classes="rowIcon" Symbol="{Binding Symbol}" />
+                      <TextBlock Grid.Column="1" Classes="rowLabel" Text="{Binding Label}" Margin="0,0,12,0" />
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" IsVisible="{Binding IsCurrent}">
+                        <ui:FASymbolIcon Symbol="Accept" FontSize="12" Foreground="{DynamicResource RmTextSecondaryBrush}" />
+                        <TextBlock Classes="caption" Text="{x:Static res:Strings.Launcher_Command_Active}" />
+                      </StackPanel>
+                      <ItemsControl Grid.Column="3" ItemsSource="{Binding Keys}" IsVisible="{Binding HasKeys}" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="3" />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="x:String">
+                            <Border Classes="keycap">
+                              <TextBlock Text="{Binding}" />
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.DataTemplates>
+              </ListBox>
+
+              <!-- Nothing to list: what the field understands, or why nothing matched. -->
+              <StackPanel x:Name="EmptyPanel" Margin="22,18,22,20" Spacing="6" IsVisible="False">
+                <TextBlock x:Name="EmptyTitle" Classes="subtitle" TextWrapping="Wrap" />
+                <TextBlock x:Name="EmptyText" Classes="hint" FontSize="13" MaxWidth="560" HorizontalAlignment="Left" />
               </StackPanel>
-              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <TextBlock Text="{Binding GroupPath}" Opacity="0.5" FontSize="12" VerticalAlignment="Center" MaxWidth="180" TextTrimming="CharacterEllipsis" />
-                <Border Classes="pill" Background="{Binding TypeBrush}">
-                  <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
-                </Border>
+            </Panel>
+          </Border>
+
+          <!-- Keys for the selected row on the left, the global hotkey on the right. -->
+          <Border Grid.Row="2" BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="0,1,0,0" Padding="20,0,10,0" Height="44">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center">
+                <StackPanel x:Name="PrimaryHint" Orientation="Horizontal" Spacing="6">
+                  <Border Classes="keycap">
+                    <TextBlock Text="{x:Static res:Strings.Launcher_Key_Enter}" />
+                  </Border>
+                  <TextBlock x:Name="PrimaryHintText" Classes="caption" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel x:Name="SecondaryHint" Orientation="Horizontal" Spacing="6">
+                  <StackPanel Orientation="Horizontal" Spacing="3">
+                    <Border Classes="keycap">
+                      <TextBlock Text="{x:Static res:Strings.Key_Ctrl}" />
+                    </Border>
+                    <Border Classes="keycap">
+                      <TextBlock Text="{x:Static res:Strings.Launcher_Key_Enter}" />
+                    </Border>
+                  </StackPanel>
+                  <TextBlock x:Name="SecondaryHintText" Classes="caption" VerticalAlignment="Center" />
+                </StackPanel>
+              </StackPanel>
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                <TextBlock x:Name="HotkeyText" Classes="caption" VerticalAlignment="Center" />
+                <StackPanel x:Name="HotkeyKeys" Orientation="Horizontal" Spacing="3" VerticalAlignment="Center" />
+                <Button x:Name="ChangeHotkeyButton" Classes="link" VerticalAlignment="Center"
+                        Content="{x:Static res:Strings.Launcher_ChangeHotkey}" />
               </StackPanel>
             </Grid>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
+          </Border>
+        </Grid>
 
-      <TextBlock x:Name="NoResults" Text="{x:Static res:Strings.Empty_NoMatch}" Opacity="0.55" Margin="4,6" IsVisible="False" />
+        <!-- ===== Global hotkey: what it is, the one in use, and the recorder for a new one ===== -->
+        <StackPanel x:Name="HotkeyView" Margin="24,20,24,18" Spacing="14" IsVisible="False">
+          <StackPanel Spacing="5">
+            <TextBlock Classes="subtitle" Text="{x:Static res:Strings.Launcher_Hotkey_Title}" />
+            <TextBlock Classes="hint" FontSize="13" Text="{x:Static res:Strings.Launcher_Hotkey_Explain}" />
+          </StackPanel>
 
-      <Grid ColumnDefinitions="*,Auto" Opacity="0.75">
-        <TextBlock Text="{x:Static res:Strings.Launcher_Hints}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-          <TextBlock x:Name="HotkeyText" FontSize="12" VerticalAlignment="Center" />
-          <Button x:Name="ChangeHotkeyButton" Classes="toolbar" Padding="8,2" FontSize="12" Content="{x:Static res:Strings.Launcher_ChangeHotkey}" />
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Classes="caption" Text="{x:Static res:Strings.Launcher_Hotkey_Current}" VerticalAlignment="Center" />
+            <StackPanel x:Name="CurrentHotkeyKeys" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" />
+            <TextBlock x:Name="CurrentHotkeyNone" Classes="muted" Text="{x:Static res:Strings.Launcher_Hotkey_CurrentNone}" VerticalAlignment="Center" />
+          </StackPanel>
+
+          <Border x:Name="HotkeyNote" Classes="note">
+            <StackPanel Spacing="3">
+              <TextBlock x:Name="HotkeyNoteTitle" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <TextBlock x:Name="HotkeyNoteText" Classes="hint" FontSize="12.5" />
+            </StackPanel>
+          </Border>
+
+          <Grid ColumnDefinitions="*,Auto">
+            <Button x:Name="ResetHotkeyButton" Classes="ghost" HorizontalAlignment="Left" Margin="-10,0,0,0" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <StackPanel x:Name="HotkeyCancelHint" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border Classes="keycap">
+                  <TextBlock Text="{x:Static res:Strings.Launcher_Key_Escape}" />
+                </Border>
+              </StackPanel>
+              <Button x:Name="HotkeyDoneButton" />
+            </StackPanel>
+          </Grid>
         </StackPanel>
-      </Grid>
-    </StackPanel>
-  </Border>
+      </Panel>
+    </Border>
+  </Panel>
 </Window>
