@@ -133,7 +133,7 @@ public sealed class Appearance
             }
         }
 
-        Color onAccent = RelativeLuminance(accent) > 0.36 ? Color.Parse("#14100A") : Colors.White;
+        Color onAccent = InkOn(accent);
         // As text on a surface the fill itself is too pale on the light theme.
         Color accentText = dark ? accent : Mix(accent, Colors.Black, 0.38);
 
@@ -162,6 +162,22 @@ public sealed class Appearance
         resources["AccentButtonBorderBrushPressed"] = Brushes.Transparent;
 
         Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// The text color on a fill of the signal color: the warm near-black or white, whichever reads better
+    /// (WCAG contrast ratio). Where neither reaches 4.5 (a narrow band of mid tones, possible with the
+    /// Windows accent) plain black does.
+    /// </summary>
+    internal static Color InkOn(Color fill)
+    {
+        Color dark = Color.Parse("#14100A");
+        double luminance = RelativeLuminance(fill);
+        double withDark = (luminance + 0.05) / (RelativeLuminance(dark) + 0.05);
+        double withWhite = 1.05 / (luminance + 0.05);
+        if (Math.Max(withDark, withWhite) < 4.5)
+            return Colors.Black;
+        return withWhite >= withDark ? Colors.White : dark;
     }
 
     private static Color Mix(Color a, Color b, double amount) => Color.FromRgb(

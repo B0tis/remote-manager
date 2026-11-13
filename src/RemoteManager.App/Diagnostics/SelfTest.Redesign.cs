@@ -543,12 +543,13 @@ internal static partial class SelfTest
         Check($"Filter chips: \"Alle\", one per type that occurs, and \"Nur online\" ({string.Join(", ", chips.Select(c => $"{c.Label} {c.Count}"))})",
             everyType && expected.Length >= 5);
 
-        // In the group of these checks: three connections of three types.
+        // In the group of these checks: three connections of three types, in the order the types are declared.
         window.ShowFilter(SidebarEntry.GroupPrefix + group.Id);
         await Settle(300);
         chips = ChipStates(window);
+        ConnectionType[] inGroup = [.. new[] { rdp, ssh, tool }.Select(c => c.Model.Type).Order()];
         bool scoped = chips.Select(c => (c.Label, c.Count)).SequenceEqual(
-            [(Strings.Filter_AllTypes, "3"), (Name(ConnectionType.Rdp), "1"), (Name(ConnectionType.Ssh), "1"), (Name(ConnectionType.TeamViewer), "1"), (Strings.Filter_OnlineOnly, chips[^1].Count)]);
+            [(Strings.Filter_AllTypes, "3"), .. inGroup.Select(t => (Name(t), "1")), (Strings.Filter_OnlineOnly, chips[^1].Count)]);
 
         window.SetTypeFilter(ConnectionType.Ssh);
         chips = ChipStates(window);
@@ -597,10 +598,12 @@ internal static partial class SelfTest
         // A selected type stays as a chip where it does not occur, so it can be switched off there.
         window.SetTypeFilter(ConnectionType.TeamViewer);
         window.SearchBox.Text = rdp.Name;
+        await Settle(300); // the text box reports a changed text with the next dispatcher round
         chips = ChipStates(window);
         bool staysAtZero = chips.Any(c => c.Label == Name(ConnectionType.TeamViewer) && c is { Checked: true, Count: "0" })
             && window.CurrentEmptyKind == MainWindow.EmptyKind.Filtered;
         window.SearchBox.Text = "";
+        await Settle(200);
         window.ClearChipFilters();
         window.ShowFilter(SidebarEntry.AllTag);
         await Settle(300);
@@ -761,6 +764,25 @@ internal static partial class SelfTest
             SaveRenderProbe(window, dark ? "redesign-dark-list.png" : "redesign-light-list.png");
             window.SetListView(false);
         }
+
+        // The Windows accent can be any color: sweep the color cube, every fill must get readable text.
+        double worst = double.MaxValue;
+        Color worstFill = default;
+        for (int r = 0; r <= 255; r += 15)
+        {
+            for (int g = 0; g <= 255; g += 15)
+            {
+                for (int b = 0; b <= 255; b += 15)
+                {
+                    Color fill = Color.FromRgb((byte)r, (byte)g, (byte)b);
+                    double ratio = ContrastRatio(fill, Appearance.InkOn(fill));
+                    if (ratio < worst)
+                        (worst, worstFill) = (ratio, fill);
+                }
+            }
+        }
+
+        Check($"Any signal color gets text with a contrast of at least 4.5 (lowest {worst:0.00} on {worstFill})", worst >= 4.5);
 
         // "System" follows Windows.
         look.SetTheme(AppTheme.System);

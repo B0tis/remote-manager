@@ -311,6 +311,8 @@ public partial class MainWindow : Window, IConnectionHost
         TileList.IsVisible = !list;
         TileToggle.IsChecked = !list;
         ListToggle.IsChecked = list;
+        // The S/M/L switch belongs to the tiles (ApplyTileSize sets it too, but only runs when the size changes).
+        SizeSwitch.IsEnabled = !list;
         Select(selected);
         app.Library.SetSetting(ViewSetting, list ? "list" : "tiles");
         UpdateEmptyState();
