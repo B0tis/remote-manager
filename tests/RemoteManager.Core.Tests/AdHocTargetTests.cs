@@ -3,7 +3,7 @@ using RemoteManager.Core.Search;
 
 namespace RemoteManager.Core.Tests;
 
-/// <summary>What the quick launcher reads as a target to connect to directly, and the bar for its action search.</summary>
+/// <summary>What the quick launcher reads as a target to connect to directly, and the bars a fuzzy match has to clear there.</summary>
 public sealed class AdHocTargetTests
 {
     [Theory]

@@ -230,11 +230,10 @@
           <Grid ColumnDefinitions="*,Auto">
             <Button x:Name="ResetHotkeyButton" Classes="ghost" HorizontalAlignment="Left" Margin="-10,0,0,0" />
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <StackPanel x:Name="HotkeyCancelHint" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <Border Classes="keycap">
-                  <TextBlock Text="{x:Static res:Strings.Launcher_Key_Escape}" />
-                </Border>
-              </StackPanel>
+              <!-- Esc does what the button says in both states: cancel while waiting, back once saved. -->
+              <Border Classes="keycap" VerticalAlignment="Center">
+                <TextBlock Text="{x:Static res:Strings.Launcher_Key_Escape}" />
+              </Border>
               <Button x:Name="HotkeyDoneButton" />
             </StackPanel>
           </Grid>
