@@ -99,6 +99,7 @@ internal static partial class SelfTest
         Check("Edit dialog opens and Cancel leaves the connection unchanged", !await editing && edited.Name == nameBefore);
 
         await RunOverviewChecksAsync(window);
+        await RunPaletteChecksAsync(window); // SelfTest.Palette.cs
         await RunGroupDeleteChecksAsync(window); // SelfTest.GroupDelete.cs
         await RunLayoutChecksAsync(window); // SelfTest.Layout.cs
         await RunCredentialChecksAsync(window);
