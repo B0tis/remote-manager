@@ -77,6 +77,14 @@ internal static partial class SelfTest
         Check("Every connection type has a handler",
             Enum.GetValues<ConnectionType>().All(app.Handlers.Supports) && window.Connections.All(c => c.Handler.Type == c.Model.Type));
 
+        if (Environment.GetEnvironmentVariable("RM_TMP_ONLY_REDESIGN") == "1") // TEMP-LOCAL: remove before commit
+        {
+            window.Activate();
+            await Settle(2500);
+            await RunRedesignChecksAsync(window);
+            return;
+        }
+
         await RunDatabaseChecksAsync(app);
         await RunStatusCheckerChecksAsync(app);
         window.Activate();
@@ -103,6 +111,7 @@ internal static partial class SelfTest
         await RunLayoutChecksAsync(window); // SelfTest.Layout.cs
         await RunCredentialChecksAsync(window);
         await RunRdpImportChecksAsync(window);
+        await RunRedesignChecksAsync(window); // SelfTest.Redesign.cs
 
         await RunRemoteToolChecksAsync(window);
         await RunVncAndVaultChecksAsync(window); // SelfTest.VncAndVaults.cs
