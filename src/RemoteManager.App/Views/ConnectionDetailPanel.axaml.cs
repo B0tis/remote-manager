@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
+using FluentAvalonia.UI.Controls;
 using Avalonia.Media;
 using RemoteManager.App.Connections;
 using RemoteManager.App.Resources;
@@ -33,6 +35,13 @@ public partial class ConnectionDetailPanel : UserControl
                 await host.CopyPasswordAsync(shown);
         };
         FavoriteButton.Click += (_, _) => Act(c => host!.SetFavorite([c], !c.IsFavorite));
+        CopyHostButton.Click += async (_, _) =>
+        {
+            if (host is null || shown is null || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
+                return;
+            await clipboard.SetTextAsync(shown.Model.Host);
+            host.ShowToast(shown.Name, string.Format(CultureInfo.CurrentCulture, Strings.Details_HostCopied, shown.Model.Host), FAInfoBarSeverity.Success);
+        };
         NotesBox.LostFocus += (_, _) => SaveNotes();
 
         ConnectAllButton.Click += (_, _) => host?.OpenAll(selection);
@@ -84,19 +93,23 @@ public partial class ConnectionDetailPanel : UserControl
     private void ShowSingle(ConnectionItem c, bool reloadNotes)
     {
         AppHost app = AppHost.Current;
-        PreviewBackground.Background = c.TypeBrush;
-        PreviewIcon.Background = c.TypeBrush;
-        PreviewInitials.Text = c.TypeInitials;
+        PreviewBackground.Background = c.TypeSoftBrush;
+        PreviewGlyph.Seed = c.Id;
+        PreviewGlyph.Brush = c.TypeBrush;
         PreviewImage.Source = c.Preview;
         PreviewImage.IsVisible = c.HasPreview;
-        PreviewIcon.IsVisible = !c.HasPreview;
+        PreviewShade.IsVisible = c.HasPreview;
+        PreviewGlyph.IsVisible = !c.HasPreview;
+        TypeChip.Background = c.TypeBrush;
+        TypeChipText.Text = c.TypeLabel;
         UpdateLiveBadge(c);
 
         NameText.Text = c.Name;
         FavoriteOn.IsVisible = c.IsFavorite;
         FavoriteOff.IsVisible = !c.IsFavorite;
         ToolTip.SetTip(FavoriteButton, c.IsFavorite ? Strings.Action_Unfavorite : Strings.Action_Favorite);
-        SubtitleText.Text = c.Description.Length > 0 ? $"{c.TypeLabel} · {c.Description}" : c.TypeLabel;
+        SubtitleText.Text = c.Description;
+        SubtitleText.IsVisible = c.Description.Length > 0;
         TagList.ItemsSource = c.Model.Tags.Select(t => $"#{t}").ToList();
         TagList.IsVisible = c.Model.Tags.Count > 0;
         CopyPasswordButton.IsVisible = c.HasStoredPassword;
@@ -113,10 +126,20 @@ public partial class ConnectionDetailPanel : UserControl
             : user;
         GroupText.Text = c.GroupLabel;
         StatusDot.Fill = c.StatusBrush;
+        StatusPillText.Text = c.StatusLabel;
         StatusText.Text = c.StatusCheckedAt is { } at
-            ? $"{c.StatusLabel} · {string.Format(CultureInfo.CurrentCulture, Strings.Status_CheckedAt, at.ToString("T", CultureInfo.CurrentCulture))}"
+            ? $"{c.StatusLabel}\n{string.Format(CultureInfo.CurrentCulture, Strings.Status_CheckedAt, at.ToString("T", CultureInfo.CurrentCulture))}"
             : c.StatusLabel;
         ToolTip.SetTip(StatusText, c.StatusHint);
+
+        // The answer-time line needs at least one measured answer; remote tools and unreachable hosts have none.
+        bool measured = c.LatencyHistory.Any(v => v is not null);
+        LatencyCard.IsVisible = measured;
+        if (measured)
+        {
+            LatencyLine.Values = [.. c.LatencyHistory];
+            LatencyText.Text = c.HasLatency ? c.LatencyLabel : Strings.Details_NoAnswer;
+        }
         LastConnectedText.Text = c.LastConnectedLabel;
 
         ParameterList.ItemsSource = StartParameters.Describe(c.Model);

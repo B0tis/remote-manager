@@ -33,12 +33,12 @@ internal static partial class SelfTest
             ConnectionGroup empty = library.EnsureGroupPath("Selftest Leer")!;
             window.SyncWithLibrary();
             await Settle(500);
-            GroupDeleteDialog? asked = await OpenGroupDeleteAsync(window, SidebarItem(window, empty));
+            GroupDeleteDialog? asked = await OpenGroupDeleteAsync(window, SidebarControl(window, SidebarItem(window, empty)));
             bool emptyDialog = asked is { HasContent: false };
             asked?.Dialog.Hide();
             await Settle(400);
             bool kept = library.FindGroup(empty.Id) is not null;
-            asked = await OpenGroupDeleteAsync(window, SidebarItem(window, empty));
+            asked = await OpenGroupDeleteAsync(window, SidebarControl(window, SidebarItem(window, empty)));
             asked?.Dialog.Hide(FAContentDialogResult.Primary);
             await Settle(600);
             Check("Deleting an empty group from the sidebar menu: simple confirmation, cancel keeps it, \"Löschen\" removes it (also on disk and in the sidebar)",
@@ -68,10 +68,9 @@ internal static partial class SelfTest
                 && reopened.FindConnection(direct.Id)?.GroupId is null && reopened.FindConnection(nested.Id)?.GroupId == inner.Id);
 
             // Delete on the selected sidebar group, "delete everything": the group and its connections go.
-            FANavigationViewItem? innerItem = SidebarItem(window, inner);
-            window.Nav.SelectedItem = innerItem;
+            window.Navigation.SelectedItem = SidebarItem(window, inner);
             await Settle(400);
-            window.Nav.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Delete, Source = innerItem });
+            window.Navigation.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Delete, Source = window.Navigation });
             await Settle(800);
             asked = GroupDeleteDialog.Current;
             if (asked is not null)
@@ -90,7 +89,7 @@ internal static partial class SelfTest
             window.Save(direct);
             window.SyncWithLibrary();
             await Settle(500);
-            FANavigationViewItem? tagItem = SidebarTag(window, tag);
+            Control? tagItem = SidebarControl(window, SidebarTag(window, tag));
             bool menuOpened = await RightClickAsync(window, tagItem);
             if (tagItem?.ContextMenu?.ItemsSource?.OfType<MenuItem>().FirstOrDefault(m => m.Header as string == Strings.Action_RemoveTag) is { } remove)
             {
@@ -115,17 +114,21 @@ internal static partial class SelfTest
         }
     }
 
-    private static FANavigationViewItem? SidebarItem(MainWindow window, ConnectionGroup group)
+    private static SidebarEntry? SidebarItem(MainWindow window, ConnectionGroup group) =>
+        window.FindSidebarEntry(SidebarEntry.GroupPrefix + group.Id);
+
+    /// <summary>The sidebar row of an entry, scrolled into view (the list only creates rows that show).</summary>
+    private static Control? SidebarControl(MainWindow window, SidebarEntry? entry)
     {
-        static IEnumerable<FANavigationViewItem> Flatten(IEnumerable<FANavigationViewItem> items) =>
-            items.SelectMany(i => (i.MenuItemsSource?.OfType<FANavigationViewItem>() is { } children ? Flatten(children) : []).Prepend(i));
-        return window.Nav.MenuItemsSource?.OfType<FANavigationViewItem>() is { } items
-            ? Flatten(items).FirstOrDefault(i => (string?)i.Tag == $"group:{group.Id}")
-            : null;
+        if (entry is null)
+            return null;
+        window.Navigation.ScrollIntoView(entry);
+        window.Navigation.UpdateLayout();
+        return window.Navigation.ContainerFromItem(entry);
     }
 
-    private static FANavigationViewItem? SidebarTag(MainWindow window, string tag) =>
-        window.Nav.MenuItemsSource?.OfType<FANavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == $"tag:{tag}");
+    private static SidebarEntry? SidebarTag(MainWindow window, string tag) =>
+        window.FindSidebarEntry(SidebarEntry.TagPrefix + tag);
 
     /// <summary>Right-clicks <paramref name="owner"/> (routed pointer events); true when its context menu opened.</summary>
     private static async Task<bool> RightClickAsync(MainWindow window, Control? owner)

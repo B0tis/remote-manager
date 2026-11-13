@@ -86,17 +86,17 @@ public partial class MainWindow
     /// <summary>Delete in the sidebar deletes the selected group, or removes the selected tag (after asking).</summary>
     private void OnNavigationKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Delete || e.KeyModifiers != KeyModifiers.None || Nav.SelectedItem is not FANavigationViewItem { Tag: string tag })
+        if (e.Key != Key.Delete || e.KeyModifiers != KeyModifiers.None || NavList.SelectedItem is not SidebarEntry entry)
             return;
-        if (tag.StartsWith("group:", StringComparison.Ordinal) && app.Library.FindGroup(tag["group:".Length..]) is { } group)
+        if (entry.Group is { } group && app.Library.FindGroup(group.Id) is not null)
         {
             e.Handled = true;
             _ = DeleteGroupAsync(group);
         }
-        else if (tag.StartsWith("tag:", StringComparison.Ordinal))
+        else if (entry.TagName is { } tag)
         {
             e.Handled = true;
-            _ = RemoveTagAsync(tag["tag:".Length..]);
+            _ = RemoveTagAsync(tag);
         }
     }
 
@@ -152,20 +152,16 @@ public partial class MainWindow
     /// <summary>Collapses or expands a group section; the state is saved and the sidebar follows.</summary>
     public void ToggleCollapsed(GroupHeaderItem header)
     {
-        if (header.Group is not { } group)
-            return;
-        group.IsCollapsed = !group.IsCollapsed;
-        app.Library.UpdateGroup(group);
-        if (Nav.MenuItemsSource?.OfType<FANavigationViewItem>() is { } navItems
-            && Flatten(navItems).FirstOrDefault(i => (string?)i.Tag == $"group:{group.Id}") is { MenuItemsSource: not null } item)
-        {
-            buildingNavigation = true;
-            item.IsExpanded = !group.IsCollapsed;
-            buildingNavigation = false;
-            SelectNavigationItem(Nav.SelectedItem as FANavigationViewItem);
-        }
+        if (header.Group is { } group)
+            SetCollapsed(group, !group.IsCollapsed);
+    }
 
-        ApplyFilter();
+    /// <summary>Collapses or expands a group in the overview and the sidebar alike (one saved flag).</summary>
+    private void SetCollapsed(ConnectionGroup group, bool collapsed)
+    {
+        group.IsCollapsed = collapsed;
+        app.Library.UpdateGroup(group);
+        BuildNavigation();
     }
 
     /// <summary>Asks for a target group and moves the connections there (end of the group).</summary>

@@ -247,7 +247,7 @@
     <value>Status</value>
   </data>
   <data name="Details_Title" xml:space="preserve">
-    <value>DETAILS</value>
+    <value>Details</value>
   </data>
   <data name="Details_ToggleTip" xml:space="preserve">
     <value>Detailbereich ein/aus (Strg+I)</value>
@@ -257,6 +257,18 @@
   </data>
   <data name="Details_UserWithPassword" xml:space="preserve">
     <value>{0} · Passwort gespeichert</value>
+  </data>
+  <data name="Details_AnswerTime" xml:space="preserve">
+    <value>Antwortzeit</value>
+  </data>
+  <data name="Details_NoAnswer" xml:space="preserve">
+    <value>keine Antwort</value>
+  </data>
+  <data name="Details_CopyHost" xml:space="preserve">
+    <value>Host kopieren</value>
+  </data>
+  <data name="Details_HostCopied" xml:space="preserve">
+    <value>{0} kopiert.</value>
   </data>
   <data name="Duplicate_Name" xml:space="preserve">
     <value>{0} (Kopie)</value>
@@ -353,6 +365,21 @@
   </data>
   <data name="Empty_Recent_Title" xml:space="preserve">
     <value>Noch nichts verbunden</value>
+  </data>
+  <data name="Empty_Filtered_Title" xml:space="preserve">
+    <value>Kein Treffer mit diesen Filtern</value>
+  </data>
+  <data name="Empty_Filtered_Message" xml:space="preserve">
+    <value>Hier gibt es Verbindungen, aber keine passt zu den gewählten Filtern.</value>
+  </data>
+  <data name="Empty_ClearFilters" xml:space="preserve">
+    <value>Filter zurücksetzen</value>
+  </data>
+  <data name="Empty_Active_Title" xml:space="preserve">
+    <value>Keine Sitzung offen</value>
+  </data>
+  <data name="Empty_Active_Message" xml:space="preserve">
+    <value>Hier stehen die Verbindungen, deren Sitzungsfenster gerade offen sind.</value>
   </data>
   <data name="Export_Done" xml:space="preserve">
     <value>Sicherung gespeichert (ohne Passwörter): {0}</value>
@@ -681,6 +708,12 @@
   <data name="Menu_ViewTiles" xml:space="preserve">
     <value>Kacheln</value>
   </data>
+  <data name="Menu_LauncherShort" xml:space="preserve">
+    <value>Schnellstart</value>
+  </data>
+  <data name="Menu_Sidebar" xml:space="preserve">
+    <value>Seitenleiste</value>
+  </data>
   <data name="Move_Title" xml:space="preserve">
     <value>„{0}“ verschieben nach</value>
   </data>
@@ -701,6 +734,9 @@
   </data>
   <data name="Nav_Tags" xml:space="preserve">
     <value>Tags</value>
+  </data>
+  <data name="Nav_Active" xml:space="preserve">
+    <value>Aktive Sitzungen</value>
   </data>
   <data name="Password_Copied" xml:space="preserve">
     <value>Kopiert, wird in {0:0} s geleert</value>
@@ -1181,6 +1217,9 @@
     <value>Das gespeicherte Passwort wurde abgelehnt. Bitte neu eingeben; mit „Passwort speichern“ wird es ersetzt.
 {0}</value>
   </data>
+  <data name="Session_OpenBadge" xml:space="preserve">
+    <value>Sitzung offen</value>
+  </data>
   <data name="Sftp_CopyPath" xml:space="preserve">
     <value>Pfad kopieren</value>
   </data>
@@ -1558,6 +1597,9 @@
   </data>
   <data name="Status_Unknown" xml:space="preserve">
     <value>Unbekannt</value>
+  </data>
+  <data name="Status_Latency" xml:space="preserve">
+    <value>{0} ms</value>
   </data>
   <data name="Subtitle_Many" xml:space="preserve">
     <value>{0} Verbindungen · {1} online</value>
@@ -2074,5 +2116,107 @@
   </data>
   <data name="Vnc_ViewOnlyTip" xml:space="preserve">
     <value>Keine Maus- und Tastatureingaben senden</value>
+  </data>
+  <data name="Sidebar_ToggleTip" xml:space="preserve">
+    <value>Seitenleiste ein- oder ausklappen (Strg+B)</value>
+  </data>
+  <data name="Sidebar_Sync_Off" xml:space="preserve">
+    <value>Synchronisierung aus</value>
+  </data>
+  <data name="Sidebar_Sync_On" xml:space="preserve">
+    <value>Synchronisiert</value>
+  </data>
+  <data name="Sidebar_Sync_OnAt" xml:space="preserve">
+    <value>Synchronisiert {0}</value>
+  </data>
+  <data name="Sidebar_Sync_Conflicts" xml:space="preserve">
+    <value>{0} Konflikte offen</value>
+  </data>
+  <data name="Sidebar_Sync_ConflictsOne" xml:space="preserve">
+    <value>1 Konflikt offen</value>
+  </data>
+  <data name="Filter_AllTypes" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="Filter_OnlineOnly" xml:space="preserve">
+    <value>Nur online</value>
+  </data>
+  <data name="TileSize_SmallTip" xml:space="preserve">
+    <value>Kleine Kacheln ohne Vorschau</value>
+  </data>
+  <data name="TileSize_MediumTip" xml:space="preserve">
+    <value>Mittlere Kacheln</value>
+  </data>
+  <data name="TileSize_LargeTip" xml:space="preserve">
+    <value>Große Kacheln</value>
+  </data>
+  <data name="TileSize_Small" xml:space="preserve">
+    <value>Klein</value>
+  </data>
+  <data name="TileSize_Medium" xml:space="preserve">
+    <value>Mittel</value>
+  </data>
+  <data name="TileSize_Large" xml:space="preserve">
+    <value>Groß</value>
+  </data>
+  <data name="Tile_LastConnected" xml:space="preserve">
+    <value>Zuletzt {0}</value>
+  </data>
+  <data name="Tile_NeverConnected" xml:space="preserve">
+    <value>Noch nie verbunden</value>
+  </data>
+  <data name="Ago_Hours" xml:space="preserve">
+    <value>vor {0} Std.</value>
+  </data>
+  <data name="Ago_Yesterday" xml:space="preserve">
+    <value>gestern</value>
+  </data>
+  <data name="Ago_Days" xml:space="preserve">
+    <value>vor {0} Tagen</value>
+  </data>
+  <data name="Ago_Date" xml:space="preserve">
+    <value>am {0}</value>
+  </data>
+  <data name="Health_Offline" xml:space="preserve">
+    <value>{0} offline</value>
+  </data>
+  <data name="Health_Unknown" xml:space="preserve">
+    <value>{0} unbekannt</value>
+  </data>
+  <data name="Appearance_Menu" xml:space="preserve">
+    <value>Darstellung</value>
+  </data>
+  <data name="Appearance_Theme_System" xml:space="preserve">
+    <value>Design wie Windows</value>
+  </data>
+  <data name="Appearance_Theme_Light" xml:space="preserve">
+    <value>Helles Design</value>
+  </data>
+  <data name="Appearance_Theme_Dark" xml:space="preserve">
+    <value>Dunkles Design</value>
+  </data>
+  <data name="Appearance_Accent" xml:space="preserve">
+    <value>Signalfarbe</value>
+  </data>
+  <data name="Appearance_TileSize" xml:space="preserve">
+    <value>Kachelgröße</value>
+  </data>
+  <data name="Accent_Bernstein" xml:space="preserve">
+    <value>Bernstein</value>
+  </data>
+  <data name="Accent_Polar" xml:space="preserve">
+    <value>Polarblau</value>
+  </data>
+  <data name="Accent_Minze" xml:space="preserve">
+    <value>Minze</value>
+  </data>
+  <data name="Accent_Flieder" xml:space="preserve">
+    <value>Flieder</value>
+  </data>
+  <data name="Accent_Koralle" xml:space="preserve">
+    <value>Koralle</value>
+  </data>
+  <data name="Accent_Windows" xml:space="preserve">
+    <value>Akzentfarbe von Windows</value>
   </data>
 </root>

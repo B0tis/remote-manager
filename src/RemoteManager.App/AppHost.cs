@@ -39,6 +39,7 @@ public sealed class AppHost : IDisposable
         Status = new StatusChecker(ProbeFor);
         History = new ConnectionHistory(report.DatabasePath);
         Sync = new SyncService(library, report.DatabasePath);
+        Appearance = new Services.Appearance(library);
     }
 
     public static AppHost Current => current ?? throw new InvalidOperationException("AppHost.Start has not run.");
@@ -52,6 +53,9 @@ public sealed class AppHost : IDisposable
     public StatusChecker Status { get; }
     public ConnectionHistory History { get; }
     public SyncService Sync { get; }
+
+    /// <summary>Theme, signal color, and tile size the user chose.</summary>
+    public Services.Appearance Appearance { get; }
 
     /// <summary>Opens the database in <see cref="AppPaths.Root"/> (migrating connections.json once) and wires the services.</summary>
     public static AppHost Start()

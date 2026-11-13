@@ -7,8 +7,8 @@ namespace RemoteManager.App.Views;
 
 /// <summary>
 /// Responsive layout (docs/ui.md). One breakpoint for the window: from <see cref="WideLayoutWidth"/> the sidebar is
-/// expanded (FANavigationView "Auto", same threshold in MainWindow.axaml) and the detail column follows the saved
-/// setting; below it the sidebar shows icons only and the detail column is closed unless opened for the moment.
+/// expanded (MainWindow.Sidebar.cs) and the detail column follows the saved setting; below it the sidebar shows
+/// icons only and the detail column is closed unless opened for the moment.
 /// The header drops button labels below <see cref="NarrowHeaderWidth"/>; the list hides low-priority columns.
 /// </summary>
 public partial class MainWindow
@@ -61,7 +61,9 @@ public partial class MainWindow
             return;
         wideLayout = wide;
         detailsOnNarrow = false; // a column opened on a narrow window does not stay open across modes
+        sidebarFloating = false; // nor does a sidebar opened over the content
         ApplyDetailsVisibility();
+        ApplySidebarMode();
     }
 
     private void ApplyDetailsVisibility()

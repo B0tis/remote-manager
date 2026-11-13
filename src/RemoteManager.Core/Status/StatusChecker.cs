@@ -2,10 +2,13 @@ using RemoteManager.Core.Model;
 
 namespace RemoteManager.Core.Status;
 
-public sealed class StatusChangedEventArgs(Connection connection, OnlineStatus status) : EventArgs
+public sealed class StatusChangedEventArgs(Connection connection, OnlineStatus status, TimeSpan? latency = null) : EventArgs
 {
     public Connection Connection { get; } = connection;
     public OnlineStatus Status { get; } = status;
+
+    /// <summary>How long the target took to answer; only for an online result of a probe that measures it.</summary>
+    public TimeSpan? Latency { get; } = latency;
 }
 
 /// <summary>
@@ -45,6 +48,7 @@ public sealed class StatusChecker : IDisposable
     private async Task CheckOneAsync(Connection connection, CancellationToken cancellationToken)
     {
         OnlineStatus status = OnlineStatus.Unknown;
+        TimeSpan? latency = null;
         if (probeFor(connection) is { } probe)
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, lifetime.Token);
@@ -60,10 +64,13 @@ public sealed class StatusChecker : IDisposable
             try
             {
                 linked.CancelAfter(Timeout);
+                var watch = System.Diagnostics.Stopwatch.StartNew();
                 Task<OnlineStatus> probing = probe.ProbeAsync(connection, linked.Token);
                 // Belt and braces: a probe that ignores its token still cannot hold the check past the timeout.
                 Task finished = await Task.WhenAny(probing, Task.Delay(Timeout + TimeSpan.FromMilliseconds(250), CancellationToken.None)).ConfigureAwait(false);
                 status = finished == probing && probing.IsCompletedSuccessfully ? probing.Result : OnlineStatus.Unknown;
+                if (status == OnlineStatus.Online && probe.MeasuresLatency)
+                    latency = watch.Elapsed;
             }
             catch (Exception)
             {
@@ -78,6 +85,6 @@ public sealed class StatusChecker : IDisposable
                 return;
         }
 
-        StatusChanged?.Invoke(this, new StatusChangedEventArgs(connection, status));
+        StatusChanged?.Invoke(this, new StatusChangedEventArgs(connection, status, latency));
     }
 }

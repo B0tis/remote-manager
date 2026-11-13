@@ -395,6 +395,7 @@ public partial class SshTerminalWindow : Window, ISessionWindow
 
         files = new SftpWindow(Connection, Card.LastLogin);
         files.Closed += (_, _) => files = null;
+        Services.WindowPlacement.OpenOnScreenOf(files, this);
         files.Show();
     }
 

@@ -23,6 +23,7 @@ public partial class App : Application
         {
             AppHost host = AppHost.Start();
             desktop.Exit += (_, _) => host.Dispose();
+            host.Appearance.Attach(this); // theme and signal color, before the first window is built
 
             var window = new MainWindow();
             desktop.MainWindow = window;
@@ -30,6 +31,8 @@ public partial class App : Application
 
             if (AppOptions.SelfTest)
                 window.Opened += async (_, _) => desktop.Shutdown(await SelfTest.RunAsync(window));
+            else if (AppOptions.Tour)
+                window.Opened += async (_, _) => desktop.Shutdown(await SelfTest.RunTourAsync(window));
         }
 
         base.OnFrameworkInitializationCompleted();

@@ -36,6 +36,7 @@ public sealed class VncHandler : ConnectionHandler
             connection.ReloadPreview();
             host.Save(connection);
         };
+        Services.WindowPlacement.OpenOnScreenOf(window, host.Owner);
         window.Show();
         return window;
     }

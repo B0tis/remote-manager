@@ -52,12 +52,17 @@ internal static class AppOptions
     public static bool OverlayPopups { get; private set; }
     public static bool SelfTest { get; private set; }
 
+    /// <summary>--tour: demo data and pictures of the main screens (Diagnostics/SelfTest.Tour.cs).</summary>
+    public static bool Tour { get; private set; }
+
     public static void Parse(string[] args)
     {
         foreach (string arg in args)
         {
             if (arg.Equals("--selftest", StringComparison.OrdinalIgnoreCase))
                 SelfTest = true;
+            else if (arg.Equals("--tour", StringComparison.OrdinalIgnoreCase))
+                Tour = true;
             else if (arg.Equals("--overlay-popups", StringComparison.OrdinalIgnoreCase))
                 OverlayPopups = true;
             else if (arg.StartsWith("--composition=", StringComparison.OrdinalIgnoreCase))

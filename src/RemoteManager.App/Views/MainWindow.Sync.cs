@@ -58,6 +58,19 @@ public partial class MainWindow
             app.Sync.IsRunning ? Strings.Sync_Running
             : conflicts > 0 ? string.Format(CultureInfo.CurrentCulture, Strings.Sync_ShowConflicts, conflicts)
             : app.Sync.IsEnabled ? Strings.Sync_Tip_On : Strings.Sync_Tip_Off);
+
+        // The foot of the sidebar always says where sync stands; a click opens its dialog.
+        SidebarStatusText.Text = !app.Sync.IsEnabled ? Strings.Sidebar_Sync_Off
+            : app.Sync.IsRunning ? Strings.Sync_Running
+            : conflicts == 1 ? Strings.Sidebar_Sync_ConflictsOne
+            : conflicts > 1 ? string.Format(CultureInfo.CurrentCulture, Strings.Sidebar_Sync_Conflicts, conflicts)
+            : app.Sync.LastError is not null ? Strings.Sync_Failed
+            : app.Sync.LastSync is { } at
+                ? string.Format(CultureInfo.CurrentCulture, Strings.Sidebar_Sync_OnAt, ConnectionItem.DescribeAgo(DateTime.UtcNow - at.ToUniversalTime(), at))
+                : Strings.Sidebar_Sync_On;
+        SidebarStatusIcon.Symbol = conflicts > 0 || (app.Sync.IsEnabled && app.Sync.LastError is not null) ? FASymbol.Important : FASymbol.Sync;
+        SidebarStatusIcon.Opacity = app.Sync.IsEnabled ? 0.9 : 0.5;
+        Avalonia.Controls.ToolTip.SetTip(SidebarStatus, app.Sync.LastError ?? Strings.Menu_Sync);
     }
 
     /// <summary>Records came in from another PC: drop items whose connection is gone, add new ones, refresh the rest.</summary>

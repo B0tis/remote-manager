@@ -1,268 +1,413 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:chrome="using:Avalonia.Controls.Chrome"
         xmlns:app="using:RemoteManager.App.Views"
+        xmlns:ctl="using:RemoteManager.App.Controls"
         xmlns:res="using:RemoteManager.App.Resources"
         x:Class="RemoteManager.App.Views.MainWindow"
         Title="Remote-Manager"
         Width="1320" Height="840" MinWidth="880" MinHeight="480"
         WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True" ExtendClientAreaTitleBarHeightHint="44"
+        WindowDecorationsTheme="{StaticResource RmWindowDecorations}"
         TransparencyLevelHint="Mica, AcrylicBlur"
+        TransparencyBackgroundFallback="{DynamicResource RmBaseBrush}"
         Background="Transparent">
   <Window.DataTemplates>
-    <!-- Group section header in both views: chevron, name, count; collapsed with an online summary. -->
+    <!-- Group section header in both views: chevron, name, count, and how many of its connections answer. -->
     <DataTemplate DataType="app:GroupHeaderItem">
       <Border Classes="groupHeader" Padding="{Binding Indent}" Background="Transparent">
-        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="4,0,0,0">
-          <Panel Width="14" VerticalAlignment="Center">
-            <ui:FASymbolIcon Symbol="ChevronDown" FontSize="12" IsVisible="{Binding ShowExpanded}" />
-            <ui:FASymbolIcon Symbol="ChevronRight" FontSize="12" IsVisible="{Binding ShowCollapsed}" />
+        <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center" Margin="6,0,0,0">
+          <Panel Width="12" VerticalAlignment="Center">
+            <ui:FASymbolIcon Symbol="ChevronDown" FontSize="11" Opacity="0.7" IsVisible="{Binding ShowExpanded}" />
+            <ui:FASymbolIcon Symbol="ChevronRight" FontSize="11" Opacity="0.7" IsVisible="{Binding ShowCollapsed}" />
           </Panel>
-          <ui:FASymbolIcon Symbol="Folder" FontSize="15" Opacity="0.65" VerticalAlignment="Center" />
-          <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+          <TextBlock Classes="section" Text="{Binding Title}" FontSize="15" />
           <Border Classes="count" VerticalAlignment="Center">
-            <TextBlock Text="{Binding CountLabel}" FontSize="11" />
+            <TextBlock Text="{Binding CountLabel}" />
           </Border>
-          <TextBlock Text="{Binding Summary}" Opacity="0.55" FontSize="12" VerticalAlignment="Center" />
+          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" IsVisible="{Binding HasOnline}"
+                      ToolTip.Tip="{x:Static res:Strings.Status_Online}">
+            <Ellipse Classes="lamp" Width="7" Height="7" Fill="{DynamicResource RmOnlineBrush}" />
+            <TextBlock Classes="caption" Text="{Binding OnlineLabel}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" IsVisible="{Binding HasOffline}"
+                      ToolTip.Tip="{x:Static res:Strings.Status_Offline}">
+            <Ellipse Classes="lamp" Width="7" Height="7" Fill="{DynamicResource RmOfflineBrush}" />
+            <TextBlock Classes="caption" Text="{Binding OfflineLabel}" />
+          </StackPanel>
         </StackPanel>
       </Border>
     </DataTemplate>
+
+    <!-- Sidebar entry: a filter (all, favorites, group, tag) or a section label. -->
+    <DataTemplate DataType="app:SidebarEntry">
+      <Panel>
+        <Grid IsVisible="{Binding IsHeader}" ColumnDefinitions="*,Auto" Margin="10,0,2,0">
+          <TextBlock Classes="caption" Text="{Binding Label}" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Classes="icon navAdd" Width="26" Height="26" Tag="{Binding}" IsVisible="{Binding CanAdd}"
+                  ToolTip.Tip="{x:Static res:Strings.Action_NewGroup}">
+            <ui:FASymbolIcon Symbol="Add" FontSize="12" />
+          </Button>
+        </Grid>
+        <Grid IsVisible="{Binding !IsHeader}" ColumnDefinitions="Auto,*,Auto,Auto" Margin="{Binding Indent}"
+              Background="Transparent" ToolTip.Tip="{Binding Tip}">
+          <Panel Width="20" Margin="9,0,0,0" VerticalAlignment="Center">
+            <ui:FASymbolIcon Classes="navIcon" Symbol="{Binding Symbol}" FontSize="16" Opacity="0.78" />
+            <Ellipse Width="7" Height="7" Fill="{DynamicResource RmOnlineBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                     Margin="0,-2,-2,0" IsVisible="{Binding ShowLamp}" />
+          </Panel>
+          <TextBlock Classes="navLabel" Grid.Column="1" Text="{Binding Label}" TextTrimming="CharacterEllipsis"
+                     VerticalAlignment="Center" Margin="11,0,6,0" />
+          <TextBlock Classes="navCount caption" Grid.Column="2" Text="{Binding CountLabel}" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <Button Grid.Column="3" Classes="icon navChevron" Width="24" Height="24" Margin="0,0,4,0" Tag="{Binding}"
+                  IsVisible="{Binding HasChildren}">
+            <Panel>
+              <ui:FASymbolIcon Symbol="ChevronDown" FontSize="10" IsVisible="{Binding IsExpanded}" />
+              <ui:FASymbolIcon Symbol="ChevronRight" FontSize="10" IsVisible="{Binding !IsExpanded}" />
+            </Panel>
+          </Button>
+        </Grid>
+      </Panel>
+    </DataTemplate>
   </Window.DataTemplates>
 
-  <!-- Sidebar: expanded from 1180 px window width, icons only below (MainWindow.Layout.cs, docs/ui.md). -->
-  <ui:FANavigationView x:Name="Nav"
-                       PaneDisplayMode="Auto" OpenPaneLength="240"
-                       ExpandedModeThresholdWidth="1180" CompactModeThresholdWidth="0"
-                       IsSettingsVisible="False" IsPaneToggleButtonVisible="True">
-    <Grid x:Name="ContentGrid" ColumnDefinitions="*,Auto">
-      <Grid x:Name="MainArea" RowDefinitions="Auto,*" Margin="24,14,16,0" ClipToBounds="True">
-        <!-- Header: where you are (filter and count), then search and the primary actions. No logo or app
-             name here: the window title shows them. Everything else is in "Mehr" (MainWindow.Menu.cs). -->
-        <Grid x:Name="Header" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" Margin="0,0,0,12" RowSpacing="10" ColumnSpacing="8">
-          <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
-            <TextBlock x:Name="PageTitle" Classes="pageTitle" Text="{x:Static res:Strings.Nav_All}" />
-            <TextBlock x:Name="PageSubtitle" Classes="caption" VerticalAlignment="Bottom" Margin="0,0,0,3" />
+  <Panel x:Name="Shell">
+    <!-- Tints the window backdrop (Mica) with the base color; opaque where Windows gives no backdrop. -->
+    <Border Background="{DynamicResource RmChromeBrush}" />
+
+    <Grid RowDefinitions="44,*" ColumnDefinitions="Auto,*">
+      <!-- ===== Title bar: drawn by the app, so search sits where the eye starts. Drag anywhere on it. ===== -->
+      <Border x:Name="TitleBar" Grid.ColumnSpan="2" Background="Transparent"
+              chrome:WindowDecorationProperties.ElementRole="TitleBar" />
+      <Grid x:Name="TitleBarContent" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,140">
+        <StackPanel Orientation="Horizontal" Margin="9,0,0,0" Spacing="2">
+          <Button x:Name="SidebarToggle" Classes="icon" ToolTip.Tip="{x:Static res:Strings.Sidebar_ToggleTip}">
+            <ui:FASymbolIcon Symbol="GlobalNavigationButton" FontSize="16" />
+          </Button>
+          <!-- Icon and name as a window frame shows them; nothing else in the window repeats them. -->
+          <StackPanel x:Name="TitleBarBrand" Orientation="Horizontal" Spacing="9" Margin="6,0,0,0" IsHitTestVisible="False">
+            <Image Source="/Assets/logo.ico" Width="16" Height="16" VerticalAlignment="Center" />
+            <TextBlock x:Name="TitleBarText" Classes="caption" Text="Remote-Manager" VerticalAlignment="Center" />
           </StackPanel>
-          <TextBox x:Name="SearchBox" Grid.Row="1" MinWidth="160" MaxWidth="560" HorizontalAlignment="Stretch"
-                   PlaceholderText="{x:Static res:Strings.Search_Placeholder}" Classes="clearButton">
-            <TextBox.InnerLeftContent>
-              <ui:FASymbolIcon Symbol="Find" FontSize="14" Margin="10,0,0,0" Opacity="0.6" />
-            </TextBox.InnerLeftContent>
-          </TextBox>
-          <StackPanel x:Name="Toolbar" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-            <Border Classes="segmented">
-              <StackPanel Orientation="Horizontal">
-                <ToggleButton x:Name="TileToggle" Classes="segment" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.View_TilesTip}">
-                  <ui:FASymbolIcon Symbol="ViewAll" FontSize="16" />
-                </ToggleButton>
-                <ToggleButton x:Name="ListToggle" Classes="segment" ToolTip.Tip="{x:Static res:Strings.View_ListTip}">
-                  <ui:FASymbolIcon Symbol="List" FontSize="16" />
-                </ToggleButton>
-              </StackPanel>
-            </Border>
-            <ToggleButton x:Name="DetailsToggle" Classes="icon" ToolTip.Tip="{x:Static res:Strings.Details_ToggleTip}" IsChecked="True">
-              <ui:FASymbolIcon Symbol="DockRight" FontSize="16" />
-            </ToggleButton>
-            <!-- Device sync (MainWindow.Sync.cs): only shown while sync is on; the count shows open conflicts. -->
-            <Button x:Name="SyncButton" Classes="icon" IsVisible="False">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <ui:FASymbolIcon Symbol="Sync" FontSize="16" />
-                <TextBlock x:Name="SyncConflictCount" IsVisible="False" FontWeight="SemiBold" VerticalAlignment="Center" />
-              </StackPanel>
-            </Button>
-            <Button x:Name="ConnectButton" IsEnabled="False" Padding="12,7" ToolTip.Tip="{x:Static res:Strings.Action_ConnectTip}">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <ui:FASymbolIcon Symbol="Play" FontSize="14" />
-                <TextBlock Classes="label" Text="{x:Static res:Strings.Action_Connect}" />
-              </StackPanel>
-            </Button>
-            <Button x:Name="AddButton" Classes="accent" Padding="12,7" ToolTip.Tip="{x:Static res:Strings.Action_NewTip}">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <ui:FASymbolIcon Symbol="Add" FontSize="14" />
-                <TextBlock Classes="label" Text="{x:Static res:Strings.Action_New}" />
-              </StackPanel>
-            </Button>
-            <!-- "Mehr": groups, view, import/export, sync, tools, updates (MainWindow.Menu.cs). -->
-            <Button x:Name="MoreButton" Classes="icon" ToolTip.Tip="{x:Static res:Strings.Action_More}">
-              <ui:FASymbolIcon Symbol="More" FontSize="16" />
-            </Button>
-          </StackPanel>
-        </Grid>
+        </StackPanel>
 
-        <Panel Grid.Row="1">
-          <!-- Tiles: preview or type icon, status, type badge, favorite, name, host, description, tags, footer. -->
-          <ListBox x:Name="TileList" Classes="tiles" Background="Transparent" SelectionMode="Multiple">
-            <ListBox.ItemsPanel>
-              <ItemsPanelTemplate>
-                <app:SectionWrapPanel />
-              </ItemsPanelTemplate>
-            </ListBox.ItemsPanel>
-            <ListBox.DataTemplates>
-              <DataTemplate DataType="app:ConnectionItem">
-                <!-- No fixed width: SectionWrapPanel gives every tile the same width (240 to 320 px). -->
-                <Border CornerRadius="8" ClipToBounds="True" BorderThickness="1"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                  <StackPanel>
-                    <Grid Height="140">
-                      <Border Background="{Binding TypeBrush}" Opacity="0.14" />
-                      <Border Width="64" Height="64" CornerRadius="32" Background="{Binding TypeBrush}"
-                              IsVisible="{Binding !HasPreview}">
-                        <TextBlock Text="{Binding TypeInitials}" Foreground="White" FontSize="18" FontWeight="SemiBold"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                      </Border>
-                      <Image Source="{Binding Preview}" Stretch="UniformToFill" IsVisible="{Binding HasPreview}" />
-                      <!-- Keeps the pills readable on bright previews. -->
-                      <Border Classes="previewShade" IsVisible="{Binding HasPreview}" />
-                      <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
-                              ToolTip.Tip="{Binding StatusTip}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                          <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" VerticalAlignment="Center" />
-                          <TextBlock Text="{Binding StatusLabel}" FontSize="11" Foreground="White" />
-                        </StackPanel>
-                      </Border>
-                      <Border Classes="pill" Background="{Binding TypeBrush}"
-                              HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">
-                        <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
-                      </Border>
-                      <!-- The preview shows the open session (MainWindow.LivePreview.cs). -->
-                      <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10"
-                              IsVisible="{Binding IsLivePreview}" ToolTip.Tip="{x:Static res:Strings.LivePreview_BadgeTip}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                          <Ellipse Width="8" Height="8" Fill="{DynamicResource SystemFillColorCriticalBrush}" VerticalAlignment="Center" />
-                          <TextBlock Text="{x:Static res:Strings.LivePreview_Badge}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
-                          <TextBlock Text="{Binding LivePreviewAge}" FontSize="11" Foreground="White" Opacity="0.8" />
-                        </StackPanel>
-                      </Border>
-                    </Grid>
-                    <StackPanel Margin="14,10,10,12" Spacing="3">
-                      <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
-                          <ui:FASymbolIcon Symbol="Permissions" FontSize="13" Opacity="0.7" VerticalAlignment="Center"
-                                           IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
-                          <Button Classes="star" Tag="{Binding}" ToolTip.Tip="{x:Static res:Strings.Action_ToggleFavorite}">
-                            <Panel>
-                              <ui:FASymbolIcon Symbol="StarFilled" FontSize="15" Foreground="{DynamicResource FavoriteBrush}" IsVisible="{Binding IsFavorite}" />
-                              <ui:FASymbolIcon Classes="starOutline" Symbol="Star" FontSize="15" IsVisible="{Binding !IsFavorite}" />
-                            </Panel>
-                          </Button>
-                        </StackPanel>
-                      </Grid>
-                      <TextBlock Text="{Binding HostLabel}" Opacity="0.75" FontSize="13" TextTrimming="CharacterEllipsis" />
-                      <TextBlock Text="{Binding Description}" Opacity="0.55" FontSize="12" TextTrimming="CharacterEllipsis" />
-                      <ItemsControl ItemsSource="{Binding VisibleTags}" Margin="0,6,0,0" Height="22" ClipToBounds="True">
-                        <ItemsControl.ItemsPanel>
-                          <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="6" />
-                          </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate x:DataType="x:String">
-                            <Border Classes="tag">
-                              <TextBlock Text="{Binding}" FontSize="11" />
-                            </Border>
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                      <TextBlock Text="{Binding FooterLabel}" Opacity="0.45" FontSize="11" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ListBox.DataTemplates>
-          </ListBox>
+        <TextBox x:Name="SearchBox" Grid.Column="1" MinWidth="160" MaxWidth="520" Height="32" Margin="16,0"
+                 HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                 PlaceholderText="{x:Static res:Strings.Search_Placeholder}" Classes="clearButton">
+          <TextBox.InnerLeftContent>
+            <ui:FASymbolIcon Symbol="Find" FontSize="14" Margin="10,0,0,0" Opacity="0.6" />
+          </TextBox.InnerLeftContent>
+        </TextBox>
 
-          <Grid x:Name="ListPanel" RowDefinitions="Auto,*" IsVisible="False">
-            <!-- Column headers; a click sorts (ascending, descending, back to the group order). -->
-            <Border Padding="12,0" Height="34" BorderThickness="0,0,0,1"
-                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-              <Grid x:Name="ColumnHeaders" ColumnDefinitions="28,190,100,150,Auto,Auto,*,Auto">
-                <Button Grid.Column="0" Classes="column" Tag="Status" ToolTip.Tip="{x:Static res:Strings.Column_Status}" />
-                <Button Grid.Column="1" Classes="column" Tag="Name" />
-                <Button Grid.Column="2" Classes="column" Tag="Type" />
-                <Button Grid.Column="3" Classes="column" Tag="Host" />
-                <Button Grid.Column="4" Classes="column wide" Width="130" Tag="Group" />
-                <Button Grid.Column="5" Classes="column wide" Width="170" Tag="Tags" />
-                <Button Grid.Column="6" Classes="column" Tag="Description" />
-                <Button Grid.Column="7" Classes="column medium" Width="140" Tag="LastConnected" />
-              </Grid>
-            </Border>
-            <ListBox x:Name="RowList" Grid.Row="1" Classes="rows" Background="Transparent" SelectionMode="Multiple">
-              <ListBox.DataTemplates>
-                <DataTemplate DataType="app:ConnectionItem">
-                  <Grid ColumnDefinitions="28,190,100,150,Auto,Auto,*,Auto" Height="40" Background="Transparent">
-                    <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" ToolTip.Tip="{Binding StatusTip}" HorizontalAlignment="Left" Margin="4,0,0,0" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                      <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="{DynamicResource FavoriteBrush}" IsVisible="{Binding IsFavorite}" />
-                      <ui:FASymbolIcon Symbol="Permissions" FontSize="12" Opacity="0.7"
-                                       IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
-                    </StackPanel>
-                    <Border Grid.Column="2" Classes="pill" Background="{Binding TypeBrush}" HorizontalAlignment="Left" VerticalAlignment="Center">
-                      <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
-                    </Border>
-                    <TextBlock Grid.Column="3" Text="{Binding HostLabel}" Opacity="0.8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Column="4" Classes="wide" Width="130" Text="{Binding GroupLabel}" Opacity="0.8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <ItemsControl Grid.Column="5" Classes="wide" Width="170" ItemsSource="{Binding VisibleTags}" VerticalAlignment="Center" ClipToBounds="True">
-                      <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                          <StackPanel Orientation="Horizontal" Spacing="4" />
-                        </ItemsPanelTemplate>
-                      </ItemsControl.ItemsPanel>
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                          <Border Classes="tag">
-                            <TextBlock Text="{Binding}" FontSize="11" />
-                          </Border>
-                        </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <TextBlock Grid.Column="6" Text="{Binding Description}" Opacity="0.6" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
-                    <TextBlock Grid.Column="7" Classes="medium" Width="140" Text="{Binding LastConnectedLabel}" Opacity="0.6" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                  </Grid>
-                </DataTemplate>
-              </ListBox.DataTemplates>
-            </ListBox>
-          </Grid>
-
-          <!-- Empty states (MainWindow.EmptyState): no connections yet, no search results, empty group, no favorites. -->
-          <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420"
-                      Spacing="8" IsVisible="False" Margin="0,48,0,0">
-            <ui:FASymbolIcon x:Name="EmptyIcon" Symbol="Find" FontSize="40" Opacity="0.4" />
-            <TextBlock x:Name="EmptyTitle" Classes="subtitle" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
-            <TextBlock x:Name="EmptyMessage" Classes="caption" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
-            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,8,0,0">
-              <Button x:Name="EmptyPrimaryButton" Classes="accent" />
-              <Button x:Name="EmptySecondaryButton" />
+        <Button x:Name="LauncherButton" Grid.Column="2" Classes="ghost" Padding="8,5" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <ui:FASymbolIcon Symbol="Keyboard" FontSize="15" Opacity="0.8" />
+            <TextBlock x:Name="LauncherButtonText" Classes="caption label" Text="{x:Static res:Strings.Menu_LauncherShort}" VerticalAlignment="Center" />
+            <StackPanel x:Name="LauncherKeys" Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+              <Border Classes="keycap"><TextBlock Text="{x:Static res:Strings.Key_Ctrl}" /></Border>
+              <Border Classes="keycap"><TextBlock Text="K" /></Border>
             </StackPanel>
           </StackPanel>
-        </Panel>
-
-        <!-- Short confirmations (copy password); closes itself after a few seconds. -->
-        <ui:FAInfoBar x:Name="Toast" Grid.Row="1" IsOpen="False" IsClosable="True" MaxWidth="460"
-                      HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,24" />
-
-        <!-- Update notice (MainWindow.Updates.cs): stays until "Später" or the update starts. The solid
-             border keeps the list below from showing through; it has no size while the notice is closed. -->
-        <Border Grid.Row="1" MaxWidth="460" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,12,0"
-                CornerRadius="4" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
-          <ui:FAInfoBar x:Name="UpdateBar" IsOpen="False" IsClosable="False"
-                        Title="{x:Static res:Strings.Update_NoticeTitle}">
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
-              <Button x:Name="UpdateNowButton" Classes="accent" Content="{x:Static res:Strings.Update_Now}" />
-              <Button x:Name="UpdateLaterButton" Content="{x:Static res:Strings.Update_Later}" />
-            </StackPanel>
-          </ui:FAInfoBar>
-        </Border>
+        </Button>
       </Grid>
 
-      <!-- Detail panel: a column, not an overlay (docs/plan-source.txt). Collapses by itself on narrow windows. -->
-      <Border x:Name="DetailPane" Grid.Column="1" Width="320" BorderThickness="1,0,0,0"
-              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-              Background="{DynamicResource LayerFillColorDefaultBrush}">
-        <app:ConnectionDetailPanel x:Name="Details" />
+      <!-- ===== Sidebar: keeps its column in the layout; opened over the content it floats (compact window). ===== -->
+      <Border x:Name="SidebarSlot" Grid.Row="1" Width="240" />
+
+      <!-- ===== Content ===== -->
+      <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource RmPanelBrush}" CornerRadius="10,0,0,0"
+              BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="1,1,0,0" ClipToBounds="True">
+        <Grid x:Name="ContentGrid" ColumnDefinitions="*,Auto">
+          <Grid x:Name="MainArea" RowDefinitions="Auto,*" Margin="26,18,12,0" ClipToBounds="True">
+            <!-- Header: where you are and how it is doing, the view controls and primary actions, then the filters. -->
+            <Grid x:Name="Header" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" Margin="0,0,14,12" ColumnSpacing="12">
+              <TextBlock x:Name="PageTitle" Classes="pageTitle" Text="{x:Static res:Strings.Nav_All}" VerticalAlignment="Center" />
+              <StackPanel x:Name="Toolbar" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border x:Name="SizeSwitch" Classes="segmented wideOnly">
+                  <StackPanel Orientation="Horizontal">
+                    <ToggleButton x:Name="SizeSmallToggle" Classes="segment" ToolTip.Tip="{x:Static res:Strings.TileSize_SmallTip}">
+                      <TextBlock Classes="display" Text="S" FontSize="12" FontWeight="SemiBold" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="SizeMediumToggle" Classes="segment" ToolTip.Tip="{x:Static res:Strings.TileSize_MediumTip}">
+                      <TextBlock Classes="display" Text="M" FontSize="12" FontWeight="SemiBold" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="SizeLargeToggle" Classes="segment" ToolTip.Tip="{x:Static res:Strings.TileSize_LargeTip}">
+                      <TextBlock Classes="display" Text="L" FontSize="12" FontWeight="SemiBold" />
+                    </ToggleButton>
+                  </StackPanel>
+                </Border>
+                <Border Classes="segmented">
+                  <StackPanel Orientation="Horizontal">
+                    <ToggleButton x:Name="TileToggle" Classes="segment" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.View_TilesTip}">
+                      <ui:FASymbolIcon Symbol="ViewAll" FontSize="15" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="ListToggle" Classes="segment" ToolTip.Tip="{x:Static res:Strings.View_ListTip}">
+                      <ui:FASymbolIcon Symbol="List" FontSize="15" />
+                    </ToggleButton>
+                  </StackPanel>
+                </Border>
+                <ToggleButton x:Name="DetailsToggle" Classes="icon" ToolTip.Tip="{x:Static res:Strings.Details_ToggleTip}" IsChecked="True">
+                  <ui:FASymbolIcon Symbol="DockRight" FontSize="16" />
+                </ToggleButton>
+                <!-- Device sync (MainWindow.Sync.cs): only shown while sync is on; the count shows open conflicts. -->
+                <Button x:Name="SyncButton" Classes="ghost" Padding="9,7" IsVisible="False">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ui:FASymbolIcon Symbol="Sync" FontSize="16" />
+                    <TextBlock x:Name="SyncConflictCount" IsVisible="False" FontWeight="SemiBold" VerticalAlignment="Center" />
+                  </StackPanel>
+                </Button>
+                <Button x:Name="ConnectButton" IsEnabled="False" Padding="12,7" ToolTip.Tip="{x:Static res:Strings.Action_ConnectTip}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ui:FASymbolIcon Symbol="Play" FontSize="14" />
+                    <TextBlock Classes="label" Text="{x:Static res:Strings.Action_Connect}" />
+                  </StackPanel>
+                </Button>
+                <Button x:Name="AddButton" Classes="accent" Padding="12,7" ToolTip.Tip="{x:Static res:Strings.Action_NewTip}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ui:FASymbolIcon Symbol="Add" FontSize="14" />
+                    <TextBlock Classes="label" Text="{x:Static res:Strings.Action_New}" />
+                  </StackPanel>
+                </Button>
+                <!-- "Mehr": groups, view, look, import/export, sync, tools, updates (MainWindow.Menu.cs). -->
+                <Button x:Name="MoreButton" Classes="icon" ToolTip.Tip="{x:Static res:Strings.Action_More}">
+                  <ui:FASymbolIcon Symbol="More" FontSize="16" />
+                </Button>
+              </StackPanel>
+
+              <!-- How the connections on screen are doing. -->
+              <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12" Margin="0,5,0,0">
+                <TextBlock x:Name="PageSubtitle" Classes="caption" VerticalAlignment="Center" />
+                <ctl:HealthBar x:Name="Health" Width="132" Height="5" VerticalAlignment="Center"
+                               OnlineBrush="{DynamicResource RmOnlineBrush}" OfflineBrush="{DynamicResource RmOfflineBrush}"
+                               UnknownBrush="{DynamicResource RmStrokeStrongBrush}" />
+                <StackPanel x:Name="HealthOffline" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                  <Ellipse Classes="lamp" Width="7" Height="7" Fill="{DynamicResource RmOfflineBrush}" />
+                  <TextBlock x:Name="HealthOfflineText" Classes="caption" />
+                </StackPanel>
+                <StackPanel x:Name="HealthUnknown" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                  <Ellipse Classes="lamp" Width="7" Height="7" Fill="{DynamicResource RmUnknownBrush}" />
+                  <TextBlock x:Name="HealthUnknownText" Classes="caption" />
+                </StackPanel>
+              </StackPanel>
+
+              <!-- Filters by type and "only online" (MainWindow.Filters.cs fills the chips). -->
+              <ScrollViewer Grid.Row="2" Grid.ColumnSpan="2" Margin="0,14,0,0" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="FilterBar" Orientation="Horizontal" Spacing="6" />
+              </ScrollViewer>
+            </Grid>
+
+            <Panel Grid.Row="1">
+              <!-- Tiles: preview or lamp panel, status, type, favorite, name, host, description, tags, footer. -->
+              <ListBox x:Name="TileList" Classes="tiles" SelectionMode="Multiple">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <app:SectionWrapPanel />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.DataTemplates>
+                  <DataTemplate DataType="app:ConnectionItem">
+                    <!-- No fixed width: SectionWrapPanel gives every tile of a size the same width. -->
+                    <Border Classes="tile">
+                      <StackPanel>
+                        <Grid Classes="tilePreview">
+                          <Border Background="{Binding TypeSoftBrush}" />
+                          <ctl:HostGlyph Seed="{Binding Id}" Brush="{Binding TypeBrush}" Margin="8,6" IsVisible="{Binding !HasPreview}" />
+                          <Image Source="{Binding Preview}" Stretch="UniformToFill" IsVisible="{Binding HasPreview}" />
+                          <!-- Keeps the labels readable on bright previews. -->
+                          <Border Classes="previewShade" IsVisible="{Binding HasPreview}" />
+                          <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="9"
+                                  ToolTip.Tip="{Binding StatusTip}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <Ellipse Classes="lamp" Fill="{Binding StatusBrush}" />
+                              <TextBlock Text="{Binding StatusLabel}" />
+                              <TextBlock Text="{Binding LatencyLabel}" Opacity="0.7" IsVisible="{Binding HasLatency}" />
+                            </StackPanel>
+                          </Border>
+                          <Border Classes="typeChip" Background="{Binding TypeBrush}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Top" Margin="9">
+                            <TextBlock Text="{Binding TypeLabel}" />
+                          </Border>
+                          <!-- The preview shows the open session (MainWindow.LivePreview.cs). -->
+                          <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="9"
+                                  IsVisible="{Binding IsLivePreview}" ToolTip.Tip="{x:Static res:Strings.LivePreview_BadgeTip}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <Ellipse Classes="lamp" Fill="{DynamicResource RmLiveBrush}" />
+                              <TextBlock Text="{x:Static res:Strings.LivePreview_Badge}" FontWeight="SemiBold" />
+                              <TextBlock Text="{Binding LivePreviewAge}" Opacity="0.8" />
+                            </StackPanel>
+                          </Border>
+                          <!-- A session window is open, without a live picture. -->
+                          <Border Classes="pill" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="9"
+                                  IsVisible="{Binding ShowSessionBadge}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <Ellipse Classes="lamp" Fill="{DynamicResource RmAccentBrush}" />
+                              <TextBlock Text="{x:Static res:Strings.Session_OpenBadge}" FontWeight="SemiBold" />
+                            </StackPanel>
+                          </Border>
+                          <Button Classes="tileConnect onHover" Tag="{Binding}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="9"
+                                  ToolTip.Tip="{x:Static res:Strings.Action_Connect}">
+                            <ui:FASymbolIcon Symbol="Play" FontSize="14" />
+                          </Button>
+                        </Grid>
+                        <StackPanel Margin="14,11,9,12" Spacing="3">
+                          <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Ellipse Classes="lamp tileCompact" Fill="{Binding StatusBrush}" Margin="0,0,9,0" ToolTip.Tip="{Binding StatusTip}" />
+                            <TextBlock Grid.Column="1" Classes="name" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                              <ui:FASymbolIcon Symbol="Permissions" FontSize="13" Opacity="0.6" VerticalAlignment="Center"
+                                               IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
+                              <Button Classes="star" Tag="{Binding}" ToolTip.Tip="{x:Static res:Strings.Action_ToggleFavorite}">
+                                <Panel>
+                                  <ui:FASymbolIcon Symbol="StarFilled" FontSize="15" Foreground="{DynamicResource FavoriteBrush}" IsVisible="{Binding IsFavorite}" />
+                                  <ui:FASymbolIcon Classes="starOutline" Symbol="Star" FontSize="15" IsVisible="{Binding !IsFavorite}" />
+                                </Panel>
+                              </Button>
+                            </StackPanel>
+                          </Grid>
+                          <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Classes="mono muted" Text="{Binding HostLabel}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <Border Grid.Column="1" Classes="typeChip tileCompact" Background="{Binding TypeBrush}" Margin="8,0,3,0" VerticalAlignment="Center">
+                              <TextBlock Text="{Binding TypeLabel}" />
+                            </Border>
+                          </Grid>
+                          <TextBlock Classes="tileDetail faint" Text="{Binding Description}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                          <ItemsControl Classes="tileDetail" ItemsSource="{Binding VisibleTags}" Margin="0,5,0,0" Height="21" ClipToBounds="True">
+                            <ItemsControl.ItemsPanel>
+                              <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="5" />
+                              </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate x:DataType="x:String">
+                                <Border Classes="tag">
+                                  <TextBlock Text="{Binding}" />
+                                </Border>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                          <TextBlock Classes="tileDetail faint" Text="{Binding FooterLabel}" FontSize="11" Margin="0,5,0,0" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.DataTemplates>
+              </ListBox>
+
+              <Grid x:Name="ListPanel" RowDefinitions="Auto,*" IsVisible="False">
+                <!-- Column headers; a click sorts (ascending, descending, back to the group order). -->
+                <Border Padding="12,0" Height="32" BorderThickness="0,0,0,1" Margin="0,0,14,0"
+                        BorderBrush="{DynamicResource RmStrokeBrush}">
+                  <Grid x:Name="ColumnHeaders" ColumnDefinitions="26,200,96,170,Auto,Auto,*,Auto">
+                    <Button Grid.Column="0" Classes="column" Tag="Status" ToolTip.Tip="{x:Static res:Strings.Column_Status}" />
+                    <Button Grid.Column="1" Classes="column" Tag="Name" />
+                    <Button Grid.Column="2" Classes="column" Tag="Type" />
+                    <Button Grid.Column="3" Classes="column" Tag="Host" />
+                    <Button Grid.Column="4" Classes="column wide" Width="130" Tag="Group" />
+                    <Button Grid.Column="5" Classes="column wide" Width="170" Tag="Tags" />
+                    <Button Grid.Column="6" Classes="column" Tag="Description" />
+                    <Button Grid.Column="7" Classes="column medium" Width="132" Tag="LastConnected" />
+                  </Grid>
+                </Border>
+                <ListBox x:Name="RowList" Grid.Row="1" Classes="rows" SelectionMode="Multiple" Margin="0,4,0,0">
+                  <ListBox.DataTemplates>
+                    <DataTemplate DataType="app:ConnectionItem">
+                      <Grid ColumnDefinitions="26,200,96,170,Auto,Auto,*,Auto" Height="40" Background="Transparent">
+                        <Ellipse Classes="lamp" Fill="{Binding StatusBrush}" ToolTip.Tip="{Binding StatusTip}" HorizontalAlignment="Left" Margin="3,0,0,0" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,8,0">
+                          <TextBlock Classes="name" FontSize="14" Text="{Binding Name}" TextTrimming="CharacterEllipsis" MaxWidth="150" />
+                          <ui:FASymbolIcon Symbol="StarFilled" FontSize="12" Foreground="{DynamicResource FavoriteBrush}" IsVisible="{Binding IsFavorite}" />
+                          <ui:FASymbolIcon Symbol="Permissions" FontSize="12" Opacity="0.6"
+                                           IsVisible="{Binding HasStoredPassword}" ToolTip.Tip="{x:Static res:Strings.Password_Stored}" />
+                        </StackPanel>
+                        <Border Grid.Column="2" Classes="typeChip" Background="{Binding TypeBrush}" HorizontalAlignment="Left" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding TypeLabel}" />
+                        </Border>
+                        <TextBlock Grid.Column="3" Classes="mono muted" Text="{Binding HostLabel}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="4" Classes="wide muted" Width="130" Text="{Binding GroupLabel}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <ItemsControl Grid.Column="5" Classes="wide" Width="170" ItemsSource="{Binding VisibleTags}" VerticalAlignment="Center" ClipToBounds="True">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <StackPanel Orientation="Horizontal" Spacing="4" />
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                              <Border Classes="tag">
+                                <TextBlock Text="{Binding}" />
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Grid.Column="6" Classes="faint" Text="{Binding Description}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                        <TextBlock Grid.Column="7" Classes="medium faint" Width="132" Text="{Binding LastConnectedLabel}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      </Grid>
+                    </DataTemplate>
+                  </ListBox.DataTemplates>
+                </ListBox>
+              </Grid>
+
+              <!-- Empty states (MainWindow.EmptyState): no connections yet, no search results, empty group, no favorites. -->
+              <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420"
+                          Spacing="8" IsVisible="False" Margin="0,24,14,0">
+                <Border Width="72" Height="72" CornerRadius="36" Background="{DynamicResource RmAccentFaintBrush}" HorizontalAlignment="Center" Margin="0,0,0,6">
+                  <ui:FASymbolIcon x:Name="EmptyIcon" Symbol="Find" FontSize="30" Foreground="{DynamicResource RmAccentTextBrush}" />
+                </Border>
+                <TextBlock x:Name="EmptyTitle" Classes="subtitle" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock x:Name="EmptyMessage" Classes="caption" FontSize="13" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Margin="0,10,0,0">
+                  <Button x:Name="EmptyPrimaryButton" Classes="accent" />
+                  <Button x:Name="EmptySecondaryButton" />
+                </StackPanel>
+              </StackPanel>
+            </Panel>
+
+            <!-- Short confirmations (copy password); closes itself after a few seconds. -->
+            <Border Grid.Row="1" MaxWidth="460" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,14,24"
+                    CornerRadius="8" Background="{DynamicResource RmCardBrush}" BoxShadow="{DynamicResource RmRaisedShadow}">
+              <ui:FAInfoBar x:Name="Toast" IsOpen="False" IsClosable="True" />
+            </Border>
+
+            <!-- Update notice (MainWindow.Updates.cs): stays until "Später" or the update starts. The solid
+                 border keeps the list below from showing through; it has no size while the notice is closed. -->
+            <Border Grid.Row="1" MaxWidth="460" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,14,0"
+                    CornerRadius="8" Background="{DynamicResource RmCardBrush}" BoxShadow="{DynamicResource RmRaisedShadow}">
+              <ui:FAInfoBar x:Name="UpdateBar" IsOpen="False" IsClosable="False"
+                            Title="{x:Static res:Strings.Update_NoticeTitle}">
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
+                  <Button x:Name="UpdateNowButton" Classes="accent" Content="{x:Static res:Strings.Update_Now}" />
+                  <Button x:Name="UpdateLaterButton" Content="{x:Static res:Strings.Update_Later}" />
+                </StackPanel>
+              </ui:FAInfoBar>
+            </Border>
+          </Grid>
+
+          <!-- Detail panel: a column, not an overlay (docs/plan-source.txt). Collapses by itself on narrow windows. -->
+          <Border x:Name="DetailPane" Grid.Column="1" Width="320" BorderThickness="1,0,0,0"
+                  BorderBrush="{DynamicResource RmStrokeBrush}">
+            <app:ConnectionDetailPanel x:Name="Details" />
+          </Border>
+        </Grid>
+      </Border>
+
+      <!-- Closes the sidebar when it floats over the content (compact window) and the content is clicked. -->
+      <Border x:Name="SidebarScrim" Grid.Row="1" Grid.ColumnSpan="2" Background="{DynamicResource RmScrimBrush}" IsVisible="False" />
+
+      <!-- The sidebar itself; wider than its slot only while it floats (MainWindow.Sidebar.cs). -->
+      <Border x:Name="Sidebar" Grid.Row="1" Grid.ColumnSpan="2" Width="240" HorizontalAlignment="Left">
+        <Grid RowDefinitions="*,Auto">
+          <ListBox x:Name="NavList" Classes="nav" SelectionMode="Single" Margin="0,2,0,0" />
+          <Border Grid.Row="1" BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="0,1,0,0" Margin="12,0" Padding="0,8,0,10">
+            <Button x:Name="SidebarStatus" Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,7">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <ui:FASymbolIcon x:Name="SidebarStatusIcon" Symbol="Sync" FontSize="15" Opacity="0.75" />
+                <TextBlock x:Name="SidebarStatusText" Classes="caption navLabel" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </Button>
+          </Border>
+        </Grid>
       </Border>
     </Grid>
-  </ui:FANavigationView>
+  </Panel>
 </Window>

@@ -48,7 +48,7 @@ public partial class MainWindow
         foreach (Control entry in new Control[]
         {
             newGroup, launcherMenuItem, new Separator(),
-            CreateViewMenu(), new Separator(),
+            CreateViewMenu(), CreateAppearanceMenu(), new Separator(),
             import, export, new Separator(),
             sync, tools, new Separator(),
             check, about,
@@ -74,16 +74,20 @@ public partial class MainWindow
         detailsMenuItem = Item(Strings.Menu_Details, FASymbol.DockRight, new KeyGesture(Key.I, KeyModifiers.Control));
         detailsMenuItem.ToggleType = MenuItemToggleType.CheckBox;
         detailsMenuItem.Click += (_, _) => SetDetailsVisible(!IsDetailsVisible);
+        var sidebarMenuItem = Item(Strings.Menu_Sidebar, FASymbol.DockLeft, new KeyGesture(Key.B, KeyModifiers.Control));
+        sidebarMenuItem.ToggleType = MenuItemToggleType.CheckBox;
+        sidebarMenuItem.Click += (_, _) => ToggleSidebar();
         var refresh = Item(Strings.Status_RefreshTip, FASymbol.Refresh, new KeyGesture(Key.F5));
         refresh.Click += (_, _) => RefreshStatus();
 
         var view = Item(Strings.Menu_View, FASymbol.View);
-        view.ItemsSource = new Control[] { tilesMenuItem, listMenuItem, new Separator(), detailsMenuItem, new Separator(), refresh, CreateLivePreviewMenu() };
+        view.ItemsSource = new Control[] { tilesMenuItem, listMenuItem, new Separator(), sidebarMenuItem, detailsMenuItem, new Separator(), refresh, CreateLivePreviewMenu() };
         view.SubmenuOpened += (_, _) =>
         {
             tilesMenuItem.IsChecked = !IsListView;
             listMenuItem.IsChecked = IsListView;
             detailsMenuItem.IsChecked = IsDetailsVisible;
+            sidebarMenuItem.IsChecked = SidebarMode == SidebarMode.Expanded || IsSidebarFloating;
         };
         return view;
     }

@@ -22,6 +22,7 @@ public sealed class SshHandler : ConnectionHandler
         var window = new SshTerminalWindow(connection);
         window.SessionConnected += (_, _) => host.MarkConnected(connection);
         window.PasswordSaved += (_, _) => host.Save(connection);
+        Services.WindowPlacement.OpenOnScreenOf(window, host.Owner);
         window.Show();
         return window;
     }
@@ -43,6 +44,7 @@ public sealed class SftpHandler : ConnectionHandler
         var window = new SftpWindow(connection);
         window.SessionConnected += (_, _) => host.MarkConnected(connection);
         window.PasswordSaved += (_, _) => host.Save(connection);
+        Services.WindowPlacement.OpenOnScreenOf(window, host.Owner);
         window.Show();
         return window;
     }

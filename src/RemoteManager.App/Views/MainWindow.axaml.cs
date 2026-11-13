@@ -48,13 +48,14 @@ public partial class MainWindow : Window, IConnectionHost
     private bool sortDescending;
     private bool clipboardCleared;
     private bool buildingNavigation;
-    private string? navigationSignature;
+
     private bool updatingSelection;
 
     public MainWindow()
     {
         InitializeComponent();
         app = AppHost.Current;
+        WindowPlacement.RestoreMain(this, app.Library); // before the first layout: FitToScreen and the breakpoints use the size
         foreach (Connection connection in app.Library.Connections)
             items.Add(CreateItem(connection));
 
@@ -94,6 +95,12 @@ public partial class MainWindow : Window, IConnectionHost
                 SetFavorite([c], !c.IsFavorite);
                 e.Handled = true;
             }
+            else if (e.Source is Button { Tag: ConnectionItem tile } connect && connect.Classes.Contains("tileConnect"))
+            {
+                // The round button that appears on a tile under the pointer.
+                OpenSession(tile);
+                e.Handled = true;
+            }
         });
         foreach (Button header in ColumnHeaders.Children.OfType<Button>())
             header.Click += (_, _) => CycleSort(Enum.Parse<OverviewColumn>((string)header.Tag!));
@@ -110,7 +117,10 @@ public partial class MainWindow : Window, IConnectionHost
         InitializeLivePreview(); // MainWindow.LivePreview.cs
         MoreButton.Flyout = CreateMoreMenu(); // MainWindow.Menu.cs
         InitializeEmptyState(); // MainWindow.EmptyState.cs
+        InitializeSidebar(); // MainWindow.Sidebar.cs
+        InitializeAppearance(); // MainWindow.Appearance.cs
         InitializeLayout(); // MainWindow.Layout.cs
+        LauncherButton.Click += (_, _) => OpenLauncher();
         RemoteToolsDialog.LibraryChanged += OnLibraryChangedOutside;
         HookSync();
         toastTimer.Tick += (_, _) =>
@@ -118,16 +128,6 @@ public partial class MainWindow : Window, IConnectionHost
             toastTimer.Stop();
             Toast.IsOpen = false;
         };
-        Nav.SelectionChanged += (_, _) =>
-        {
-            if (!buildingNavigation && Nav.SelectedItem is FANavigationViewItem { Tag: string tag })
-            {
-                filter = tag;
-                ApplyFilter();
-            }
-        };
-        HookNavigationDrop();
-        Nav.KeyDown += OnNavigationKeyDown;
 
         // Results arrive on a thread-pool thread; the items belong to the UI thread.
         app.Status.StatusChanged += OnStatusChanged;
@@ -135,7 +135,7 @@ public partial class MainWindow : Window, IConnectionHost
         statusTimer.Start();
 
         LoadViewState();
-        BuildNavigation();
+        ApplySidebarMode(); // also builds the sidebar entries and applies the filter
         UpdateColumnHeaders();
         RefreshStatus();
         Opened += (_, _) => StartHotkey();
@@ -202,9 +202,11 @@ public partial class MainWindow : Window, IConnectionHost
         {
             sessionWindows.Remove(window);
             EndHistory(connection);
+            OnSessionsChanged();
         };
         sessionWindows.Add(window);
         TrackLivePreview(window, connection);
+        OnSessionsChanged();
         return window;
     }
 
@@ -429,118 +431,14 @@ public partial class MainWindow : Window, IConnectionHost
         RefreshStatus();
     }
 
-    private void BuildNavigation()
-    {
-        static FANavigationViewItem Item(string text, FASymbol symbol, string tag) =>
-            new() { Content = text, Tag = tag, IconSource = new FASymbolIconSource { Symbol = symbol } };
-
-        var items = new List<object>
-        {
-            Item(Strings.Nav_All, FASymbol.Library, "all"),
-            Item(Strings.Nav_Favorites, FASymbol.Star, "fav"),
-            Item(Strings.Nav_Recent, FASymbol.Clock, "recent"),
-        };
-
-        List<FANavigationViewItem> groups = [.. app.Library.ChildrenOf(null).Select(GroupItem)];
-        if (groups.Count > 0)
-        {
-            items.Add(new FANavigationViewItemHeader { Content = Strings.Nav_Groups });
-            items.AddRange(groups);
-        }
-
-        string[] tags = [.. this.items.SelectMany(c => c.Model.Tags).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.CurrentCultureIgnoreCase)];
-
-        // Replacing the items restarts FANavigationView's selection animation; rebuilding it several times
-        // in a row keeps the UI thread busy. Only rebuild when groups or tags changed.
-        string signature = string.Join("|", app.Library.DescendantsOf(null).Select(g => $"{g.Id}:{g.Name}:{g.ParentId}:{g.IsCollapsed}"))
-            + "#" + string.Join("|", tags);
-        if (signature == navigationSignature && Nav.MenuItemsSource?.OfType<FANavigationViewItem>() is { } current)
-        {
-            if ((Nav.SelectedItem as FANavigationViewItem)?.Tag as string != filter)
-                SelectNavigationItem(Flatten(current).FirstOrDefault(i => (string?)i.Tag == filter));
-
-            ApplyFilter();
-            return;
-        }
-
-        navigationSignature = signature;
-        if (tags.Length > 0)
-        {
-            items.Add(new FANavigationViewItemHeader { Content = Strings.Nav_Tags });
-            items.AddRange(tags.Select(TagItem));
-        }
-
-        // Clear the selection before replacing the items and select again after layout: FANavigationView
-        // re-posts its selection animation until the selected item's indicator exists, which never
-        // happens for an item that is not laid out yet and starves the UI thread.
-        FANavigationViewItem selected = Flatten(items.OfType<FANavigationViewItem>()).FirstOrDefault(i => (string?)i.Tag == filter)
-            ?? (FANavigationViewItem)items[0];
-        buildingNavigation = true;
-        Nav.SelectedItem = null;
-        Nav.MenuItemsSource = items;
-        buildingNavigation = false;
-        filter = (string)selected.Tag!;
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (Nav.MenuItemsSource == items)
-                SelectNavigationItem(selected);
-        }, DispatcherPriority.Loaded);
-        ApplyFilter();
-
-        FANavigationViewItem TagItem(string tag)
-        {
-            FANavigationViewItem item = Item(tag, FASymbol.Tag, $"tag:{tag}");
-            item.ContextMenu = CreateTagMenu(tag);
-            return item;
-        }
-
-        FANavigationViewItem GroupItem(ConnectionGroup group)
-        {
-            var item = Item(group.Name, FASymbol.Folder, $"group:{group.Id}");
-            item.ContextMenu = CreateGroupMenu(group);
-            FANavigationViewItem[] children = [.. app.Library.ChildrenOf(group.Id).Select(GroupItem)];
-            if (children.Length > 0)
-            {
-                item.MenuItemsSource = children;
-                item.IsExpanded = !group.IsCollapsed;
-                // Collapsed groups stay collapsed after a restart; the overview sections follow.
-                item.PropertyChanged += (_, e) =>
-                {
-                    if (e.Property == FANavigationViewItem.IsExpandedProperty && !buildingNavigation && group.IsCollapsed == item.IsExpanded)
-                    {
-                        group.IsCollapsed = !item.IsExpanded;
-                        app.Library.UpdateGroup(group);
-                        ApplyFilter();
-                    }
-                };
-            }
-
-            return item;
-        }
-    }
-
-    /// <summary>
-    /// Marks the sidebar entry of the current filter. An entry inside a collapsed group is not shown, so
-    /// it is not marked either (see the selection animation note in <see cref="BuildNavigation"/>).
-    /// </summary>
-    private void SelectNavigationItem(FANavigationViewItem? item)
-    {
-        bool hidden = item?.Tag is string tag && tag.StartsWith("group:", StringComparison.Ordinal)
-            && app.Library.AncestorsOf(tag["group:".Length..]).Skip(1).Any(g => g.IsCollapsed);
-        buildingNavigation = true;
-        Nav.SelectedItem = hidden ? null : item;
-        buildingNavigation = false;
-    }
-
-    private static IEnumerable<FANavigationViewItem> Flatten(IEnumerable<FANavigationViewItem> items) =>
-        items.SelectMany(i => (i.MenuItemsSource?.OfType<FANavigationViewItem>() is { } children ? Flatten(children) : []).Prepend(i));
-
     private void ApplyFilter()
     {
+        UpdateSidebarCounts();
         IEnumerable<ConnectionItem> query = filter switch
         {
             "fav" => items.Where(c => c.IsFavorite),
             "recent" => items.Where(c => c.Model.LastConnectedAt is not null).OrderByDescending(c => c.Model.LastConnectedAt),
+            SidebarEntry.ActiveTag => items.Where(c => c.IsSessionOpen),
             _ when CurrentGroupId is { } id => items.Where(c => app.Library.IsInGroup(c.Model, id)),
             _ when filter.StartsWith("tag:", StringComparison.Ordinal) => items.Where(c => c.Model.Tags.Contains(filter["tag:".Length..], StringComparer.OrdinalIgnoreCase)),
             _ => items,
@@ -556,6 +454,7 @@ public partial class MainWindow : Window, IConnectionHost
         string search = SearchBox.Text?.Trim() ?? "";
         if (search.Length > 0)
             query = query.Where(c => c.Matches(search));
+        query = ApplyChipFilters([.. query]); // MainWindow.Filters.cs: type chips and "Nur online"
 
         IReadOnlyList<ConnectionItem> selected = SelectedConnections;
         visible.Clear();
@@ -575,6 +474,7 @@ public partial class MainWindow : Window, IConnectionHost
         {
             "fav" => Strings.Nav_Favorites,
             "recent" => Strings.Nav_Recent,
+            SidebarEntry.ActiveTag => Strings.Nav_Active,
             _ when CurrentGroupId is { } id => app.Library.PathOf(id),
             _ when filter.StartsWith("tag:", StringComparison.Ordinal) => $"#{filter["tag:".Length..]}",
             _ => Strings.Nav_All,
@@ -661,8 +561,20 @@ public partial class MainWindow : Window, IConnectionHost
     private void UpdateSubtitle()
     {
         int online = visible.Count(c => c.Status == OnlineStatus.Online);
+        int offline = visible.Count(c => c.Status == OnlineStatus.Offline);
+        int unknown = visible.Count - online - offline;
         PageSubtitle.Text = string.Format(CultureInfo.CurrentCulture,
             visible.Count == 1 ? Strings.Subtitle_One : Strings.Subtitle_Many, visible.Count, online);
+
+        // The bar shows the three shares; offline and unknown also as numbers, because they are what needs a look.
+        Health.Online = online;
+        Health.Offline = offline;
+        Health.Unknown = unknown;
+        Health.IsVisible = visible.Count > 0;
+        HealthOffline.IsVisible = offline > 0;
+        HealthOfflineText.Text = string.Format(CultureInfo.CurrentCulture, Strings.Health_Offline, offline);
+        HealthUnknown.IsVisible = unknown > 0;
+        HealthUnknownText.Text = string.Format(CultureInfo.CurrentCulture, Strings.Health_Unknown, unknown);
     }
 
 
@@ -713,9 +625,17 @@ public partial class MainWindow : Window, IConnectionHost
         Dispatcher.UIThread.Post(() =>
         {
             foreach (ConnectionItem item in items.Where(i => i.Model == e.Connection))
-                item.Status = e.Status;
+                item.SetStatus(e.Status, e.Latency);
+            if (onlineOnly)
+            {
+                // "Nur online" follows the results as they come in.
+                ApplyFilter();
+                return;
+            }
+
             UpdateSubtitle();
             UpdateHeaderCounts();
+            UpdateFilterBar(lastScope);
         });
 
     /// <summary>Online summaries of the group headers after status results.</summary>
@@ -940,6 +860,7 @@ public partial class MainWindow : Window, IConnectionHost
                 case Key.N: AddConnection(); e.Handled = true; break;
                 case Key.K: OpenLauncher(); e.Handled = true; break;
                 case Key.I: SetDetailsVisible(!IsDetailsVisible); e.Handled = true; break;
+                case Key.B: ToggleSidebar(); e.Handled = true; break;
             }
         }
         else if (e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && e.Key == Key.N)
@@ -958,6 +879,8 @@ public partial class MainWindow : Window, IConnectionHost
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
+        WindowPlacement.SaveMain(this, app.Library);
+
         // A copied password must not outlive the app on the clipboard: clear it first, then close for real.
         if (!clipboardCleared && SecretClipboard.HasPending)
         {

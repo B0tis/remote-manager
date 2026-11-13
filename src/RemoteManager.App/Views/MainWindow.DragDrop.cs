@@ -135,8 +135,8 @@ public partial class MainWindow
 
     private void HookNavigationDrop()
     {
-        DragDrop.SetAllowDrop(Nav, true);
-        Nav.AddHandler(DragDrop.DragOverEvent, (_, e) =>
+        DragDrop.SetAllowDrop(NavList, true);
+        NavList.AddHandler(DragDrop.DragOverEvent, (_, e) =>
         {
             if (e.Handled)
                 return;
@@ -144,7 +144,7 @@ public partial class MainWindow
                 ? DragDropEffects.Move
                 : DragDropEffects.None;
         });
-        Nav.AddHandler(DragDrop.DropEvent, (_, e) =>
+        NavList.AddHandler(DragDrop.DropEvent, (_, e) =>
         {
             if (!e.Handled && e.DataTransfer.TryGetValue(DragFormat) is { } drag && NavigationTargetAt(e.Source) is { } target)
                 Drop(drag, target, DropPosition.Into);
@@ -152,10 +152,10 @@ public partial class MainWindow
     }
 
     private static NavigationDropTarget? NavigationTargetAt(object? source) =>
-        (source as Visual)?.FindAncestorOfType<FANavigationViewItem>(includeSelf: true)?.Tag switch
+        SidebarEntryAt(source) switch
         {
-            "all" => new NavigationDropTarget(null),
-            string tag when tag.StartsWith("group:", StringComparison.Ordinal) => new NavigationDropTarget(tag["group:".Length..]),
+            { Tag: SidebarEntry.AllTag } => new NavigationDropTarget(null),
+            { Group: { } group } => new NavigationDropTarget(group.Id),
             _ => null,
         };
 

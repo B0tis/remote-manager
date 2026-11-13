@@ -1,0 +1,124 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    The "Leitstand" palette: cool graphite surfaces, an amber signal color (set at runtime by
+    Services/Appearance, so the user can pick another one), and status colors that read like panel lamps.
+    Rm* keys are the app's own tokens. The other keys replace FluentAvalonia's neutral brushes so that
+    dialogs, flyouts, and inputs sit on the same surfaces as the app's own views.
+  -->
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Dark">
+      <!-- Surfaces, back to front -->
+      <SolidColorBrush x:Key="RmBaseBrush" Color="#0C1115" />
+      <SolidColorBrush x:Key="RmChromeBrush" Color="#CC0C1115" />
+      <SolidColorBrush x:Key="RmPanelBrush" Color="#12181D" />
+      <SolidColorBrush x:Key="RmCardBrush" Color="#182027" />
+      <SolidColorBrush x:Key="RmCardHoverBrush" Color="#1D2730" />
+      <SolidColorBrush x:Key="RmInsetBrush" Color="#0E1418" />
+      <SolidColorBrush x:Key="RmStrokeBrush" Color="#232D36" />
+      <SolidColorBrush x:Key="RmStrokeStrongBrush" Color="#34414D" />
+      <SolidColorBrush x:Key="RmHoverBrush" Color="#12FFFFFF" />
+      <SolidColorBrush x:Key="RmPressedBrush" Color="#0AFFFFFF" />
+      <SolidColorBrush x:Key="RmScrimBrush" Color="#B3070A0D" />
+
+      <!-- Text -->
+      <SolidColorBrush x:Key="RmTextBrush" Color="#E8EEF3" />
+      <SolidColorBrush x:Key="RmTextSecondaryBrush" Color="#9BA8B5" />
+      <SolidColorBrush x:Key="RmTextTertiaryBrush" Color="#66737F" />
+
+      <!-- Status lamps -->
+      <SolidColorBrush x:Key="RmOnlineBrush" Color="#3DD68C" />
+      <SolidColorBrush x:Key="RmOfflineBrush" Color="#FF6166" />
+      <SolidColorBrush x:Key="RmUnknownBrush" Color="#6B7884" />
+      <SolidColorBrush x:Key="RmLiveBrush" Color="#FF4D4D" />
+      <SolidColorBrush x:Key="FavoriteBrush" Color="#FFC53D" />
+      <SolidColorBrush x:Key="RmOnlineSoftBrush" Color="#263DD68C" />
+      <SolidColorBrush x:Key="RmOfflineSoftBrush" Color="#26FF6166" />
+
+      <!-- Labels drawn on top of a preview picture -->
+      <SolidColorBrush x:Key="RmOnImageBrush" Color="#D90A0E12" />
+      <SolidColorBrush x:Key="RmOnImageTextBrush" Color="#F2F6F9" />
+      <BoxShadows x:Key="RmCardShadow">0 1 2 0 #40000000</BoxShadows>
+      <BoxShadows x:Key="RmRaisedShadow">0 12 32 0 #66000000</BoxShadows>
+
+      <!-- FluentAvalonia neutrals on the same surfaces -->
+      <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#0C1115" />
+      <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="#12181D" />
+      <SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="#182027" />
+      <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#12181D" />
+      <SolidColorBrush x:Key="LayerFillColorAltBrush" Color="#0E1418" />
+      <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#182027" />
+      <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#232D36" />
+      <SolidColorBrush x:Key="ContentDialogBackground" Color="#151C22" />
+      <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="#151C22" />
+      <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="#2C3742" />
+      <SolidColorBrush x:Key="ContentDialogSmokeFill" Color="#B3070A0D" />
+      <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#182027" />
+      <SolidColorBrush x:Key="FlyoutBorderThemeBrush" Color="#2C3742" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#182027" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#2C3742" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#182027" />
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#1D2730" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#34414D" />
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="RmBaseBrush" Color="#E9EDF1" />
+      <SolidColorBrush x:Key="RmChromeBrush" Color="#CCE9EDF1" />
+      <SolidColorBrush x:Key="RmPanelBrush" Color="#F6F8FA" />
+      <SolidColorBrush x:Key="RmCardBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RmCardHoverBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="RmInsetBrush" Color="#ECEFF3" />
+      <SolidColorBrush x:Key="RmStrokeBrush" Color="#DCE2E8" />
+      <SolidColorBrush x:Key="RmStrokeStrongBrush" Color="#BCC6D0" />
+      <SolidColorBrush x:Key="RmHoverBrush" Color="#0F1A2A3A" />
+      <SolidColorBrush x:Key="RmPressedBrush" Color="#081A2A3A" />
+      <SolidColorBrush x:Key="RmScrimBrush" Color="#80D8DEE5" />
+
+      <SolidColorBrush x:Key="RmTextBrush" Color="#131A20" />
+      <SolidColorBrush x:Key="RmTextSecondaryBrush" Color="#51606E" />
+      <SolidColorBrush x:Key="RmTextTertiaryBrush" Color="#8391A0" />
+
+      <SolidColorBrush x:Key="RmOnlineBrush" Color="#12A15F" />
+      <SolidColorBrush x:Key="RmOfflineBrush" Color="#D8383E" />
+      <SolidColorBrush x:Key="RmUnknownBrush" Color="#8F9BA8" />
+      <SolidColorBrush x:Key="RmLiveBrush" Color="#E5383B" />
+      <SolidColorBrush x:Key="FavoriteBrush" Color="#E79A00" />
+      <SolidColorBrush x:Key="RmOnlineSoftBrush" Color="#2212A15F" />
+      <SolidColorBrush x:Key="RmOfflineSoftBrush" Color="#22D8383E" />
+
+      <SolidColorBrush x:Key="RmOnImageBrush" Color="#D90A0E12" />
+      <SolidColorBrush x:Key="RmOnImageTextBrush" Color="#F2F6F9" />
+      <BoxShadows x:Key="RmCardShadow">0 1 2 0 #14101820</BoxShadows>
+      <BoxShadows x:Key="RmRaisedShadow">0 12 32 0 #29101820</BoxShadows>
+
+      <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#E9EDF1" />
+      <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="#F6F8FA" />
+      <SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#F6F8FA" />
+      <SolidColorBrush x:Key="LayerFillColorAltBrush" Color="#ECEFF3" />
+      <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#DCE2E8" />
+      <SolidColorBrush x:Key="ContentDialogBackground" Color="#F9FAFB" />
+      <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="#F9FAFB" />
+      <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="#CCD4DC" />
+      <SolidColorBrush x:Key="ContentDialogSmokeFill" Color="#80D8DEE5" />
+      <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="FlyoutBorderThemeBrush" Color="#CCD4DC" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#CCD4DC" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#CCD4DC" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- DIN lettering (Bahnschrift ships with Windows) for titles, names, and figures; the body stays in the system face. -->
+  <FontFamily x:Key="RmDisplayFont">Bahnschrift, Segoe UI Variable Display, Segoe UI, Inter</FontFamily>
+  <!-- Hosts, IPs, IDs, fingerprints: characters that must not be confused (0/O, 1/l) and that line up. -->
+  <FontFamily x:Key="RmMonoFont">Cascadia Mono, Cascadia Code, Consolas, monospace</FontFamily>
+
+  <CornerRadius x:Key="RmRadiusCard">10</CornerRadius>
+  <CornerRadius x:Key="RmRadiusControl">7</CornerRadius>
+  <CornerRadius x:Key="RmRadiusChip">6</CornerRadius>
+</ResourceDictionary>
