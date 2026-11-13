@@ -42,6 +42,7 @@
   <Style Selector="TextBlock.mono, SelectableTextBlock.mono">
     <Setter Property="FontFamily" Value="{StaticResource RmMonoFont}" />
     <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="FontWeight" Value="Light" />
   </Style>
   <Style Selector="TextBox.mono">
     <Setter Property="FontFamily" Value="{StaticResource RmMonoFont}" />
@@ -57,6 +58,13 @@
     <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
     <Setter Property="FontSize" Value="12" />
     <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- The name of a form field, above its input. A placeholder alone disappears once the field is filled. -->
+  <Style Selector="TextBlock.fieldLabel">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+    <Setter Property="Margin" Value="1,0,0,5" />
   </Style>
 
   <!-- ===== Small labels ===== -->
@@ -128,6 +136,22 @@
     <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="{StaticResource RmRadiusCard}" />
+  </Style>
+  <!-- A remark inside a form or dialog: what a setting means, a warning, an error. -->
+  <Style Selector="Border.note">
+    <Setter Property="Background" Value="{DynamicResource RmInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RmRadiusControl}" />
+    <Setter Property="Padding" Value="12,9" />
+  </Style>
+  <Style Selector="Border.note.warning">
+    <Setter Property="Background" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+  </Style>
+  <Style Selector="Border.note.error">
+    <Setter Property="Background" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCriticalBrush}" />
   </Style>
   <!-- The connect / logon card of a session window. -->
   <Style Selector="Border.dialogCard">
