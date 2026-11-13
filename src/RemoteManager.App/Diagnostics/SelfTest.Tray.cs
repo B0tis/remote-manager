@@ -5,6 +5,7 @@ using Avalonia.Controls.Platform;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform;
 using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections;

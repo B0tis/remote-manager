@@ -109,6 +109,7 @@ internal static partial class SelfTest
         await RunLivePreviewChecksAsync(window); // SelfTest.LivePreview.cs
         await RunSshChecksAsync(window);
         await RunUpdateChecksAsync(window); // SelfTest.Updates.cs
+        await RunTrayChecksAsync(window); // SelfTest.Tray.cs
         await RunSyncChecksAsync(window); // SelfTest.Sync.cs
 
         // --- Two session windows, each with its own RDP client -------------------------------------
