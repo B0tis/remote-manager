@@ -17,6 +17,8 @@ All widths are in DIP (device-independent pixels; physical pixels divided by the
 - **Minimum window size 880 × 480.** A 1366 × 768 laptop at 150 % has about 910 × 480 DIP usable (taskbar
   subtracted), so 900 × 560 would not fit there.
 - **Start size:** 1320 × 840, but at most 92 % of the screen's working area.
+- **Header:** the page title comes first. Below 770 px of header width (`RoomyHeaderWidth`; the start size with the
+  detail column open gives 707) the S/M/L switch hides so the title is not cut off; the tile size stays in "Mehr".
 - **Tiles:** `SectionWrapPanel` fits as many tiles in a row as possible at 240 px or more and shares the row
   evenly. A tile is at most 320 px wide. Group headers always span the row.
 - **List:** below 900 px the group and tag columns hide, below 640 px also "zuletzt verbunden". Name, type, host,

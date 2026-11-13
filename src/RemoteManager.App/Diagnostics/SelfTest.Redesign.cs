@@ -98,6 +98,7 @@ internal static partial class SelfTest
 
             await RunDetailLatencyChecksAsync(window, rdp, tool);
             await RunTitleBarChecksAsync(window, rdp);
+            await RunHeaderRoomChecksAsync(window);
             await RunSidebarChecksAsync(window, group, sub, rdp, ssh, tool, databasePath);
             await RunFilterChipChecksAsync(window, group, rdp, ssh, tool, databasePath);
             await RunTileSizeChecksAsync(window, rdp, databasePath);
@@ -360,6 +361,41 @@ internal static partial class SelfTest
         await Settle(300);
         Check($"Typing in the title bar search filters the overview ({before} -> 1 -> {window.VisibleConnections.Count}; Strg+F focused it: {focused})",
             before > 1 && typed && narrowed && focused && window.VisibleConnections.Count == before);
+    }
+
+    /// <summary>
+    /// The header at the start size (1320 x 840, detail column open): the page title is whole. Title, view
+    /// controls, and the labelled buttons do not all fit there, so the S/M/L switch steps back (the sizes stay in
+    /// "Mehr") and returns as soon as there is room.
+    /// </summary>
+    private static async Task RunHeaderRoomChecksAsync(MainWindow window)
+    {
+        static bool Whole(TextBlock text) => text.Bounds.Width > 0 && !text.TextLayout.TextLines.Any(line => line.HasCollapsed);
+
+        var cut = new List<string>();
+        foreach (string tag in new[] { SidebarEntry.AllTag, SidebarEntry.FavoritesTag, SidebarEntry.RecentTag, SidebarEntry.ActiveTag })
+        {
+            window.ShowFilter(tag);
+            await Settle(250);
+            if (!Whole(window.PageTitle))
+                cut.Add($"{window.PageTitle.Text} in {window.PageTitle.Bounds.Width:0} px");
+        }
+
+        window.ShowFilter(SidebarEntry.AllTag);
+        await Settle(250);
+        bool labelled = !window.Header.Classes.Contains("narrow")
+            && window.AddButton.GetVisualDescendants().OfType<TextBlock>().Any(t => t.IsEffectivelyVisible && t.Text == Strings.Action_New);
+        bool startSize = cut.Count == 0 && labelled && HeaderFits(window) && !window.SizeSwitch.IsVisible;
+        string atStart = $"header {window.Header.Bounds.Width:0} px, {(cut.Count == 0 ? "titles whole" : "cut off: " + string.Join(", ", cut))}, S/M/L {(window.SizeSwitch.IsVisible ? "shown" : "in the menu")}";
+
+        window.SetDetailsVisible(false);
+        await Settle(500);
+        bool roomy = Whole(window.PageTitle) && window.SizeSwitch.IsEffectivelyVisible && HeaderFits(window);
+        string withRoom = $"header {window.Header.Bounds.Width:0} px, S/M/L {(window.SizeSwitch.IsEffectivelyVisible ? "shown" : "hidden")}";
+        window.SetDetailsVisible(true);
+        await Settle(500);
+        Check($"At the start size the page title is not cut off and the buttons keep their labels; the S/M/L switch shows when there is room ({atStart}; without details: {withRoom})",
+            startSize && roomy);
     }
 
     // --- Sidebar --------------------------------------------------------------------------------------------------
