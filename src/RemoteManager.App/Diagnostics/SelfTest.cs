@@ -163,7 +163,8 @@ internal static partial class SelfTest
             && window.SessionWindows.Count == 1 && window.SessionWindows[0] == first);
 
         // --- Real server (optional) --------------------------------------------------------------------
-        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_HOST")))
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_HOST"))
+            || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_CONNECTION")))
             await RunLiveSessionChecksAsync(window);
         else
             Log("SKIP live-session checks (RM_SPIKE_HOST not set): logon, snapshot as preview, live RDP preview, resize, DPI.");
@@ -360,8 +361,52 @@ internal static partial class SelfTest
             raised && s.Rdp.IsClientReady && !s.IsSessionActive && !s.Rdp.IsVisible);
     }
 
+    /// <summary>
+    /// <c>--livetest</c>: only the checks that need a real server, without the rest of the self-test. Uses
+    /// RM_SPIKE_CONNECTION (name or id of a saved connection, with its stored password) or RM_SPIKE_HOST / _USER /
+    /// _PASSWORD. Writes selftest-live.log and the session probes to the spike folder.
+    /// </summary>
+    public static async Task<int> RunLiveOnlyAsync(MainWindow window)
+    {
+        try
+        {
+            Log($"Remote-Manager live test {DateTime.Now:O}");
+            await Settle(1500);
+            await RunLiveSessionChecksAsync(window);
+        }
+        catch (Exception ex)
+        {
+            Fail($"Unhandled exception: {ex}");
+        }
+
+        Log(failures == 0 ? "RESULT: PASS" : $"RESULT: FAIL ({failures} failed checks)");
+        await File.WriteAllLinesAsync(Path.Combine(AppPaths.Spike, "selftest-live.log"), Lines);
+        return failures == 0 ? 0 : 1;
+    }
+
     private static async Task RunLiveSessionChecksAsync(MainWindow window)
     {
+        // A saved connection with its own stored password: nothing secret passes through the environment.
+        if (Environment.GetEnvironmentVariable("RM_SPIKE_CONNECTION") is { Length: > 0 } saved)
+        {
+            ConnectionItem? existing = window.Connections.FirstOrDefault(c => c.Id == saved || string.Equals(c.Name, saved, StringComparison.OrdinalIgnoreCase));
+            if (existing is null)
+            {
+                Fail($"RM_SPIKE_CONNECTION: no saved connection \"{saved}\".");
+                return;
+            }
+
+            if (existing.Model.Type != ConnectionType.Rdp)
+            {
+                Fail($"RM_SPIKE_CONNECTION: \"{existing.Name}\" is {existing.TypeLabel}, the live checks need RDP.");
+                return;
+            }
+
+            Log($"Live checks against the saved connection \"{existing.Name}\" ({existing.HostLabel}), stored password: {existing.HasStoredPassword}.");
+            await RunLiveSessionAsync(window, existing, existing.HasStoredPassword);
+            return;
+        }
+
         ConnectionItem connection = window.CreateItem(new Connection
         {
             Id = TestId("live"),
@@ -391,7 +436,64 @@ internal static partial class SelfTest
         }
     }
 
+    /// <summary>
+    /// Windows of this process that are not Avalonia's: dialogs the RDP control opens by itself (certificate
+    /// warning, credential prompt, error). Logged once each, so a run without a person shows what blocked it;
+    /// with RM_SPIKE_CLOSE_DIALOGS=1 they are closed, which answers them with "no".
+    /// </summary>
+    private static void ReportNativeDialogs(HashSet<nint> seen)
+    {
+        uint pid = (uint)Environment.ProcessId;
+        bool close = Environment.GetEnvironmentVariable("RM_SPIKE_CLOSE_DIALOGS") == "1";
+        EnumWindows((hwnd, _) =>
+        {
+            GetWindowThreadProcessId(hwnd, out uint owner);
+            if (owner != pid || !IsWindowVisible(hwnd) || !seen.Add(hwnd))
+                return true;
+            var name = new StringBuilder(256);
+            GetClassName(hwnd, name, name.Capacity);
+            string className = name.ToString();
+            if (className.StartsWith("Avalonia", StringComparison.Ordinal))
+                return true;
+            var title = new StringBuilder(256);
+            GetWindowText(hwnd, title, title.Capacity);
+            if (className != "#32770" && title.Length == 0)
+                return true;
+            Log($"  native dialog: class \"{className}\", title \"{title}\"{(close ? " (closed by the test)" : "")}");
+            if (close)
+                PostMessage(hwnd, 0x0010, 0, 0); // WM_CLOSE
+            return true;
+        }, 0);
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(nint window, StringBuilder name, int capacity);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(nint window, StringBuilder text, int capacity);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PostMessage(nint window, uint message, nint wParam, nint lParam);
+
     private static async Task RunLiveSessionAsync(MainWindow window, ConnectionItem connection, bool stored)
+    {
+        var dialogs = new HashSet<nint>();
+        var dialogWatch = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
+        dialogWatch.Tick += (_, _) => ReportNativeDialogs(dialogs);
+        ReportNativeDialogs(dialogs); // the windows that are already there are not dialogs of the session
+        dialogWatch.Start();
+        try
+        {
+            await RunLiveSessionCoreAsync(window, connection, stored);
+        }
+        finally
+        {
+            dialogWatch.Stop();
+        }
+    }
+
+    private static async Task RunLiveSessionCoreAsync(MainWindow window, ConnectionItem connection, bool stored)
     {
         var live = (SessionWindow)window.OpenSession(connection)!;
         live.StatusLogged += (_, message) => Log($"  [{live.Title}] {message}");
@@ -403,6 +505,9 @@ internal static partial class SelfTest
             loggedIn && live.UsedStoredPassword == stored);
         if (!loggedIn)
         {
+            await Settle(500);
+            Log($"  not logged in: card visible {live.IsConnectCardVisible}, card message \"{live.CardMessageText}\", status \"{live.LastStatus}\", reason {live.LastDisconnectReason}");
+            SaveRenderProbe(live, "session-window-live-failed.png");
             live.Close();
             return;
         }
@@ -412,6 +517,12 @@ internal static partial class SelfTest
         Check($"Live snapshot is a non-blank PNG ({png})", png is not null && File.Exists(png) && !CapturedBlank(live));
         Check("Snapshot becomes the connection preview", connection.HasPreview);
         SaveScreenProbe(live, "session-window-live.png");
+        if (png is not null)
+            File.Copy(png, Path.Combine(AppPaths.Spike, "session-live-snapshot.png"), overwrite: true);
+        Check($"The session bar shows the connected lamp and the time connected (\"{live.SessionBar.ClockText}\", status \"{live.LastStatus}\")",
+            live.SessionBar.Lamp == SessionLamp.Connected && live.SessionBar.ClockText.Length > 0 && live.SessionBar.Connected > TimeSpan.FromSeconds(3));
+        Check("The open session is listed under \"Aktive Sitzungen\" and marked on its item",
+            connection.IsSessionOpen && window.FindSidebarEntry(SidebarEntry.ActiveTag) is { Count: > 0, ShowLamp: true });
         await RunLiveRdpPreviewChecksAsync(window, live, connection); // SelfTest.LivePreview.cs
 
         // Resize: dynamic resolution should follow the viewport after the debounce.
@@ -442,6 +553,10 @@ internal static partial class SelfTest
         bool gone = await WaitFor(() => !live.IsSessionActive, TimeSpan.FromSeconds(20));
         Check($"User disconnect leaves a thumbnail ({live.LastThumbnailPath})",
             gone && live.LastThumbnailPath is not null && File.Exists(live.LastThumbnailPath));
+        await Settle(600);
+        SaveRenderProbe(live, "session-window-after-disconnect.png");
+        Check("After the disconnect the bar's lamp is idle, the clock is gone, and the reconnect card shows",
+            live.SessionBar.Lamp == SessionLamp.Idle && live.SessionBar.ClockText.Length == 0 && live.IsConnectCardVisible);
         live.Close();
         File.Delete(connection.Model.ResolvedPreviewPath);
     }

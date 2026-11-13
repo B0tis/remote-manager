@@ -69,6 +69,7 @@ public partial class SshTerminalWindow : Window, ISessionWindow
         InitializeComponent();
         Connection = connection;
         Title = connection.Name;
+        Bar.Load(connection);
         Card.Load(connection);
         Card.ConnectRequested += (_, _) => Connect();
         Card.SecretSaved += (_, _) => PasswordSaved?.Invoke(this, EventArgs.Empty);
@@ -116,7 +117,7 @@ public partial class SshTerminalWindow : Window, ISessionWindow
     public bool IsConnected => shell is not null;
     public bool IsPageReady => pageReady.Task is { IsCompletedSuccessfully: true, Result: true };
     public (int Columns, int Rows) TerminalSize { get; private set; } = (80, 24);
-    public string LastStatus => StatusText.Text ?? "";
+    public string LastStatus => Bar.Status;
     public bool IsCardVisible => Card.IsVisible;
     public SshLogonCard LogonCard => Card;
     public SftpWindow? FilesWindow => files;
@@ -129,14 +130,14 @@ public partial class SshTerminalWindow : Window, ISessionWindow
             return;
 
         ReconnectButton.IsVisible = false;
-        SetStatusDot(Color.FromRgb(0xF5, 0x9E, 0x0B));
+        Bar.Lamp = SessionLamp.Busy;
         // Load the page while SSH connects.
         StartPage();
         (SshRoute Route, SshClient Client)? result = await Card.ConnectAsync(this, info => new SshClient(info), SetStatus);
         if (result is null)
         {
             SetStatus(Card.MessageText.Length > 0 ? Card.MessageText : Strings.Session_NotConnected);
-            SetStatusDot(Color.FromRgb(0x9C, 0xA3, 0xAF));
+            Bar.Lamp = SessionLamp.Idle;
             ShowCard();
             return;
         }
@@ -174,7 +175,7 @@ public partial class SshTerminalWindow : Window, ISessionWindow
         IReadOnlyList<string> problems = SshRoute.StartForwards(client, Connection.Model.SettingsAs<SshSettings>().PortForwards);
         string status = string.Format(CultureInfo.CurrentCulture, Strings.Ssh_Status_Connected, Card.LastLogin?.UserName, Connection.Model.Host);
         SetStatus(problems.Count == 0 ? status : $"{status} · {string.Format(CultureInfo.CurrentCulture, Strings.Ssh_Status_ForwardFailed, string.Join("; ", problems))}");
-        SetStatusDot(Color.FromRgb(0x22, 0xC5, 0x5E));
+        Bar.Lamp = SessionLamp.Connected;
         DisconnectButton.IsEnabled = FilesButton.IsEnabled = PasteButton.IsEnabled = true;
         FocusTerminal();
         SessionConnected?.Invoke(this, EventArgs.Empty);
@@ -360,7 +361,7 @@ public partial class SshTerminalWindow : Window, ISessionWindow
         string message = error is null ? Strings.Ssh_Status_Closed : SshConnect.Describe(error);
         _ = Terminal.InvokeScript($"rm.writeText({JsonSerializer.Serialize($"\r\n\u001b[2m[{message}]\u001b[0m\r\n")})");
         SetStatus(message);
-        SetStatusDot(Color.FromRgb(0x9C, 0xA3, 0xAF));
+        Bar.Lamp = SessionLamp.Idle;
         DisconnectButton.IsEnabled = FilesButton.IsEnabled = PasteButton.IsEnabled = false;
         // The terminal stays visible with its last output; reconnect from the toolbar.
         ReconnectButton.IsVisible = true;
@@ -419,11 +420,9 @@ public partial class SshTerminalWindow : Window, ISessionWindow
         _ = Terminal.InvokeScript("rm.focus()");
     }
 
-    private void SetStatusDot(Color color) => StatusDot.Fill = new SolidColorBrush(color);
-
     private void SetStatus(string message)
     {
-        StatusText.Text = message;
+        Bar.Status = message;
         StatusLogged?.Invoke(this, message);
     }
 

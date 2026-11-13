@@ -28,6 +28,10 @@ public partial class SessionWindow : Window, ISessionWindow
     // user, account restricted, locked, or expired, password expired or must be changed.
     private static readonly HashSet<int> LogonFailureReasons = [2055, 2567, 2823, 3335, 3591, 3847, 4615];
 
+    // The same class, without a specific cause: network level authentication (CredSSP) failed. Servers that
+    // are not Windows (GNOME Remote Desktop, KRdp) answer a wrong or missing user or password with it.
+    private const int NlaFailedReason = 519;
+
     private readonly DispatcherTimer frameTimer;
     private SessionFrame? lastGoodFrame;
     private bool disposed;
@@ -53,24 +57,28 @@ public partial class SessionWindow : Window, ISessionWindow
         Connection = connection;
         Title = connection.Name;
 
-        NameText.Text = connection.Name;
-        HostText.Text = connection.HostLabel;
+        Bar.Load(connection);
+        CardHeader.Load(connection);
         DescriptionText.Text = connection.Description;
         DescriptionText.IsVisible = connection.Description.Length > 0;
-        TypeBadge.Background = connection.TypeBrush;
-        TypeBadgeText.Text = connection.TypeInitials;
         // Own credentials, or those inherited from the group.
         Core.Credentials.EffectiveCredential credentials = connection.Credentials;
         UserBox.Text = credentials.UserName;
         DomainBox.Text = credentials.Domain;
         connection.RefreshCredentialState();
         UpdatePasswordFields();
-        if (connection.HasStoredPassword)
+        if (connection.HasStoredPassword && credentials.UserName.Length > 0)
         {
             // Direct Windows logon: skip the card and connect as soon as the RDP client is ready.
             connectWhenReady = true;
             ConnectCard.IsVisible = false;
-            StatusText.Text = Strings.Session_ConnectingStored;
+            Bar.Status = Strings.Session_ConnectingStored;
+            Bar.Lamp = SessionLamp.Busy;
+        }
+        else if (connection.HasStoredPassword)
+        {
+            // A password without a user cannot log on; connecting anyway only earns an error from the server.
+            ShowCardMessage(Strings.Session_UserMissing);
         }
         else
         {
@@ -84,6 +92,7 @@ public partial class SessionWindow : Window, ISessionWindow
         DisconnectButton.Click += (_, _) => Disconnect();
         FullScreenButton.Click += (_, _) => RdpView.FullScreen = true;
         SnapshotItem.Click += (_, _) => SaveSnapshot("manual");
+        SnapshotButton.Click += (_, _) => SaveSnapshot("manual");
         FocusItem.Click += (_, _) => RdpView.FocusSession();
         Opened += (_, _) => (UserBox.Text?.Length > 0 ? PasswordBox : UserBox).Focus();
         Activated += (_, _) =>
@@ -137,7 +146,10 @@ public partial class SessionWindow : Window, ISessionWindow
     public int LastDisconnectReason { get; private set; }
     public PixelSize LastRemoteDesktopSize { get; private set; }
     public string? LastThumbnailPath { get; private set; }
-    public string LastStatus => StatusText.Text ?? string.Empty;
+    public string LastStatus => Bar.Status;
+
+    /// <summary>The bar at the top: lamp, status line, time connected (self-test).</summary>
+    public SessionBar SessionBar => Bar;
     public bool IsConnectCardVisible => ConnectCard.IsVisible;
     public string CardMessageText => CardMessage.IsVisible ? CardMessage.Text ?? "" : "";
     /// <summary>The last connect used the password from the Credential Manager.</summary>
@@ -181,9 +193,17 @@ public partial class SessionWindow : Window, ISessionWindow
             }
         }
 
+        RdpSettings settings = Connection.Model.SettingsAs<RdpSettings>();
+        if (settings.EnableNla && password.Length > 0 && string.IsNullOrWhiteSpace(UserBox.Text))
+        {
+            ShowCardMessage(Strings.Session_UserMissing);
+            ShowCard();
+            UserBox.Focus();
+            return;
+        }
+
         passwordToSave = typed.Length > 0 && SavePasswordBox.IsChecked == true ? typed : null;
 
-        RdpSettings settings = Connection.Model.SettingsAs<RdpSettings>();
         string gatewayPassword = "";
         if (settings.GatewayUsage != RdpGatewayUsage.None && !settings.GatewayUsesConnectionCredentials && settings.GatewayCredential is { } gatewayCredential)
         {
@@ -237,6 +257,7 @@ public partial class SessionWindow : Window, ISessionWindow
             IsSessionActive = false;
             passwordToSave = null;
             CloseTunnel();
+            Bar.Lamp = SessionLamp.Idle;
             SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Session_ConnectFailed, ex.Message));
             ShowCard();
             return;
@@ -247,7 +268,7 @@ public partial class SessionWindow : Window, ISessionWindow
             PasswordBox.Text = "";
         }
 
-        SetStatusDot(Color.FromRgb(0xF5, 0x9E, 0x0B));
+        Bar.Lamp = SessionLamp.Busy;
         DisconnectButton.IsEnabled = true;
     }
 
@@ -301,9 +322,10 @@ public partial class SessionWindow : Window, ISessionWindow
     private void OnLoginCompleted(object? sender, EventArgs e)
     {
         IsLoggedIn = true;
-        SetStatusDot(Color.FromRgb(0x22, 0xC5, 0x5E));
+        Bar.Lamp = SessionLamp.Connected;
         FullScreenButton.IsEnabled = true;
         SnapshotItem.IsEnabled = true;
+        SnapshotButton.IsEnabled = true;
         FocusItem.IsEnabled = true;
         frameTimer.Start();
         RdpView.FocusSession();
@@ -347,7 +369,8 @@ public partial class SessionWindow : Window, ISessionWindow
         if (!IsSessionActive)
             return;
 
-        bool rejectedStoredPassword = !IsLoggedIn && usedStoredPassword && LogonFailureReasons.Contains(reason);
+        bool logonRefused = !IsLoggedIn && (LogonFailureReasons.Contains(reason) || reason == NlaFailedReason);
+        bool rejectedStoredPassword = logonRefused && usedStoredPassword;
         IsSessionActive = false;
         IsLoggedIn = false;
         passwordToSave = null;
@@ -361,15 +384,21 @@ public partial class SessionWindow : Window, ISessionWindow
         if (lastGoodFrame is not null && LastThumbnailPath is null)
             SaveSnapshot("server-disconnect");
 
-        SetStatusDot(Color.FromRgb(0x9C, 0xA3, 0xAF));
+        Bar.Lamp = SessionLamp.Idle;
         DisconnectButton.IsEnabled = false;
         FullScreenButton.IsEnabled = false;
         SnapshotItem.IsEnabled = false;
+        SnapshotButton.IsEnabled = false;
         FocusItem.IsEnabled = false;
         ConnectButton.Content = Strings.Session_Reconnect;
         if (rejectedStoredPassword)
         {
             ShowStoredPasswordRejected();
+        }
+        else if (logonRefused && reason == NlaFailedReason)
+        {
+            ShowCardMessage(Strings.Session_NlaFailed);
+            ShowCard();
         }
         else
         {
@@ -397,6 +426,8 @@ public partial class SessionWindow : Window, ISessionWindow
     {
         if (reason < 0)
             return Strings.Session_DisconnectReportedByView;
+        if (reason == NlaFailedReason)
+            return Strings.Session_NlaFailedShort;
 
         try
         {
@@ -449,11 +480,9 @@ public partial class SessionWindow : Window, ISessionWindow
             PasswordBox.Text = Environment.GetEnvironmentVariable("RM_SPIKE_PASSWORD") ?? "";
     }
 
-    private void SetStatusDot(Color color) => StatusDot.Fill = new SolidColorBrush(color);
-
     private void SetStatus(string message)
     {
-        StatusText.Text = message;
+        Bar.Status = message;
         StatusLogged?.Invoke(this, message);
     }
 

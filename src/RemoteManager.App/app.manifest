@@ -10,6 +10,19 @@
     </security>
   </trustInfo>
 
+  <!--
+    Common Controls 6. The RDP control (mstscax.dll) shows its own dialogs, for example the warning about a
+    certificate it cannot verify (every xrdp server with its self-signed certificate), with TaskDialogIndirect,
+    which only version 6 has. Without this dependency the process binds comctl32 5.82 and the first such dialog
+    ends the app with a delay-load failure (C06D007F) instead of asking.
+  -->
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0"
+                        processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*" />
+    </dependentAssembly>
+  </dependency>
+
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
       <!-- Windows 10 and Windows 11 -->

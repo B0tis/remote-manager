@@ -41,6 +41,7 @@ public partial class SftpWindow : Window, ISessionWindow
         InitializeComponent();
         Connection = connection;
         Title = string.Format(CultureInfo.CurrentCulture, Strings.Sftp_Title, connection.Name);
+        Bar.Load(connection);
         Card.Load(connection, knownLogin);
         Card.ConnectRequested += (_, _) => Connect();
         Card.SecretSaved += (_, _) => PasswordSaved?.Invoke(this, EventArgs.Empty);
@@ -116,7 +117,7 @@ public partial class SftpWindow : Window, ISessionWindow
     public bool IsBusy => busy;
     public string CurrentPath { get; private set; } = "";
     public IReadOnlyList<SftpItem> Items { get; private set; } = [];
-    public string LastStatus => StatusText.Text ?? "";
+    public string LastStatus => Bar.Status;
     public bool IsCardVisible => Card.IsVisible;
     public SshLogonCard LogonCard => Card;
     public ListBox EntryList => Entries;
@@ -131,12 +132,12 @@ public partial class SftpWindow : Window, ISessionWindow
             return;
 
         ReconnectButton.IsVisible = false;
-        SetStatusDot(Color.FromRgb(0xF5, 0x9E, 0x0B));
+        Bar.Lamp = SessionLamp.Busy;
         (SshRoute Route, SftpClient Client)? result = await Card.ConnectAsync(this, info => new SftpClient(info), SetStatus);
         if (result is null)
         {
             SetStatus(Card.MessageText.Length > 0 ? Card.MessageText : Strings.Session_NotConnected);
-            SetStatusDot(Color.FromRgb(0x9C, 0xA3, 0xAF));
+            Bar.Lamp = SessionLamp.Idle;
             ShowCard();
             return;
         }
@@ -147,7 +148,7 @@ public partial class SftpWindow : Window, ISessionWindow
         Card.IsVisible = false;
         Browser.IsVisible = true;
         DisconnectButton.IsEnabled = true;
-        SetStatusDot(Color.FromRgb(0x22, 0xC5, 0x5E));
+        Bar.Lamp = SessionLamp.Connected;
         SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Ssh_Status_Connected, Card.LastLogin?.UserName, Connection.Model.Host));
         string start = Connection.Model.Settings is SshSettings { RemoteDirectory.Length: > 0 } settings ? settings.RemoteDirectory : home;
         if (!await NavigateAsync(start) && start != home)
@@ -431,7 +432,7 @@ public partial class SftpWindow : Window, ISessionWindow
 
         r.Dispose();
         SetStatus(message);
-        SetStatusDot(Color.FromRgb(0x9C, 0xA3, 0xAF));
+        Bar.Lamp = SessionLamp.Idle;
         DisconnectButton.IsEnabled = false;
         ReconnectButton.IsVisible = true;
         Browser.IsEnabled = false;
@@ -459,11 +460,9 @@ public partial class SftpWindow : Window, ISessionWindow
     private static bool IsSftpProblem(Exception ex) =>
         ex is SshException or IOException or InvalidOperationException or ObjectDisposedException or System.Net.Sockets.SocketException;
 
-    private void SetStatusDot(Color color) => StatusDot.Fill = new SolidColorBrush(color);
-
     private void SetStatus(string message)
     {
-        StatusText.Text = message;
+        Bar.Status = message;
         StatusLogged?.Invoke(this, message);
     }
 

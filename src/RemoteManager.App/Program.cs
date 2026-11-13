@@ -55,6 +55,9 @@ internal static class AppOptions
     /// <summary>--tour: demo data and pictures of the main screens (Diagnostics/SelfTest.Tour.cs).</summary>
     public static bool Tour { get; private set; }
 
+    /// <summary>--livetest: only the checks against a real server (Diagnostics/SelfTest.cs, RunLiveOnlyAsync).</summary>
+    public static bool LiveTest { get; private set; }
+
     public static void Parse(string[] args)
     {
         foreach (string arg in args)
@@ -63,6 +66,8 @@ internal static class AppOptions
                 SelfTest = true;
             else if (arg.Equals("--tour", StringComparison.OrdinalIgnoreCase))
                 Tour = true;
+            else if (arg.Equals("--livetest", StringComparison.OrdinalIgnoreCase))
+                LiveTest = true;
             else if (arg.Equals("--overlay-popups", StringComparison.OrdinalIgnoreCase))
                 OverlayPopups = true;
             else if (arg.StartsWith("--composition=", StringComparison.OrdinalIgnoreCase))

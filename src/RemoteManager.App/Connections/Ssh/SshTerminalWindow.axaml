@@ -2,36 +2,44 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:ssh="using:RemoteManager.App.Connections.Ssh"
+        xmlns:conn="using:RemoteManager.App.Connections"
         xmlns:res="using:RemoteManager.App.Resources"
         x:Class="RemoteManager.App.Connections.Ssh.SshTerminalWindow"
-        Width="1040" Height="660" MinWidth="480" MinHeight="300"
+        Width="1040" Height="660" MinWidth="560" MinHeight="300"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+        ExtendClientAreaToDecorationsHint="True" ExtendClientAreaTitleBarHeightHint="44"
+        WindowDecorationsTheme="{StaticResource RmWindowDecorations}"
+        Background="{DynamicResource RmBaseBrush}">
   <!-- One SSH session per window: xterm.js in WebView2. The web view is a native child window, so the
        logon card is only shown while the terminal surface is hidden. -->
   <DockPanel>
-    <Border DockPanel.Dock="Top" Padding="14,6" BorderThickness="0,0,0,1"
-            Background="{DynamicResource LayerFillColorDefaultBrush}"
-            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <Ellipse x:Name="StatusDot" Width="8" Height="8" VerticalAlignment="Center" Fill="#9CA3AF" />
-        <TextBlock x:Name="StatusText" Grid.Column="1" Margin="10,0" VerticalAlignment="Center"
-                   Opacity="0.8" Text="{x:Static res:Strings.Session_NotConnected}" TextTrimming="CharacterEllipsis" />
-        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
-          <Button x:Name="ReconnectButton" Classes="toolbar" IsVisible="False" Content="{x:Static res:Strings.Session_Reconnect}" />
-          <Button x:Name="FilesButton" Classes="toolbar" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Ssh_Terminal_FilesTip}">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <ui:FASymbolIcon Symbol="Folder" FontSize="16" />
+    <conn:SessionBar x:Name="Bar" DockPanel.Dock="Top">
+      <conn:SessionBar.Actions>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <Button x:Name="ReconnectButton" Classes="ghost" IsVisible="False" Padding="9,6">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <ui:FASymbolIcon Symbol="Refresh" FontSize="14" />
+              <TextBlock Text="{x:Static res:Strings.Session_Reconnect}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button x:Name="FilesButton" Classes="ghost" IsEnabled="False" Padding="9,6" ToolTip.Tip="{x:Static res:Strings.Ssh_Terminal_FilesTip}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <ui:FASymbolIcon Symbol="Folder" FontSize="15" />
               <TextBlock Text="{x:Static res:Strings.Ssh_Terminal_Files}" VerticalAlignment="Center" />
             </StackPanel>
           </Button>
-          <Button x:Name="PasteButton" Classes="toolbar" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Ssh_Terminal_PasteTip}">
+          <Button x:Name="PasteButton" Classes="icon" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Ssh_Terminal_PasteTip}">
             <ui:FASymbolIcon Symbol="Paste" FontSize="16" />
           </Button>
-          <Button x:Name="DisconnectButton" Classes="toolbar" IsEnabled="False" Content="{x:Static res:Strings.Session_Disconnect}" />
+          <Button x:Name="DisconnectButton" Classes="ghost" IsEnabled="False" Padding="9,6">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <ui:FASymbolIcon Symbol="Cancel" FontSize="13" />
+              <TextBlock Text="{x:Static res:Strings.Session_Disconnect}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
         </StackPanel>
-      </Grid>
-    </Border>
+      </conn:SessionBar.Actions>
+    </conn:SessionBar>
 
     <Grid>
       <ssh:SshLogonCard x:Name="Card" />

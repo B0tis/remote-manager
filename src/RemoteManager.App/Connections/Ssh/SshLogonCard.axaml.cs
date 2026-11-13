@@ -54,10 +54,7 @@ public partial class SshLogonCard : UserControl
     {
         connection = item;
         lastLogin = knownLogin;
-        NameText.Text = item.Name;
-        HostText.Text = item.HostLabel;
-        TypeBadge.Background = item.TypeBrush;
-        TypeBadgeText.Text = item.TypeInitials;
+        Header.Load(item);
         UserBox.Text = knownLogin?.UserName ?? item.Credentials.UserName;
         item.RefreshCredentialState();
 
@@ -77,6 +74,7 @@ public partial class SshLogonCard : UserControl
         AuthHint.Text = hint;
         AuthHint.IsVisible = hint is not null;
         SecretBox.IsVisible = SaveSecretBox.IsVisible = usesSecret;
+        SecretLabel.Text = Method == SshAuthMethod.KeyFile ? Strings.Ssh_Card_PassphraseLabel : Strings.Field_Password;
         SecretBox.PlaceholderText = Method == SshAuthMethod.KeyFile
             ? item.HasStoredPassword ? Strings.Ssh_Card_PassphraseStored : Strings.Ssh_Card_Passphrase
             : item.HasStoredPassword ? Strings.Session_PasswordPlaceholderStored : Strings.Field_Password;

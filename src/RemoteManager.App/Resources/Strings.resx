@@ -1220,6 +1220,24 @@
   <data name="Session_OpenBadge" xml:space="preserve">
     <value>Sitzung offen</value>
   </data>
+  <data name="Session_Domain" xml:space="preserve">
+    <value>Domäne</value>
+  </data>
+  <data name="Session_Optional" xml:space="preserve">
+    <value>optional</value>
+  </data>
+  <data name="Session_OpenExternal" xml:space="preserve">
+    <value>Extern öffnen</value>
+  </data>
+  <data name="Session_UserMissing" xml:space="preserve">
+    <value>Für die Anmeldung fehlt der Benutzername. Trage ihn ein; ein gespeichertes Passwort wird dann verwendet.</value>
+  </data>
+  <data name="Session_NlaFailed" xml:space="preserve">
+    <value>Der Server hat die Anmeldung abgelehnt (Authentifizierung auf Netzwerkebene). Prüfe Benutzername und Passwort. GNOME- und KDE-Desktops erwarten die Zugangsdaten aus ihren Remotedesktop-Einstellungen, nicht die des Linux-Kontos.</value>
+  </data>
+  <data name="Session_NlaFailedShort" xml:space="preserve">
+    <value>Anmeldung abgelehnt (Authentifizierung auf Netzwerkebene, Grund 519)</value>
+  </data>
   <data name="Sftp_CopyPath" xml:space="preserve">
     <value>Pfad kopieren</value>
   </data>
@@ -1333,6 +1351,9 @@
   </data>
   <data name="Sftp_UploadTip" xml:space="preserve">
     <value>Dateien hochladen (oder aus dem Explorer hierher ziehen)</value>
+  </data>
+  <data name="Sftp_Transfer_Cancel" xml:space="preserve">
+    <value>Übertragung abbrechen</value>
   </data>
   <data name="Ssh_Auth_Agent" xml:space="preserve">
     <value>Anmeldung über SSH-Agent (OpenSSH-Agent oder Pageant)</value>
@@ -1486,6 +1507,9 @@
   </data>
   <data name="Ssh_Terminal_PasteTip" xml:space="preserve">
     <value>Einfügen (Strg+Umschalt+V). Kopieren: markieren und Strg+Umschalt+C oder Rechtsklick.</value>
+  </data>
+  <data name="Ssh_Card_PassphraseLabel" xml:space="preserve">
+    <value>Passphrase des Schlüssels</value>
   </data>
   <data name="StartParams_Custom" xml:space="preserve">
     <value>Eigene Einstellungen</value>

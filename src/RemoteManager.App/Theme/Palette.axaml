@@ -31,6 +31,7 @@
       <SolidColorBrush x:Key="RmOfflineBrush" Color="#FF6166" />
       <SolidColorBrush x:Key="RmUnknownBrush" Color="#6B7884" />
       <SolidColorBrush x:Key="RmLiveBrush" Color="#FF4D4D" />
+      <SolidColorBrush x:Key="RmPendingBrush" Color="#F5B83D" />
       <SolidColorBrush x:Key="FavoriteBrush" Color="#FFC53D" />
       <SolidColorBrush x:Key="RmOnlineSoftBrush" Color="#263DD68C" />
       <SolidColorBrush x:Key="RmOfflineSoftBrush" Color="#26FF6166" />
@@ -83,6 +84,7 @@
       <SolidColorBrush x:Key="RmOfflineBrush" Color="#D8383E" />
       <SolidColorBrush x:Key="RmUnknownBrush" Color="#8F9BA8" />
       <SolidColorBrush x:Key="RmLiveBrush" Color="#E5383B" />
+      <SolidColorBrush x:Key="RmPendingBrush" Color="#C97A00" />
       <SolidColorBrush x:Key="FavoriteBrush" Color="#E79A00" />
       <SolidColorBrush x:Key="RmOnlineSoftBrush" Color="#2212A15F" />
       <SolidColorBrush x:Key="RmOfflineSoftBrush" Color="#22D8383E" />

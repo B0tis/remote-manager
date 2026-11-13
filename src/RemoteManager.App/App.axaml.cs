@@ -33,6 +33,8 @@ public partial class App : Application
                 window.Opened += async (_, _) => desktop.Shutdown(await SelfTest.RunAsync(window));
             else if (AppOptions.Tour)
                 window.Opened += async (_, _) => desktop.Shutdown(await SelfTest.RunTourAsync(window));
+            else if (AppOptions.LiveTest)
+                window.Opened += async (_, _) => desktop.Shutdown(await SelfTest.RunLiveOnlyAsync(window));
         }
 
         base.OnFrameworkInitializationCompleted();

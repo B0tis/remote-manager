@@ -48,12 +48,10 @@ public partial class VncSessionWindow : Window, ISessionWindow
         this.host = host;
         Title = connection.Name;
 
-        NameText.Text = connection.Name;
-        HostText.Text = connection.HostLabel;
+        Bar.Load(connection);
+        CardHeader.Load(connection);
         DescriptionText.Text = connection.Description;
         DescriptionText.IsVisible = connection.Description.Length > 0;
-        TypeBadge.Background = connection.TypeBrush;
-        TypeBadgeText.Text = connection.TypeInitials;
 
         VncSettings settings = connection.Model.SettingsAs<VncSettings>();
         ViewOnlyButton.IsChecked = settings.ViewOnly;
@@ -88,7 +86,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
     public bool IsTunneled => tunnel is not null;
 
     /// <summary>The last status or error text (used by the self-test).</summary>
-    public string Status => StatusText.Text ?? "";
+    public string Status => Bar.Status;
 
     public string? CardError => CardMessage.IsVisible ? CardMessage.Text : null;
 
@@ -121,7 +119,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
         PasswordBox.Text = "";
         connecting = new CancellationTokenSource();
         HideCard();
-        SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Vnc_Connecting, Connection.HostLabel), "#F59E0B");
+        SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Vnc_Connecting, Connection.HostLabel), SessionLamp.Busy);
 
         // VNC over SSH: open the tunnel first and connect to its local end (it stays open for reconnects).
         (string Host, int Port) target = (Connection.Model.Host.Trim(), Connection.Model.EffectivePort);
@@ -200,7 +198,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
         connection.Dispose();
         CloseTunnel();
         ShowCard(null);
-        SetStatus(message, "#9CA3AF");
+        SetStatus(message, SessionLamp.Idle);
         UpdateButtons();
     }
 
@@ -213,14 +211,14 @@ public partial class VncSessionWindow : Window, ISessionWindow
             case ConnectionState.Connected:
                 SetStatus(string.Format(CultureInfo.CurrentCulture, Strings.Vnc_Connected,
                     connection.DesktopName is { Length: > 0 } name ? name : Connection.HostLabel,
-                    connection.RemoteFramebufferSize.Width, connection.RemoteFramebufferSize.Height), "#22C55E");
+                    connection.RemoteFramebufferSize.Width, connection.RemoteFramebufferSize.Height), SessionLamp.Connected);
                 host?.MarkConnected(Connection);
                 Scroller.IsVisible = true;
                 View.Focus();
                 break;
             case ConnectionState.Interrupted:
             case ConnectionState.Reconnecting:
-                SetStatus(Strings.Vnc_Reconnecting, "#F59E0B");
+                SetStatus(Strings.Vnc_Reconnecting, SessionLamp.Busy);
                 break;
             case ConnectionState.ReconnectFailed:
             case ConnectionState.Closed:
@@ -273,7 +271,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
         CardMessage.Text = message;
         CardMessage.IsVisible = message is { Length: > 0 };
         if (message is { Length: > 0 })
-            SetStatus(message, "#EF4444");
+            SetStatus(message, SessionLamp.Idle);
         PasswordBox.Focus();
     }
 
@@ -283,10 +281,10 @@ public partial class VncSessionWindow : Window, ISessionWindow
         CardMessage.IsVisible = false;
     }
 
-    private void SetStatus(string text, string color)
+    private void SetStatus(string text, SessionLamp lamp)
     {
-        StatusText.Text = text;
-        StatusDot.Fill = new SolidColorBrush(Avalonia.Media.Color.Parse(color));
+        Bar.Status = text;
+        Bar.Lamp = lamp;
         Log(text);
     }
 
@@ -332,7 +330,7 @@ public partial class VncSessionWindow : Window, ISessionWindow
         try
         {
             if (await SshConnect.OpenTunnelAsync(this, jumpHostId, Connection.Id, target.Host, target.Port,
-                    status => SetStatus(status, "#F59E0B"), connecting!.Token) is not { } end)
+                    status => SetStatus(status, SessionLamp.Busy), connecting!.Token) is not { } end)
             {
                 ShowCard(Strings.HostKey_Declined);
                 return null;
