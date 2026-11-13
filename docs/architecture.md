@@ -149,10 +149,31 @@ Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md
   (setting `overview.details`).
 - **History** (`Core/History/ConnectionHistory`, migration 0002): an entry per logon (`MarkConnected`), ended
   when the session window closes. Feeds the detail panel and the launcher ranking.
-- **Quick launcher** (`QuickLauncherWindow`, `Services/GlobalHotkey`): a system-wide hotkey (RegisterHotKey on
-  the main window, default Strg+Alt+R, setting `launcher.hotkey`, changeable in the launcher) or Strg+K opens
-  it. `Core/Search/FuzzySearch` ranks over name, host, tags, group, description, and type plus usage from the
-  history. Enter connects, Strg+Enter shows the connection in the overview, Esc closes.
+- **Quick launcher** (`QuickLauncherWindow`, `QuickLauncherItems.cs`, `MainWindow.Launcher.cs`,
+  `Services/GlobalHotkey`): a command palette in its own top-level window (it opens above session windows; it is
+  hidden, not closed, between uses). A system-wide hotkey (RegisterHotKey on the main window, default
+  Strg+Alt+R, setting `launcher.hotkey`) or Strg+K opens it; the hotkey pressed again closes it. One list with
+  section labels (`LauncherSection` rows, never selected):
+  - Empty query: "Zuletzt verwendet" (the later of the history and `LastConnectedAt`, most recent first), then
+    the favorites not already listed.
+  - A query: "Verbindungen" (`Core/Search/FuzzySearch` over name, host, tags, group, description, and type plus
+    usage from the history), "Direkt verbinden", then "Aktionen". A query starting with ">" lists only actions.
+    `FuzzySearch.Rank` takes a minimum score per letter: low for connections, higher for actions, so letters
+    scattered over a label or description are no hit.
+  - Actions (`LauncherCommand`, built in `MainWindow.CreateLauncherCommands`) call what their entry in the "Mehr"
+    menu calls. One that opens a dialog brings the overview to the front and does not run while another dialog
+    is open there.
+  - A typed address (`Core/Search/AdHocTarget.Parse`: host name, IPv4, IPv6, optional `user@`, `DOMAIN\user@`,
+    `:port`, and a type in front, "ssh host" or "ssh://host") gives one "Direkt verbinden" row per offered type.
+    Enter opens a session for a connection that is never added to the library (`MainWindow.ConnectDirect`; a
+    password saved from its logon card and its preview picture go when the window closes), Strg+Enter opens the
+    editor for a new connection filled with the target. A single word is a search first and only offered as a
+    host when nothing else matches. `user:password@host` is not accepted, so no password lands in the field.
+  - Keys: Up and Down (wrapping), Tab and Umschalt+Tab between sections, Enter runs the row, Strg+Enter shows a
+    connection in the overview, Esc closes. A click selects, a double click runs.
+  - "Ändern" (or the action "Globalen Hotkey ändern") swaps the search for the hotkey view: what the hotkey is,
+    the current one, and a recorder that stays open until a combination is accepted or Esc. A combination
+    Windows refuses leaves the previous one registered and says so.
 - **Sidebar note:** FANavigationView re-posts its selection animation until the selected item has an
   indicator; selecting a freshly created or hidden (collapsed parent) item starves the UI thread. The main
   window therefore rebuilds the sidebar only when groups or tags changed, clears the selection before

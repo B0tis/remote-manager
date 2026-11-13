@@ -44,6 +44,27 @@ public partial class MainWindow
         launcher.ShowFor(this);
     }
 
+    /// <summary>
+    /// The global hotkey opens the launcher and closes it again when it is already open. While the hotkey
+    /// view waits for a combination, the current hotkey never arrives there as keys (Windows hands it to
+    /// the app as the hotkey), so pressing it means "keep this one".
+    /// </summary>
+    private void OnHotkeyPressed()
+    {
+        if (launcher is not { IsVisible: true } open)
+        {
+            OpenLauncher();
+        }
+        else if (!open.IsHotkeyViewShown)
+        {
+            open.Hide();
+        }
+        else if (open.IsRecordingHotkey && Hotkey?.Gesture is { } current)
+        {
+            open.ApplyHotkey(current);
+        }
+    }
+
     /// <summary>Registers <paramref name="gesture"/> as the global hotkey and saves it; false (old one kept) when Windows refuses it.</summary>
     public bool TrySetHotkey(KeyGesture gesture)
     {
@@ -186,6 +207,9 @@ public partial class MainWindow
             return Task.CompletedTask;
         }
 
+        // A menu label ends in " …" when the entry opens a dialog; in a list of actions that is only noise.
+        static string Plain(string menuLabel) => menuLabel.TrimEnd(' ', '…');
+
         LauncherCommand Theme(string id, AppTheme theme, string label, FASymbol symbol, string keywords) => new()
         {
             Id = id, Label = label, Symbol = symbol, Keywords = keywords,
@@ -212,25 +236,25 @@ public partial class MainWindow
             },
             new()
             {
-                Id = "group.new", Label = Strings.Action_NewGroup, Symbol = FASymbol.NewFolder, Keywords = Strings.Launcher_Keywords_NewGroup,
+                Id = "group.new", Label = Plain(Strings.Action_NewGroup), Symbol = FASymbol.NewFolder, Keywords = Strings.Launcher_Keywords_NewGroup,
                 Gesture = new KeyGesture(Key.N, ctrl | KeyModifiers.Shift), ShowsOverview = true, OpensDialog = true,
                 Run = () => CreateGroupAsync(CurrentGroupId),
             },
             new()
             {
-                Id = "import", Label = Strings.Action_Import, Symbol = FASymbol.Import, Keywords = Strings.Launcher_Keywords_Import,
+                Id = "import", Label = Plain(Strings.Action_Import), Symbol = FASymbol.Import, Keywords = Strings.Launcher_Keywords_Import,
                 ShowsOverview = true, OpensDialog = true,
                 Run = () => ImportExportCommands.ShowImportAsync(this),
             },
             new()
             {
-                Id = "export", Label = Strings.Action_ExportBackup, Symbol = FASymbol.Save, Keywords = Strings.Launcher_Keywords_Export,
+                Id = "export", Label = Plain(Strings.Action_ExportBackup), Symbol = FASymbol.Save, Keywords = Strings.Launcher_Keywords_Export,
                 ShowsOverview = true,
                 Run = () => ImportExportCommands.ExportAsync(this),
             },
             new()
             {
-                Id = "sync", Label = Strings.Menu_Sync, Symbol = FASymbol.Sync, Keywords = Strings.Launcher_Keywords_Sync,
+                Id = "sync", Label = Plain(Strings.Menu_Sync), Symbol = FASymbol.Sync, Keywords = Strings.Launcher_Keywords_Sync,
                 ShowsOverview = true, OpensDialog = true,
                 Run = () => SyncDialog.ShowAsync(app.Sync),
             },
@@ -260,7 +284,7 @@ public partial class MainWindow
             Size("tiles.large", TileSize.Large, Strings.TileSize_Large, FASymbol.ZoomIn),
             new()
             {
-                Id = "tools", Label = Strings.Menu_RemoteTools, Symbol = FASymbol.Settings, Keywords = Strings.Launcher_Keywords_RemoteTools,
+                Id = "tools", Label = Plain(Strings.Menu_RemoteTools), Symbol = FASymbol.Settings, Keywords = Strings.Launcher_Keywords_RemoteTools,
                 ShowsOverview = true, OpensDialog = true,
                 Run = () => RemoteToolsDialog.ShowAsync(),
             },
@@ -278,7 +302,7 @@ public partial class MainWindow
             },
             new()
             {
-                Id = "about", Label = Strings.About_Menu, Symbol = FASymbol.Help, Keywords = Strings.Launcher_Keywords_About,
+                Id = "about", Label = Plain(Strings.About_Menu), Symbol = FASymbol.Help, Keywords = Strings.Launcher_Keywords_About,
                 ShowsOverview = true, OpensDialog = true,
                 Run = () => AboutView.ShowAsync(this),
             },
@@ -298,7 +322,7 @@ public partial class MainWindow
         if (Hotkey is not null)
             return;
         Hotkey = new GlobalHotkey(this);
-        Hotkey.Pressed += (_, _) => OpenLauncher();
+        Hotkey.Pressed += (_, _) => OnHotkeyPressed();
         KeyGesture gesture = GlobalHotkey.Parse(app.Library.GetSetting(HotkeySetting));
         if (!Hotkey.Register(gesture))
         {

@@ -38,6 +38,12 @@ public partial class QuickLauncherWindow : Window
     /// </summary>
     private const int CommandMatchScore = 25;
 
+    /// <summary>
+    /// The bar for a connection: far lower, so "dc1" finds "dc01" and "stgam" finds "Selftest Gamma", but
+    /// letters spread over a long description do not count as a hit.
+    /// </summary>
+    private const int ConnectionMatchScore = 10;
+
     private const double MaxListHeight = 440;
 
     /// <summary>Search row, footer, and the list's margins: what the card needs besides the list.</summary>
@@ -127,7 +133,12 @@ public partial class QuickLauncherWindow : Window
     public string Query
     {
         get => QueryBox.Text ?? "";
-        set => QueryBox.Text = value;
+        set
+        {
+            QueryBox.Text = value;
+            // As if typed: the caret ends up behind the text.
+            QueryBox.CaretIndex = value.Length;
+        }
     }
 
     /// <summary>Shows the launcher centered in the upper part of the screen the overview is on, with an empty query.</summary>
@@ -314,7 +325,7 @@ public partial class QuickLauncherWindow : Window
         {
             DateTime now = DateTime.UtcNow;
             connections = [.. FuzzySearch.Rank(query, host.Connections.OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase),
-                c => c.SearchFields, c => FuzzySearch.UsageBonus(usage.GetValueOrDefault(c.Id), now)).Take(MaxConnections)];
+                c => c.SearchFields, c => FuzzySearch.UsageBonus(usage.GetValueOrDefault(c.Id), now), ConnectionMatchScore).Take(MaxConnections)];
             commands = MatchCommands(query, MaxCommands);
 
             // A single word is more likely a search than a host: it is only offered when nothing else was found.

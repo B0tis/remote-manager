@@ -114,6 +114,8 @@ internal static partial class SelfTest
             && launcher.Results.SequenceEqual([.. recent, .. launcher.Favorites])
             && launcher.Commands.Count == 0 && launcher.AdHocTargets.Count == 0);
         SaveRenderProbe(launcher, "palette-empty.png");
+        // What is really composed: the card on its transparent window, above the overview.
+        SaveScreenProbe(launcher, "palette-screen.png");
         launcher.Hide();
     }
 
@@ -211,14 +213,19 @@ internal static partial class SelfTest
         bool quiet = launcher.Commands.Count == 0 && launcher.Results.FirstOrDefault()?.Name == "Selftest Palette Alt";
         launcher.Query = "neue";
         await Settle(250);
-        bool mixed = launcher.Commands.Take(2).Select(c => c.Id).SequenceEqual(["connection.new", "group.new"]);
+        bool commandsOnly = launcher.Results.Count == 0 && launcher.SelectedRow is LauncherCommand { Id: "connection.new" };
+        launcher.Query = "neu";
+        await Settle(250);
+        bool mixed = launcher.Results.Any(c => c.Name == "Selftest Palette Neu") && launcher.SelectedRow is ConnectionItem
+            && launcher.Commands.Take(2).Select(c => c.Id).SequenceEqual(["connection.new", "group.new"])
+            && launcher.Sections.SequenceEqual([Strings.Launcher_Section_Connections, Strings.Launcher_Section_Commands]);
         SaveRenderProbe(launcher, "palette-search.png");
         launcher.Query = "> gibtesnicht";
         await Settle(250);
         bool none = launcher.Commands.Count == 0 && launcher.SelectedRow is null;
         SaveRenderProbe(launcher, "palette-no-match.png");
-        Check("Palette: actions only show for a real match (\"neue\" yes, a connection name no), and an unknown action says so",
-            quiet && mixed && none);
+        Check("Palette: actions show below the connections and only for a real match (\"neu\" both, \"neue\" actions only, a connection name none); an unknown action says so",
+            quiet && commandsOnly && mixed && none);
 
         // A command with a dialog: the overview comes up with the same editor "Neue Verbindung" opens.
         launcher.Query = "neue verbindung";
@@ -304,8 +311,18 @@ internal static partial class SelfTest
             return;
         }
 
+        // Pressed while the palette is open, the global hotkey closes it again.
+        QuickLauncherWindow launcher = await OpenPaletteAsync(window, "");
+        SendMessage(window.Hotkey.WindowHandle, GlobalHotkey.WmHotkey, GlobalHotkey.HotkeyId, 0);
+        await Settle(300);
+        bool closed = !launcher.IsVisible;
+        SendMessage(window.Hotkey.WindowHandle, GlobalHotkey.WmHotkey, GlobalHotkey.HotkeyId, 0);
+        await Settle(400);
+        Check("Global hotkey toggles the palette: pressed again it closes, then opens it", closed && launcher.IsVisible);
+
         // The action "Globalen Hotkey ändern" opens the same view as "Ändern" and keeps the palette open.
-        QuickLauncherWindow launcher = await OpenPaletteAsync(window, "hotkey");
+        launcher.Query = "hotkey";
+        await Settle(250);
         bool found = launcher.SelectedRow is LauncherCommand { Id: "hotkey" };
         PressInPalette(launcher, Key.Enter);
         await Settle(300);
@@ -317,6 +334,18 @@ internal static partial class SelfTest
         bool invalidExplained = launcher.IsRecordingHotkey && launcher.HotkeyMessage == Strings.Launcher_HotkeyInvalid && window.Hotkey.Gesture == before;
         Check("Palette hotkey view: the action opens it, it waits for a combination, and one without Strg, Alt, or Win is explained and changes nothing",
             found && shown && invalidExplained);
+
+        // The current hotkey reaches the app as WM_HOTKEY, not as keys: in the waiting view it means "keep it".
+        if (before is not null)
+        {
+            SendMessage(window.Hotkey.WindowHandle, GlobalHotkey.WmHotkey, GlobalHotkey.HotkeyId, 0);
+            await Settle(300);
+            Check("Palette hotkey view: pressing the current hotkey keeps it and confirms, instead of resetting the palette",
+                launcher.IsVisible && launcher.IsHotkeyViewShown && !launcher.IsRecordingHotkey && window.Hotkey.Gesture == before
+                && launcher.HotkeyMessage == string.Format(CultureInfo.CurrentCulture, Strings.Launcher_Hotkey_Saved, GlobalHotkey.Format(before)));
+            launcher.ShowHotkeySettings();
+            await Settle(200);
+        }
 
         // A combination Windows refuses: this process holds it itself through a second registration.
         var taken = new KeyGesture(Key.F9, KeyModifiers.Control | KeyModifiers.Alt | KeyModifiers.Shift);
@@ -367,7 +396,7 @@ internal static partial class SelfTest
         launcher.Query = ">";
         await Settle(250);
         SaveRenderProbe(launcher, $"palette-commands{suffix}.png");
-        launcher.Query = "neue";
+        launcher.Query = "neu";
         await Settle(250);
         SaveRenderProbe(launcher, $"palette-search{suffix}.png");
         launcher.Query = "root@10.0.0.5:2222";

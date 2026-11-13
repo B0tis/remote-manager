@@ -700,7 +700,7 @@
     <value>sync abgleich geräte onedrive cloud passphrase</value>
   </data>
   <data name="Launcher_Keywords_Refresh" xml:space="preserve">
-    <value>status ping prüfen erreichbar refresh neu laden</value>
+    <value>status ping prüfen erreichbar lampen refresh reload</value>
   </data>
   <data name="Launcher_Keywords_ViewTiles" xml:space="preserve">
     <value>kacheln tiles vorschau raster grid view</value>
@@ -724,7 +724,7 @@
     <value>teamviewer anydesk rustdesk pfad tools einstellungen</value>
   </data>
   <data name="Launcher_Keywords_Updates" xml:space="preserve">
-    <value>update aktualisierung version neu</value>
+    <value>update updates aktualisierung version download herunterladen</value>
   </data>
   <data name="Launcher_Keywords_About" xml:space="preserve">
     <value>info version lizenz about hilfe</value>

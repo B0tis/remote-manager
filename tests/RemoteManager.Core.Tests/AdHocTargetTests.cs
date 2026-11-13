@@ -179,4 +179,18 @@ public sealed class AdHocTargetTests
         Assert.Equal(["Synchronisierung …"], FuzzySearch.Rank("sync", actions, Fields, minimumScorePerLetter: 25));
         Assert.Equal(["Design wie Windows"], FuzzySearch.Rank("windows design", actions, Fields, minimumScorePerLetter: 25));
     }
+
+    [Fact]
+    public void ALowMinimumScoreKeepsFuzzyNamesAndDropsLettersSpreadOverADescription()
+    {
+        (string Name, string Description)[] connections = [("dc01", "Domain Controller"), ("Selftest Gamma", ""), ("Kasse 2", "Laden, unbeaufsichtigter Zugriff")];
+        static IEnumerable<SearchField> Fields((string Name, string Description) c) => [new(c.Name, 4), new(c.Description, 1)];
+
+        // "neue" is n, e, u, e somewhere in the description of "Kasse 2": a hit without a bar, none with the launcher's.
+        Assert.Equal(["Kasse 2"], FuzzySearch.Rank("neue", connections, Fields).Select(c => c.Name));
+        Assert.Empty(FuzzySearch.Rank("neue", connections, Fields, minimumScorePerLetter: 10));
+        Assert.Equal(["dc01"], FuzzySearch.Rank("dc1", connections, Fields, minimumScorePerLetter: 10).Select(c => c.Name));
+        Assert.Equal(["Selftest Gamma"], FuzzySearch.Rank("stgam", connections, Fields, minimumScorePerLetter: 10).Select(c => c.Name));
+        Assert.Equal(["Kasse 2"], FuzzySearch.Rank("zugriff", connections, Fields, minimumScorePerLetter: 10).Select(c => c.Name));
+    }
 }
