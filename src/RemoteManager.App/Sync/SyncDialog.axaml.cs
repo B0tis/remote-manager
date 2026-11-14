@@ -3,17 +3,22 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
 using RemoteManager.Core.Sync;
 
 namespace RemoteManager.App.Sync;
 
 /// <summary>
-/// Sync settings: on/off, folder, passphrase (the same on every PC), what a joining PC does with its own
-/// connections, "Jetzt synchronisieren" with the last result, and the way to open conflicts.
+/// Sync settings. On top the state at a glance (on/off, last sync, open conflicts, and the way to decide them),
+/// then folder, passphrase (the same on every PC), and what a joining PC does with its own connections; at the
+/// bottom "Jetzt synchronisieren" with its result. Top and bottom stay in view while the settings scroll.
 /// </summary>
 public partial class SyncDialog : UserControl
 {
     public const int MinPassphraseLength = 10;
+
+    /// <summary>With the choice of the first sync the form is taller than a dialog usually gets; it may use the window's room.</summary>
+    private const double MaxDialogHeight = 860;
 
     private readonly SyncService service;
 
@@ -38,6 +43,7 @@ public partial class SyncDialog : UserControl
         };
         service.StateChanged += OnServiceStateChanged;
         DetachedFromVisualTree += (_, _) => service.StateChanged -= OnServiceStateChanged;
+        DialogKit.FitToWindow(this, MaxDialogHeight);
         UpdateState();
     }
 
@@ -46,6 +52,12 @@ public partial class SyncDialog : UserControl
     public static SyncDialog? OpenContent { get; private set; }
 
     public FAInfoBar Result => ResultBar;
+
+    /// <summary>True while the state row counts open conflicts and the note offers to decide them (self-test).</summary>
+    internal bool ShowsConflicts => ConflictsNote.IsVisible && ConflictsLamp.IsVisible && ConflictsButton.IsEffectivelyVisible;
+
+    /// <summary>True while the choice between merging and replacing shows (self-test).</summary>
+    internal bool ShowsJoinChoice => JoinPanel.IsVisible && JoinMerge.IsChecked == true;
 
     public static async Task ShowAsync(SyncService service)
     {
@@ -58,6 +70,7 @@ public partial class SyncDialog : UserControl
             CloseButtonText = Strings.Action_Cancel,
             DefaultButton = FAContentDialogButton.Primary,
         };
+        DialogKit.AllowHeight(dialog, MaxDialogHeight);
         dialog.PrimaryButtonClick += async (_, e) =>
         {
             var deferral = e.GetDeferral();
@@ -162,16 +175,27 @@ public partial class SyncDialog : UserControl
         PassphraseBox.PlaceholderText = service.HasPassphrase
             ? Strings.Sync_PassphraseStored
             : string.Format(CultureInfo.CurrentCulture, Strings.Sync_PassphrasePlaceholder, MinPassphraseLength);
+        PassphraseState.Text = service.HasPassphrase ? Strings.Sync_PassphraseStoredShort : Strings.Sync_PassphraseNotStored;
+        DialogKit.SetLamp(PassphraseLamp, service.HasPassphrase ? "ok" : "idle");
         JoinPanel.IsVisible = !service.HasSynced;
         SyncNowButton.IsEnabled = !service.IsRunning;
+
+        // The lamp is green only while sync is on and the last run worked; an error of a sync that is off is history.
+        bool failed = service.IsEnabled && service.LastError is not null;
         StatusText.Text = service.IsRunning ? Strings.Sync_Running
-            : !service.IsEnabled ? Strings.Sync_StatusOff
-            : service.LastError is not null ? Strings.Sync_Failed
-            : service.LastSync is { } last ? string.Format(CultureInfo.CurrentCulture, Strings.Sync_LastSync, last.ToLocalTime())
-            : Strings.Sync_Never;
+            : failed ? Strings.Sync_FailedShort
+            : service.LastSync is { } last ? last.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)
+            : Strings.Sync_NeverShort;
+        DialogKit.SetLamp(StateLamp, failed ? "fault"
+            : service.IsEnabled && !service.IsRunning && service.LastSync is not null ? "ok"
+            : "idle");
+
         int conflicts = service.OpenConflicts;
-        ConflictsButton.IsVisible = conflicts > 0;
-        ConflictsText.Text = string.Format(CultureInfo.CurrentCulture, Strings.Sync_ShowConflicts, conflicts);
+        ConflictsValue.Text = conflicts == 0 ? Strings.Sync_ConflictsNone
+            : string.Format(CultureInfo.CurrentCulture, Strings.Sync_ConflictsOpen, conflicts);
+        ConflictsLamp.IsVisible = ConflictsNote.IsVisible = conflicts > 0;
+        ConflictsText.Text = conflicts == 1 ? Strings.Sync_ConflictWaitingOne
+            : string.Format(CultureInfo.CurrentCulture, Strings.Sync_ConflictsWaiting, conflicts);
     }
 
     private async Task PickFolderAsync()

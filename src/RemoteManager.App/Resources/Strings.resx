@@ -78,6 +78,36 @@
   <data name="About_CheckNow" xml:space="preserve">
     <value>Jetzt suchen</value>
   </data>
+  <data name="About_AppName" xml:space="preserve">
+    <value>Remote-Manager</value>
+  </data>
+  <data name="About_Build" xml:space="preserve">
+    <value>Build {0}</value>
+  </data>
+  <data name="About_FoldersTitle" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="About_DataLabel" xml:space="preserve">
+    <value>Daten</value>
+  </data>
+  <data name="About_DataHint" xml:space="preserve">
+    <value>Liegen außerhalb des Programmordners und bleiben bei Updates und bei einer Neuinstallation erhalten.</value>
+  </data>
+  <data name="About_InstallLabel" xml:space="preserve">
+    <value>Programm</value>
+  </data>
+  <data name="About_NotInstalledShort" xml:space="preserve">
+    <value>Nicht mit Setup installiert</value>
+  </data>
+  <data name="About_CopyPath" xml:space="preserve">
+    <value>Pfad kopieren</value>
+  </data>
+  <data name="About_OpenFolder" xml:space="preserve">
+    <value>Im Explorer öffnen</value>
+  </data>
+  <data name="About_SourceLabel" xml:space="preserve">
+    <value>Update-Quelle</value>
+  </data>
   <data name="Action_Cancel" xml:space="preserve">
     <value>Abbrechen</value>
   </data>
@@ -199,10 +229,22 @@
     <value>Die Verbindung, ihr Vorschaubild und ihr gespeichertes Passwort werden entfernt. Das lässt sich nicht rückgängig machen.</value>
   </data>
   <data name="Delete_Title" xml:space="preserve">
-    <value>{0} löschen?</value>
+    <value>Verbindung „{0}“ löschen?</value>
   </data>
   <data name="Delete_TitleMany" xml:space="preserve">
     <value>{0} Verbindungen löschen?</value>
+  </data>
+  <data name="Delete_MessageMany" xml:space="preserve">
+    <value>Die Verbindungen, ihre Vorschaubilder und ihre gespeicherten Passwörter werden entfernt. Das lässt sich nicht rückgängig machen.</value>
+  </data>
+  <data name="Delete_AndMore" xml:space="preserve">
+    <value>{0} und {1} weitere</value>
+  </data>
+  <data name="Delete_SessionOpen" xml:space="preserve">
+    <value>Eine geöffnete Sitzung wird dabei getrennt.</value>
+  </data>
+  <data name="Delete_SessionsOpen" xml:space="preserve">
+    <value>{0} geöffnete Sitzungen werden dabei getrennt.</value>
   </data>
   <data name="Details_Change" xml:space="preserve">
     <value>Ändern</value>
@@ -613,16 +655,16 @@
     <value>Neuen Schlüssel übernehmen</value>
   </data>
   <data name="HostKey_Algorithm" xml:space="preserve">
-    <value>Typ</value>
+    <value>Schlüsseltyp</value>
   </data>
   <data name="HostKey_ChangedAdvice" xml:space="preserve">
-    <value>Übernehmen Sie den neuen Schlüssel nur, wenn Sie sicher wissen, warum er sich geändert hat (zum Beispiel nach einer Neuinstallation).</value>
+    <value>Übernimm den neuen Schlüssel nur, wenn du sicher weißt, warum er sich geändert hat. Im Zweifel abbrechen und beim Betreiber des Servers nachfragen.</value>
   </data>
   <data name="HostKey_ChangedText" xml:space="preserve">
-    <value>{0} meldet einen anderen Schlüssel als beim letzten Mal. Das passiert nach einer Neuinstallation, kann aber auch ein Angriff (Man-in-the-Middle) sein.</value>
+    <value>{0} meldet einen anderen Schlüssel als beim letzten Mal. Das passiert nach einer Neuinstallation des Servers, kann aber auch ein Angriff sein (Man-in-the-Middle).</value>
   </data>
   <data name="HostKey_ChangedTitle" xml:space="preserve">
-    <value>Achtung: Host-Schlüssel hat sich geändert</value>
+    <value>Achtung: Der Host-Schlüssel hat sich geändert</value>
   </data>
   <data name="HostKey_Declined" xml:space="preserve">
     <value>Verbindung abgebrochen: Host-Schlüssel nicht bestätigt.</value>
@@ -637,16 +679,25 @@
     <value>Bisher</value>
   </data>
   <data name="HostKey_UnknownAdvice" xml:space="preserve">
-    <value>Den Fingerabdruck zeigt der Server mit: ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</value>
+    <value>So zeigt der Server seinen Fingerabdruck:</value>
   </data>
   <data name="HostKey_UnknownText" xml:space="preserve">
-    <value>Mit {0} wurde noch nie verbunden. Vertrauen Sie dem Schlüssel nur, wenn der Fingerabdruck mit dem des Servers übereinstimmt.</value>
+    <value>Mit {0} wurde noch nie verbunden. Vertraue dem Schlüssel nur, wenn der Fingerabdruck mit dem des Servers übereinstimmt.</value>
   </data>
   <data name="HostKey_UnknownTitle" xml:space="preserve">
     <value>Unbekannter Host-Schlüssel</value>
   </data>
   <data name="HostKey_WindowTitle" xml:space="preserve">
     <value>SSH-Host-Schlüssel prüfen</value>
+  </data>
+  <data name="HostKey_UnknownCommand" xml:space="preserve">
+    <value>ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</value>
+  </data>
+  <data name="HostKey_New" xml:space="preserve">
+    <value>Neu</value>
+  </data>
+  <data name="HostKey_CopyFingerprint" xml:space="preserve">
+    <value>Fingerabdruck kopieren</value>
   </data>
   <data name="Import_Browse" xml:space="preserve">
     <value>Durchsuchen …</value>
@@ -835,10 +886,19 @@
     <value>Seitenleiste</value>
   </data>
   <data name="Move_Title" xml:space="preserve">
-    <value>„{0}“ verschieben nach</value>
+    <value>„{0}“ verschieben</value>
   </data>
   <data name="Move_TitleMany" xml:space="preserve">
-    <value>{0} Verbindungen verschieben nach</value>
+    <value>{0} Verbindungen verschieben</value>
+  </data>
+  <data name="Move_Target" xml:space="preserve">
+    <value>Zielgruppe</value>
+  </data>
+  <data name="Move_Hint" xml:space="preserve">
+    <value>Die Verbindung kommt ans Ende der gewählten Gruppe.</value>
+  </data>
+  <data name="Move_HintMany" xml:space="preserve">
+    <value>Die Verbindungen kommen ans Ende der gewählten Gruppe.</value>
   </data>
   <data name="Nav_All" xml:space="preserve">
     <value>Alle Verbindungen</value>
@@ -905,6 +965,12 @@
   </data>
   <data name="Picker_Title" xml:space="preserve">
     <value>KeePass-Eintrag auswählen</value>
+  </data>
+  <data name="Picker_Count" xml:space="preserve">
+    <value>{0} Einträge</value>
+  </data>
+  <data name="Picker_CountOne" xml:space="preserve">
+    <value>1 Eintrag</value>
   </data>
   <data name="Planned_Phase3" xml:space="preserve">
     <value>Dieser Verbindungstyp lässt sich schon anlegen und ordnen; Verbinden kommt in Phase 3.</value>
@@ -1201,7 +1267,7 @@
     <value>{0} importiert, {1} schon vorhanden, {2} Zeilen übersprungen.</value>
   </data>
   <data name="RemoteTool_Csv_Title" xml:space="preserve">
-    <value>AnyDesk-Import (CSV)</value>
+    <value>AnyDesk-Adressbuch importieren</value>
   </data>
   <data name="RemoteTool_Error_SecretInArguments" xml:space="preserve">
     <value>Die zusätzlichen Startparameter enthalten „{0}“. Passwörter gehören ins Passwortfeld, nicht in die Startparameter.</value>
@@ -1361,7 +1427,7 @@
     <value>Token speichern</value>
   </data>
   <data name="RemoteTool_Sync_Title" xml:space="preserve">
-    <value>TeamViewer Web API</value>
+    <value>TeamViewer-Konto abgleichen</value>
   </data>
   <data name="RemoteTool_Sync_TokenPlaceholder" xml:space="preserve">
     <value>Script-Token einfügen</value>
@@ -1386,6 +1452,23 @@
   </data>
   <data name="RemoteTool_Arguments" xml:space="preserve">
     <value>Zusätzliche Startparameter (optional)</value>
+  <data name="RemoteTool_Missing_DownloadLabel" xml:space="preserve">
+    <value>Download-Seite</value>
+  </data>
+  <data name="RemoteTool_State_Found" xml:space="preserve">
+    <value>Gefunden</value>
+  </data>
+  <data name="RemoteTool_State_Set" xml:space="preserve">
+    <value>Eingestellt</value>
+  </data>
+  <data name="RemoteTool_State_Missing" xml:space="preserve">
+    <value>Nicht gefunden</value>
+  </data>
+  <data name="RemoteTool_State_SetMissing" xml:space="preserve">
+    <value>Eingestellter Pfad fehlt</value>
+  </data>
+  <data name="RemoteTool_Token_Label" xml:space="preserve">
+    <value>Script-Token</value>
   </data>
   <data name="Search_Placeholder" xml:space="preserve">
     <value>Name, Host, Tag, Beschreibung suchen</value>
@@ -1924,7 +2007,7 @@
     <value>Dieser PC (gelöscht)</value>
   </data>
   <data name="Sync_Conflicts_None" xml:space="preserve">
-    <value>Keine offenen Konflikte.</value>
+    <value>Keine offenen Konflikte</value>
   </data>
   <data name="Sync_Conflicts_Title" xml:space="preserve">
     <value>Sync-Konflikte</value>
@@ -2035,13 +2118,13 @@
     <value>Gruppen und Verbindungen werden Ende-zu-Ende-verschlüsselt über eine Datei in einem Ordner abgeglichen, zum Beispiel in OneDrive oder Syncthing. Kennwörter, Verlauf, Status und Vorschaubilder bleiben auf diesem PC.</value>
   </data>
   <data name="Sync_Join_Merge" xml:space="preserve">
-    <value>Verbindungen dieses PCs hinzufügen</value>
+    <value>Zusammenführen</value>
   </data>
   <data name="Sync_Join_Replace" xml:space="preserve">
-    <value>Verbindungen dieses PCs durch die Sync-Daten ersetzen</value>
+    <value>Durch die Sync-Daten ersetzen</value>
   </data>
   <data name="Sync_Join_Title" xml:space="preserve">
-    <value>Wenn im Ordner schon Sync-Daten liegen</value>
+    <value>Erster Abgleich auf diesem PC</value>
   </data>
   <data name="Sync_KeepBoth" xml:space="preserve">
     <value>Beide behalten (Kopie)</value>
@@ -2050,10 +2133,10 @@
     <value>Die Verbindung übernimmt die andere Version; die Version dieses PCs wird als neue Verbindung angelegt.</value>
   </data>
   <data name="Sync_KeepMine" xml:space="preserve">
-    <value>Diese behalten</value>
+    <value>Meine Version behalten</value>
   </data>
   <data name="Sync_KeepOther" xml:space="preserve">
-    <value>Andere behalten</value>
+    <value>Andere Version übernehmen</value>
   </data>
   <data name="Sync_Kind_Connection" xml:space="preserve">
     <value>Verbindung</value>
@@ -2086,7 +2169,7 @@
     <value>Passphrase wiederholen</value>
   </data>
   <data name="Sync_PassphraseStored" xml:space="preserve">
-    <value>Gespeichert. Leer lassen, um sie zu behalten</value>
+    <value>Leer lassen, um sie zu behalten</value>
   </data>
   <data name="Sync_PickFolder" xml:space="preserve">
     <value>Ordner wählen …</value>
@@ -2139,6 +2222,99 @@
   <data name="Sync_Value_Yes" xml:space="preserve">
     <value>Ja</value>
   </data>
+  <data name="Sync_On" xml:space="preserve">
+    <value>An</value>
+  </data>
+  <data name="Sync_Off" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="Sync_LastSyncLabel" xml:space="preserve">
+    <value>Zuletzt synchronisiert</value>
+  </data>
+  <data name="Sync_NeverShort" xml:space="preserve">
+    <value>Noch nie</value>
+  </data>
+  <data name="Sync_FailedShort" xml:space="preserve">
+    <value>Fehlgeschlagen</value>
+  </data>
+  <data name="Sync_ConflictsLabel" xml:space="preserve">
+    <value>Konflikte</value>
+  </data>
+  <data name="Sync_ConflictsNone" xml:space="preserve">
+    <value>Keine</value>
+  </data>
+  <data name="Sync_ConflictsOpen" xml:space="preserve">
+    <value>{0} offen</value>
+  </data>
+  <data name="Sync_ConflictWaitingOne" xml:space="preserve">
+    <value>1 Konflikt wartet auf deine Entscheidung.</value>
+  </data>
+  <data name="Sync_ConflictsWaiting" xml:space="preserve">
+    <value>{0} Konflikte warten auf deine Entscheidung.</value>
+  </data>
+  <data name="Sync_ResolveConflicts" xml:space="preserve">
+    <value>Konflikte lösen</value>
+  </data>
+  <data name="Sync_Join_Hint" xml:space="preserve">
+    <value>Gilt nur, wenn im Ordner schon Sync-Daten eines anderen PCs liegen.</value>
+  </data>
+  <data name="Sync_Join_MergeHint" xml:space="preserve">
+    <value>Die Verbindungen dieses PCs bleiben und kommen zu den Sync-Daten dazu.</value>
+  </data>
+  <data name="Sync_Join_ReplaceHint" xml:space="preserve">
+    <value>Gruppen und Verbindungen dieses PCs werden gelöscht. Danach hat dieser PC denselben Stand wie die anderen.</value>
+  </data>
+  <data name="Sync_Conflicts_ListTitle" xml:space="preserve">
+    <value>Offene Konflikte</value>
+  </data>
+  <data name="Sync_Conflicts_NoneHint" xml:space="preserve">
+    <value>Alle PCs haben wieder denselben Stand.</value>
+  </data>
+  <data name="Sync_Conflicts_Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="Sync_Conflict_Summary" xml:space="preserve">
+    <value>{0}, {1}.</value>
+  </data>
+  <data name="Sync_Conflict_Decide" xml:space="preserve">
+    <value>Bis du entscheidest, behält jeder PC seine eigene Version.</value>
+  </data>
+  <data name="Sync_Conflict_LastChange" xml:space="preserve">
+    <value>Letzte Änderung {0:g}</value>
+  </data>
+  <data name="Sync_Conflict_ThisPcState" xml:space="preserve">
+    <value>Stand auf diesem PC</value>
+  </data>
+  <data name="Sync_Conflict_DeletedHereNote" xml:space="preserve">
+    <value>Auf diesem PC gelöscht</value>
+  </data>
+  <data name="Sync_Conflict_DeletedThereNote" xml:space="preserve">
+    <value>Auf {0} gelöscht</value>
+  </data>
+  <data name="Sync_KeepDeleted" xml:space="preserve">
+    <value>Gelöscht lassen</value>
+  </data>
+  <data name="Sync_Restore" xml:space="preserve">
+    <value>Wiederherstellen</value>
+  </data>
+  <data name="Sync_KeepExisting" xml:space="preserve">
+    <value>Behalten</value>
+  </data>
+  <data name="Sync_DeleteHereToo" xml:space="preserve">
+    <value>Auch hier löschen</value>
+  </data>
+  <data name="Sync_NowHint" xml:space="preserve">
+    <value>Speichert die Einstellungen und gleicht sofort ab.</value>
+  </data>
+  <data name="Sync_PassphraseStoredShort" xml:space="preserve">
+    <value>Gespeichert</value>
+  </data>
+  <data name="Sync_PassphraseNotStored" xml:space="preserve">
+    <value>Noch keine gespeichert</value>
+  </data>
+  <data name="Sync_ThisPcLabel" xml:space="preserve">
+    <value>Auf diesem PC</value>
+  </data>
   <data name="TagRemove_Action" xml:space="preserve">
     <value>Entfernen</value>
   </data>
@@ -2168,6 +2344,12 @@
   </data>
   <data name="Unlock_Wrong" xml:space="preserve">
     <value>Master-Passwort oder Schlüsseldatei ist falsch. Versuch es noch einmal.</value>
+  </data>
+  <data name="Unlock_Database" xml:space="preserve">
+    <value>Datenbank</value>
+  </data>
+  <data name="Unlock_KeyFileLabel" xml:space="preserve">
+    <value>Schlüsseldatei</value>
   </data>
   <data name="Vault_Browse" xml:space="preserve">
     <value>Durchsuchen …</value>
@@ -2320,7 +2502,7 @@
     <value>Es ist noch eine Sitzung geöffnet. Für das Update startet Remote-Manager neu, dabei wird sie getrennt.</value>
   </data>
   <data name="Update_SessionsTitle" xml:space="preserve">
-    <value>Sitzungen sind geöffnet</value>
+    <value>Sitzungen trennen und aktualisieren?</value>
   </data>
   <data name="Update_SessionsText" xml:space="preserve">
     <value>Es sind noch {0} Sitzungen geöffnet. Für das Update startet Remote-Manager neu, dabei werden sie getrennt.</value>
@@ -2330,6 +2512,9 @@
   </data>
   <data name="Update_CheckMenu" xml:space="preserve">
     <value>Nach Updates suchen</value>
+  </data>
+  <data name="Update_SessionsTitleOne" xml:space="preserve">
+    <value>Sitzung trennen und aktualisieren?</value>
   </data>
   <data name="Vnc_AuthFailed" xml:space="preserve">
     <value>Der Server hat das Passwort abgelehnt.</value>

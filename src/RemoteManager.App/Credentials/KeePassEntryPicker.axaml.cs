@@ -1,11 +1,20 @@
+using System.Globalization;
 using Avalonia.Controls;
+using RemoteManager.App.Resources;
 using RemoteManager.Core.Credentials.KeePass;
 
 namespace RemoteManager.App.Credentials;
 
 /// <summary>One row of the picker: no password, only what identifies the entry.</summary>
+/// <param name="Detail">Group path and user name in one text: what the filter searches besides the title.</param>
 /// <param name="Reference">What goes into the reference: the path, or the UUID when the path is not unique.</param>
-public sealed record KeePassEntryChoice(string Title, string Detail, string Reference);
+public sealed record KeePassEntryChoice(string Title, string Detail, string Reference)
+{
+    /// <summary>"Group / Subgroup", or empty for an entry at the top.</summary>
+    public string Group { get; init; } = "";
+
+    public string UserName { get; init; } = "";
+}
 
 /// <summary>Lets the user pick a KeePass entry instead of typing its path.</summary>
 public partial class KeePassEntryPicker : Window
@@ -21,8 +30,8 @@ public partial class KeePassEntryPicker : Window
         InitializeComponent();
         all = Choices(entries);
         DatabaseText.Text = Path.GetFileName(databasePath);
-        EntryList.ItemsSource = all;
-        EmptyText.IsVisible = all.Count == 0;
+        ToolTip.SetTip(DatabaseText, databasePath);
+        Show(all);
 
         FilterBox.TextChanged += (_, _) => ApplyFilter();
         EntryList.SelectionChanged += (_, _) => SelectButton.IsEnabled = EntryList.SelectedItem is not null;
@@ -36,6 +45,12 @@ public partial class KeePassEntryPicker : Window
     public static KeePassEntryPicker? Current { get; private set; }
 
     public IReadOnlyList<KeePassEntryChoice> Shown => (IReadOnlyList<KeePassEntryChoice>)EntryList.ItemsSource!;
+
+    /// <summary>True while "nothing found" shows instead of entries (self-test).</summary>
+    internal bool ShowsEmptyText => EmptyText.IsVisible;
+
+    /// <summary>Types into the filter box (self-test).</summary>
+    internal void Filter(string text) => FilterBox.Text = text;
 
     public void Select(KeePassEntryChoice choice) => Close(choice.Reference);
 
@@ -59,8 +74,12 @@ public partial class KeePassEntryPicker : Window
             .OrderBy(e => e.Path, StringComparer.CurrentCultureIgnoreCase)
             .Select(e => new KeePassEntryChoice(
                 e.Title.Length > 0 ? e.Title : "-",
-                string.Join("  ·  ", new[] { string.Join(" / ", e.GroupPath), e.UserName }.Where(s => s.Length > 0)),
-                PathFinds(e, entries) ? e.Path : e.Uuid))];
+                string.Join("  ", new[] { string.Join(" / ", e.GroupPath), e.UserName }.Where(s => s.Length > 0)),
+                PathFinds(e, entries) ? e.Path : e.Uuid)
+            {
+                Group = string.Join(" / ", e.GroupPath),
+                UserName = e.UserName,
+            })];
     }
 
     /// <summary>Whether the readable path finds exactly this entry again (titles and paths need not be unique).</summary>
@@ -79,9 +98,17 @@ public partial class KeePassEntryPicker : Window
     private void ApplyFilter()
     {
         string filter = FilterBox.Text?.Trim() ?? "";
-        EntryList.ItemsSource = filter.Length == 0
+        Show(filter.Length == 0
             ? all
-            : all.Where(c => c.Title.Contains(filter, StringComparison.CurrentCultureIgnoreCase) || c.Detail.Contains(filter, StringComparison.CurrentCultureIgnoreCase)).ToList();
+            : all.Where(c => c.Title.Contains(filter, StringComparison.CurrentCultureIgnoreCase) || c.Detail.Contains(filter, StringComparison.CurrentCultureIgnoreCase)).ToList());
+    }
+
+    private void Show(List<KeePassEntryChoice> choices)
+    {
+        EntryList.ItemsSource = choices;
+        EmptyText.IsVisible = choices.Count == 0;
+        CountText.Text = choices.Count == 1 ? Strings.Picker_CountOne
+            : string.Format(CultureInfo.CurrentCulture, Strings.Picker_Count, choices.Count);
     }
 
     private void Select()
