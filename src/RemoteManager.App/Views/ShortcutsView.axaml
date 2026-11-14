@@ -25,24 +25,26 @@
   <UserControl.DataTemplates>
     <!-- One area: its name, then the shortcuts as lines of a card. -->
     <DataTemplate x:DataType="app:ShortcutArea">
-      <StackPanel Spacing="8" Margin="0,0,0,20">
+      <StackPanel Spacing="8">
         <TextBlock Classes="section" Text="{Binding Title}" HorizontalAlignment="Left" Margin="2,0,0,0" />
         <Border Classes="card" Padding="14,3">
           <ItemsControl ItemsSource="{Binding Rows}" />
         </Border>
-        <TextBlock Classes="hint" Text="{Binding Hint}" IsVisible="{Binding HasHint}" Margin="2,0,0,0" />
+        <TextBlock Classes="hint" Text="{Binding Hint}" IsVisible="{Binding HasHint}" TextWrapping="Wrap" Margin="2,0,0,0" />
       </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:DataType="app:ShortcutRow">
-      <Border BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="{Binding Divider}" MinHeight="37">
+      <Border BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="{Binding Divider}" MinHeight="33">
         <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+          <!-- The plate keeps its place on the following rows of the same type (ChipOpacity 0), so the labels line up. -->
           <Border Classes="typeChip" Background="{Binding ChipBrush}" IsVisible="{Binding HasChip}" MinWidth="44"
+                  Opacity="{Binding ChipOpacity}"
                   Margin="0,0,10,0" VerticalAlignment="Center">
             <TextBlock Text="{Binding Chip}" HorizontalAlignment="Center" />
           </Border>
           <TextBlock Grid.Column="1" Text="{Binding Label}" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center"
-                     Margin="0,7,12,8" />
+                     Margin="0,5,12,6" />
           <ItemsControl Grid.Column="2" ItemsSource="{Binding Parts}" VerticalAlignment="Center">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
@@ -67,7 +69,16 @@
 
   <!-- Two columns: the overview and its connections on the left, launcher and sessions on the right. -->
   <Grid ColumnDefinitions="*,24,*">
-    <ItemsControl x:Name="LeftColumn" />
-    <ItemsControl x:Name="RightColumn" Grid.Column="2" />
+    <Grid.Styles>
+      <Style Selector="ItemsControl.column">
+        <Setter Property="ItemsPanel">
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="18" />
+          </ItemsPanelTemplate>
+        </Setter>
+      </Style>
+    </Grid.Styles>
+    <ItemsControl x:Name="LeftColumn" Classes="column" />
+    <ItemsControl x:Name="RightColumn" Classes="column" Grid.Column="2" />
   </Grid>
 </UserControl>

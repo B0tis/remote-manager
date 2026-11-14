@@ -2250,8 +2250,7 @@
     <value>Alle Favoriten in der Übersicht</value>
   </data>
   <data name="Tray_EntryTip" xml:space="preserve">
-    <value>{0}, {1}
-{2}</value>
+    <value>{0}, {1}</value>
   </data>
   <data name="Tray_CloseToTray" xml:space="preserve">
     <value>Beim Schließen im Infobereich weiterlaufen</value>
@@ -2293,13 +2292,13 @@
     <value>Verbindung</value>
   </data>
   <data name="Shortcuts_Area_Connection_Hint" xml:space="preserve">
-    <value>Gilt für die Auswahl in Kacheln oder Liste.</value>
+    <value>Gilt für die ausgewählten Verbindungen in Kacheln oder Liste.</value>
   </data>
   <data name="Shortcuts_Area_Launcher" xml:space="preserve">
     <value>Schnellstart</value>
   </data>
   <data name="Shortcuts_Area_Launcher_Hint" xml:space="preserve">
-    <value>Den Hotkey änderst du im Schnellstart unter „Ändern“.</value>
+    <value>Der Hotkey gilt in jedem Programm, solange Remote-Manager läuft. Du änderst ihn im Schnellstart unter „Ändern“.</value>
   </data>
   <data name="Shortcuts_Area_Session" xml:space="preserve">
     <value>Sitzung</value>
@@ -2344,10 +2343,10 @@
     <value>Alle sichtbaren Verbindungen auswählen</value>
   </data>
   <data name="Shortcuts_SidebarDelete" xml:space="preserve">
-    <value>In der Seitenleiste: Gruppe löschen oder Tag entfernen</value>
+    <value>Seitenleiste: Gruppe löschen, Tag entfernen</value>
   </data>
   <data name="Shortcuts_LauncherGlobal" xml:space="preserve">
-    <value>Von überall öffnen, auch wenn die Übersicht zu ist</value>
+    <value>Von überall öffnen</value>
   </data>
   <data name="Shortcuts_LauncherLocal" xml:space="preserve">
     <value>In der Übersicht öffnen</value>
@@ -2368,16 +2367,16 @@
     <value>Vollbild verlassen</value>
   </data>
   <data name="Shortcuts_TerminalCopy" xml:space="preserve">
-    <value>Markierten Text kopieren</value>
+    <value>Auswahl kopieren</value>
   </data>
   <data name="Shortcuts_TerminalPaste" xml:space="preserve">
     <value>Einfügen</value>
   </data>
   <data name="Shortcuts_TerminalPasteAlt" xml:space="preserve">
-    <value>Einfügen, zweite Möglichkeit</value>
+    <value>Einfügen, alternativ</value>
   </data>
   <data name="Shortcuts_SftpOpen" xml:space="preserve">
-    <value>Ordner öffnen oder Datei herunterladen</value>
+    <value>Öffnen oder herunterladen</value>
   </data>
   <data name="Shortcuts_SftpUp" xml:space="preserve">
     <value>Eine Ebene nach oben</value>

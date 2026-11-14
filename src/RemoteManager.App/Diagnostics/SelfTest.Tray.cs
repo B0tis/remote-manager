@@ -90,13 +90,15 @@ internal static partial class SelfTest
             return;
         }
 
-        string?[] headers = [.. menu.Items.Select(i => (i as NativeMenuItem)?.Header)];
+        // A separator is a NativeMenuItem too (header "-"); null stands for it here.
+        string?[] headers = [.. menu.Items.Select(i => i is NativeMenuItemSeparator ? null : (i as NativeMenuItem)?.Header)];
         string?[] expected =
         [
             Strings.Tray_Open, Strings.Menu_Launcher, null, Strings.Nav_Favorites, Strings.Nav_Recent, null, Strings.Tray_Quit,
         ];
         Check($"Tray menu: open, launcher, favorites, recent, quit ({string.Join(" | ", headers.Select(h => h ?? "-"))})",
-            headers.SequenceEqual(expected) && menu.Items.OfType<NativeMenuItem>().All(i => i.Menu is not null || i.HasClickHandlers));
+            headers.SequenceEqual(expected)
+            && menu.Items.OfType<NativeMenuItem>().All(i => i is NativeMenuItemSeparator || i.Menu is not null || i.HasClickHandlers));
 
         NativeMenuItem favorites = menu.Items.OfType<NativeMenuItem>().First(i => i.Header == Strings.Nav_Favorites);
         NativeMenuItem recent = menu.Items.OfType<NativeMenuItem>().First(i => i.Header == Strings.Nav_Recent);
@@ -121,7 +123,7 @@ internal static partial class SelfTest
         window.SetFavorite(starredBefore, true);
         window.SetFavorite([first], true);
         await Settle(300);
-        Check($"\"Favoriten\" follows the star: disabled without favorites, the connection with name, lamp, and tooltip when starred, gone when unstarred ({starred?.Header}, {starred?.ToolTip?.Replace('\n', '/')})",
+        Check($"\"Favoriten\" follows the star: disabled without favorites, the connection with name, lamp, and tooltip when starred, gone when unstarred ({starred?.Header}, {starred?.ToolTip?.Replace('\n', '/')}; disabled {disabled}, followed {followed}, named {named}, removed {removed})",
             disabled && followed && named && removed && Ids(favorites).Contains(first.Id) && Ids(favorites).Count == starredBefore.Count + 1);
 
         // "Zuletzt verwendet": the five connected last, newest first. MarkConnected is what a session calls on logon.
@@ -181,7 +183,11 @@ internal static partial class SelfTest
                 favorites.Open();
                 await Settle(600);
                 if (favorites.GetVisualDescendants().OfType<Popup>().FirstOrDefault()?.Child is { } submenu)
+                {
+                    foreach (Image image in submenu.GetVisualDescendants().OfType<Image>()) // TEMP
+                        Log($"  TEMP image {image.Bounds} source {image.Source?.Size} px {(image.Source as Avalonia.Media.Imaging.Bitmap)?.PixelSize} dpi {(image.Source as Avalonia.Media.Imaging.Bitmap)?.Dpi} chain {string.Join(" < ", image.GetVisualAncestors().Take(6).Select(v => $"{v.GetType().Name} {v.Bounds.Width}x{v.Bounds.Height}"))}");
                     SaveControlProbe(submenu, window, $"{name}-favorites.png");
+                }
                 favorites.Close();
             }
         }
@@ -279,7 +285,7 @@ internal static partial class SelfTest
         bool cameBack = window.IsVisible && MissingToolDialog.Current is not null && window.TrayHint is null;
         MissingToolDialog.Current?.Hide();
         await Settle(300);
-        Check("Connecting from the tray brings the overview back when the handler shows a dialog there; same place, same size, no second start",
+        Check($"Connecting from the tray brings the overview back when the handler shows a dialog there; same place, same size, no second start (visible {window.IsVisible}, note open {window.TrayHint is not null}, {window.Position}, {window.ClientSize})",
             cameBack && window.Position == position && window.ClientSize == size && window.Hotkey == hotkey && HandleOf(window) == handle);
 
         // Second close: hidden again, without the note; the icon brings it back.
@@ -290,12 +296,48 @@ internal static partial class SelfTest
         await Settle(600);
         Check("A later close hides without the note, and the icon brings the overview back", hiddenAgain && window.IsVisible && IsWindowVisible(handle));
 
-        // A failed connection must not go unseen: an error message shows the overview again.
+        // A failed connection must not go unseen, and the overview must not take the keyboard from a session:
+        // the corner note carries a warning or an error, and nothing else.
         window.Close();
         await Settle(400);
-        window.ShowToast("Selftest Tray", "Fehler, während die Übersicht ausgeblendet ist", FAInfoBarSeverity.Error);
+        window.ShowToast("Selftest Tray", "Gespeichert.", FAInfoBarSeverity.Success);
+        await Settle(400);
+        bool quiet = window.TrayHint is null && !window.IsVisible;
+        const string Problem = "TeamViewer konnte nicht gestartet werden: Das System kann die angegebene Datei nicht finden.";
+        window.ShowToast("Selftest Tray Kasse", Problem, FAInfoBarSeverity.Error);
+        await Settle(600);
+        TrayHintWindow? message = window.TrayHint;
+        bool shown = message is { IsVisible: true, IsActive: false, IsMessage: true, Heading: "Selftest Tray Kasse", Body: Problem } && !window.IsVisible;
+        if (message is not null)
+        {
+            SaveRenderProbe(message, "tray-note-error.png");
+            AppHost.Current.Appearance.SetTheme(AppTheme.Light);
+            await Settle(500);
+            SaveRenderProbe(message, "tray-note-error-light.png");
+            AppHost.Current.Appearance.SetTheme(AppTheme.Dark);
+            await Settle(300);
+        }
+
+        window.ShowToast("Selftest Tray", "Zwei Konflikte beim Synchronisieren.", FAInfoBarSeverity.Warning);
+        await Settle(600);
+        TrayHintWindow? warning = window.TrayHint;
+        bool replaced = warning is { IsMessage: true, Heading: "Selftest Tray" } && warning != message && message is { IsVisible: false };
+        if (warning is not null)
+            SaveRenderProbe(warning, "tray-note-warning.png");
+        Check($"While hidden, a warning or an error shows as a corner note and the overview stays hidden; other messages show nothing (quiet {quiet}, error {shown}, replaced by the next {replaced})",
+            quiet && shown && replaced);
+
+        warning?.FindControl<Button>("OpenButton")?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await Settle(600);
+        Check("\"Remote-Manager öffnen\" on the note brings the overview back and closes the note", window.IsVisible && window.TrayHint is null);
+
+        // A dialog needs a shown owner: the hidden overview comes back for it (KeePass master password, SSH host key).
+        window.Close();
+        await Settle(400);
+        bool wasHidden = !window.IsVisible;
+        Window owner = DialogOwner.Shown(window);
         await Settle(500);
-        Check("An error message while hidden brings the overview back", window.IsVisible && window.ToastBar.IsOpen);
+        Check("A dialog that needs the overview as its owner brings the hidden overview back first", wasHidden && owner == window && window.IsVisible);
 
         window.SetCloseToTray(false);
         entry = window.MoreMenuItems().FirstOrDefault(i => i.Header as string == Strings.Tray_CloseToTray);
@@ -310,15 +352,32 @@ internal static partial class SelfTest
         Check("\"Mehr\" offers \"Tastenkürzel …\" with F1",
             window.MoreMenuItems().FirstOrDefault(i => i.Header as string == Strings.Shortcuts_Menu)?.InputGesture is { Key: Key.F1, KeyModifiers: KeyModifiers.None });
 
-        // F1 opens it; a second F1 does not open a second dialog.
+        // F1 opens it and F1 closes it again.
+        void PressF1() => window.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.F1, Source = window });
         window.Activate();
-        window.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.F1, Source = window });
+        PressF1();
+        await Settle(800);
+        bool openedByKey = ShortcutsView.OpenDialog is not null && ShortcutsView.OpenContent is not null;
+        PressF1();
+        await Settle(600);
+        Check("F1 opens the shortcut overview and closes it again", openedByKey && ShortcutsView.OpenDialog is null);
+
+        // Not on top of another dialog of the overview: the editor keeps the keyboard.
+        Task<bool> editing = ConnectionEditor.ShowAsync(window.Connections[0].Model, isNew: false);
+        await Settle(800);
+        PressF1();
+        await Settle(500);
+        bool stayedOut = ConnectionEditor.OpenDialog is not null && ShortcutsView.OpenDialog is null;
+        ConnectionEditor.OpenDialog?.Hide();
+        await editing;
+        await Settle(400);
+        Check("F1 does not put the shortcut overview on top of an open dialog", stayedOut);
+
+        window.MoreMenuItems().FirstOrDefault(i => i.Header as string == Strings.Shortcuts_Menu)?.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         await Settle(800);
         FAContentDialog? dialog = ShortcutsView.OpenDialog;
-        window.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.F1, Source = window });
-        await Settle(300);
         ShortcutsView? view = ShortcutsView.OpenContent;
-        Check("F1 opens the shortcut overview, once", dialog is not null && view is not null && ShortcutsView.OpenDialog == dialog);
+        Check("\"Tastenkürzel …\" in the \"Mehr\" menu opens the shortcut overview", dialog is not null && view is not null);
         if (dialog is null || view is null)
             return;
 
@@ -326,7 +385,7 @@ internal static partial class SelfTest
         List<ShortcutRow> rows = [.. view.Rows];
         Check($"The overview groups the shortcuts by area ({string.Join(", ", areas.Zip(view.Areas, (title, area) => $"{title} {area.Rows.Count}"))})",
             areas.SequenceEqual([Strings.Shortcuts_Area_Overview, Strings.Shortcuts_Area_Connection, Strings.Shortcuts_Area_Launcher, Strings.Shortcuts_Area_Session])
-            && view.Areas.All(a => a.Rows.Count >= 5) && rows.All(r => r.Label.Length > 0 && r.Parts.Count > 0));
+            && view.Areas.All(a => a.Rows.Count >= 4) && rows.All(r => r.Label.Length > 0 && r.Parts.Count > 0));
 
         // Every shortcut a menu shows must be in the list, with the same German key names.
         List<string> shown = [.. window.MoreMenuItems().Select(i => i.InputGesture)
@@ -341,16 +400,28 @@ internal static partial class SelfTest
         string wanted = window.Hotkey?.Gesture is { } gesture ? GlobalHotkey.Format(gesture) : Strings.Launcher_HotkeyNone;
         Check($"The launcher row shows the global hotkey that is registered now ({global.GestureText})", global.GestureText == wanted);
 
+        // At the standard window size everything is on one page; the minimum window scrolls it.
+        double width = window.Width, height = window.Height;
+        await ResizeAsync(window, 1320, 840);
         int caps = view.GetVisualDescendants().OfType<Border>().Count(b => b.Classes.Contains("keycap") && b.IsEffectivelyVisible);
         bool fits = DialogFits(window, dialog, out string bounds);
-        Check($"The keys are drawn as key caps and the dialog fits the window ({caps} caps, {bounds})",
-            caps == rows.Sum(r => r.Parts.Count(p => p.IsKey)) && fits);
+        ScrollViewer? scroller = view.FindAncestorOfType<ScrollViewer>();
+        bool onePage = scroller is not null && scroller.Extent.Height <= scroller.Viewport.Height + 0.5;
+        Check($"The keys are drawn as key caps and the dialog shows everything without scrolling at 1320 x 840 ({caps} caps, {bounds}, content {scroller?.Extent.Height:0} in {scroller?.Viewport.Height:0})",
+            caps == rows.Sum(r => r.Parts.Count(p => p.IsKey)) && fits && onePage);
         SaveRenderProbe(window, "shortcuts.png");
         AppHost.Current.Appearance.SetTheme(AppTheme.Light);
         await Settle(700);
         SaveRenderProbe(window, "shortcuts-light.png");
         AppHost.Current.Appearance.SetTheme(AppTheme.Dark);
         await Settle(400);
+
+        await ResizeAsync(window, window.MinWidth, window.MinHeight);
+        bool fitsMinimum = DialogFits(window, dialog, out string minimumBounds);
+        SaveRenderProbe(window, "shortcuts-minimum.png");
+        Check($"The shortcut overview fits the minimum window and scrolls ({minimumBounds})",
+            fitsMinimum && scroller is not null && scroller.Extent.Height > scroller.Viewport.Height);
+        await ResizeAsync(window, width, height);
         dialog.Hide();
         await Settle(400);
         Check("The shortcut overview closes", ShortcutsView.OpenDialog is null);

@@ -68,6 +68,21 @@ internal static partial class SelfTest
         foreach (Screen screen in window.Screens.All)
             Log($"Screen {screen.DisplayName}: bounds {screen.Bounds}, scaling {screen.Scaling}, primary {screen.IsPrimary}");
         CheckAppIcon(window);
+        if (Environment.GetEnvironmentVariable("RM_ONLY_TRAY") == "1") { await RunTrayChecksAsync(window); return; } // TEMP
+        if (Environment.GetEnvironmentVariable("RM_ONLY_TRAY") == "exit") // TEMP
+        {
+            window.SetCloseToTray(true);
+            window.Close();
+            await Task.Delay(1500);
+            string marker = Path.Combine(Environment.GetEnvironmentVariable("REMOTE_MANAGER_DATA")!, "exit-probe.txt");
+            File.WriteAllText(marker, $"hidden {!window.IsVisible}, icon {window.Tray is not null}, sessions {window.SessionWindows.Count}|");
+            await Task.Delay(3000);
+            File.AppendAllText(marker, $"still running after 3 s, hidden {!window.IsVisible}|");
+            window.Closed += (_, _) => File.AppendAllText(marker, $"Closed raised, icon gone {window.Tray is null}|");
+            window.ExitFromTray();
+            File.AppendAllText(marker, "ExitFromTray returned|");
+            await Task.Delay(Timeout.Infinite);
+        }
 
         // --- Overview: store, tile view, list view ------------------------------------------------
         AppHost app = AppHost.Current;

@@ -35,7 +35,7 @@ public partial class HostKeyWindow : Window
         Current = window;
         try
         {
-            await window.ShowDialog(owner);
+            await window.ShowDialog(Services.DialogOwner.Shown(owner));
         }
         finally
         {

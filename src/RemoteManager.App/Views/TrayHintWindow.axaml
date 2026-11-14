@@ -8,24 +8,36 @@
         WindowDecorations="BorderOnly" ExtendClientAreaToDecorationsHint="True" ExtendClientAreaTitleBarHeightHint="0"
         ShowInTaskbar="False" ShowActivated="False" Topmost="True" WindowStartupLocation="Manual"
         Background="{DynamicResource RmCardBrush}">
-  <!-- Shown once, the first time the overview hides in the notification area: where it went and how to get it back. -->
-  <Border Padding="16,13,8,16" BorderBrush="{DynamicResource RmStrokeStrongBrush}" BorderThickness="1">
-    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+  <!--
+    The corner note of the hidden overview. Either the one-time hint (where the app went and how to get it back)
+    or a warning or an error that would otherwise sit unseen in the hidden window.
+  -->
+  <Border Padding="16,13,8,14" BorderBrush="{DynamicResource RmStrokeStrongBrush}" BorderThickness="1">
+    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
       <Image Source="/Assets/logo.ico" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,11,0" />
-      <TextBlock Grid.Column="1" Classes="name" Text="{x:Static res:Strings.Tray_Hint_Title}" VerticalAlignment="Center" />
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <!-- A message carries the lamp of its severity. -->
+        <Ellipse x:Name="SeverityLamp" Classes="lamp" IsVisible="False" />
+        <TextBlock x:Name="TitleText" Classes="name" Text="{x:Static res:Strings.Tray_Hint_Title}" TextTrimming="CharacterEllipsis"
+                   MaxWidth="290" VerticalAlignment="Center" />
+      </StackPanel>
       <Button x:Name="CloseButton" Grid.Column="2" Classes="icon" Width="28" Height="28"
               ToolTip.Tip="{x:Static res:Strings.Tray_Hint_Close}">
         <ui:FASymbolIcon Symbol="Dismiss" FontSize="10" />
       </Button>
 
-      <TextBlock Grid.Row="1" Grid.Column="1" Classes="hint" FontSize="12.5" LineHeight="18" Margin="0,5,6,0"
-                 Text="{x:Static res:Strings.Tray_Hint_Text}" />
+      <TextBlock x:Name="BodyText" Grid.Row="1" Grid.Column="1" Classes="hint" FontSize="12.5" LineHeight="18" Margin="0,5,6,0"
+                 MaxLines="6" TextTrimming="CharacterEllipsis" Text="{x:Static res:Strings.Tray_Hint_Text}" />
 
       <!-- The other way back in: the global hotkey, with the keys that are registered right now. -->
-      <StackPanel x:Name="HotkeyLine" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="9" Margin="0,12,0,0">
+      <StackPanel x:Name="HotkeyLine" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="9" Margin="0,12,0,2">
         <TextBlock Classes="caption" Text="{x:Static res:Strings.Tray_Hint_Hotkey}" VerticalAlignment="Center" />
         <StackPanel x:Name="HotkeyKeys" Orientation="Horizontal" Spacing="3" VerticalAlignment="Center" />
       </StackPanel>
+
+      <!-- A message leads back to the overview, where the rest of the story is. -->
+      <Button x:Name="OpenButton" Grid.Row="3" Grid.Column="1" Classes="link" IsVisible="False" HorizontalAlignment="Left"
+              Margin="-6,8,0,0" Content="{x:Static res:Strings.Tray_Open}" />
     </Grid>
   </Border>
 </Window>

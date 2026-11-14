@@ -16,6 +16,7 @@ namespace RemoteManager.App.Views;
 /// default off). The icon is always there: a click opens the overview, its menu opens the launcher and connects
 /// favorites and the five connections used last. With the setting on, closing the overview only hides it:
 /// sessions, status checks, and the global hotkey keep running, and "Beenden" in the icon's menu ends the app.
+/// While it is hidden, a corner note (<see cref="TrayHintWindow"/>) stands in for the overview's messages.
 /// </summary>
 public partial class MainWindow
 {
@@ -32,13 +33,14 @@ public partial class MainWindow
     private TrayHintWindow? trayHint;
     private MenuItem? closeToTrayMenuItem;
     private bool exitRequested;
+    private bool toastNoteQueued;
     private int trayRefreshQueued;
 
     /// <summary>The icon's menu (self-test). Entries of a connection carry its id as <see cref="NativeMenuItem.CommandParameter"/>.</summary>
     internal NativeMenu? TrayMenu => trayIcon?.Menu;
     internal TrayIcon? Tray => trayIcon;
 
-    /// <summary>The note shown the first time the overview hides, while it is open (self-test).</summary>
+    /// <summary>The corner note of the hidden overview while it is open: the one-time hint, or a warning or an error (self-test).</summary>
     internal TrayHintWindow? TrayHint => trayHint;
 
     /// <summary>Closing the overview hides it in the notification area instead of ending the app.</summary>
@@ -96,6 +98,8 @@ public partial class MainWindow
         app.Status.StatusChanged += OnTrayStatusChanged;
         Toast.PropertyChanged += OnToastChangedWhileHidden;
         AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+        // However the overview comes back (the icon, a dialog of a handler, an error message): the note has done its job.
+        Opened += (_, _) => trayHint?.Close();
         Closed += (_, _) => DisposeTray();
         RefreshTrayMenu();
     }
@@ -117,11 +121,7 @@ public partial class MainWindow
     }
 
     /// <summary>Brings the overview back (icon click, "Remote-Manager öffnen").</summary>
-    public void ShowFromTray()
-    {
-        trayHint?.Close();
-        BringToFront();
-    }
+    public void ShowFromTray() => BringToFront();
 
     /// <summary>"Beenden": closes the overview for real, whatever the setting says. The app ends with it.</summary>
     public void ExitFromTray()
@@ -147,9 +147,22 @@ public partial class MainWindow
             return;
 
         app.Library.SetSetting(TrayHintSetting, "1");
-        trayHint = new TrayHintWindow();
-        trayHint.Closed += (_, _) => trayHint = null;
-        trayHint.ShowFor(this, Hotkey?.Gesture);
+        ShowTrayNote(note => note.ShowFor(this, Hotkey?.Gesture));
+    }
+
+    /// <summary>One corner note at a time: a new one takes the place of the one that is open.</summary>
+    private void ShowTrayNote(Action<TrayHintWindow> show)
+    {
+        trayHint?.Close();
+        var note = new TrayHintWindow();
+        note.Closed += (_, _) =>
+        {
+            if (trayHint == note)
+                trayHint = null;
+        };
+        note.OpenRequested += (_, _) => ShowFromTray();
+        trayHint = note;
+        show(note);
     }
 
     /// <summary>
@@ -232,9 +245,10 @@ public partial class MainWindow
             // A single underscore would mark an access key and vanish from the name.
             entry.Header = connection.Name.Replace("_", "__", StringComparison.Ordinal);
             entry.Icon = TrayLamp(connection.StatusBrush);
-            entry.ToolTip = connection.HostLabel.Length > 0
-                ? string.Format(CultureInfo.CurrentCulture, Strings.Tray_EntryTip, connection.TypeLabel, connection.HostLabel, connection.StatusLabel)
-                : $"{connection.TypeLabel}\n{connection.StatusLabel}";
+            string what = connection.HostLabel.Length > 0
+                ? string.Format(CultureInfo.CurrentCulture, Strings.Tray_EntryTip, connection.TypeLabel, connection.HostLabel)
+                : connection.TypeLabel;
+            entry.ToolTip = $"{what}\n{connection.StatusLabel}";
         }
     }
 
@@ -245,10 +259,11 @@ public partial class MainWindow
             return null;
         if (!trayLamps.TryGetValue(color, out Bitmap? lamp))
         {
-            // 16 x 16 at twice the density, so the dot stays round on a scaled screen.
-            var target = new RenderTargetBitmap(new PixelSize(32, 32), new Vector(192, 192));
+            // Drawn at twice the size the menu shows it (16 x 16), so the dot stays round on a scaled screen. At 96 dpi
+            // on purpose: a bitmap with another density is drawn cropped by the menu's Image.
+            var target = new RenderTargetBitmap(new PixelSize(32, 32), new Vector(96, 96));
             using (DrawingContext context = target.CreateDrawingContext())
-                context.DrawEllipse(new SolidColorBrush(color), null, new Point(8, 8), 4, 4);
+                context.DrawEllipse(new SolidColorBrush(color), null, new Point(16, 16), 8, 8);
             trayLamps[color] = lamp = target;
         }
 
@@ -257,16 +272,29 @@ public partial class MainWindow
 
     /// <summary>
     /// A warning or an error must not go unseen because the overview is hidden (a connection started from the
-    /// icon's menu or the launcher that fails, a sync conflict): the overview comes back with the message.
+    /// icon's menu or the launcher that fails, a sync conflict): the corner note shows it. The overview itself
+    /// stays hidden: brought to the front, it would take the keyboard away from the session someone is typing in.
     /// </summary>
     private void OnToastChangedWhileHidden(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if ((e.Property == FAInfoBar.IsOpenProperty || e.Property == FAInfoBar.MessageProperty)
-            && Toast.IsOpen && !IsVisible && trayIcon is not null
-            && Toast.Severity is FAInfoBarSeverity.Warning or FAInfoBarSeverity.Error)
+        if ((e.Property == FAInfoBar.IsOpenProperty || e.Property == FAInfoBar.MessageProperty || e.Property == FAInfoBar.SeverityProperty)
+            && !IsVisible && trayIcon is not null && !toastNoteQueued)
         {
-            ShowFromTray();
+            // ShowToast sets title, message, and severity one after the other; look once all of them are in place.
+            toastNoteQueued = true;
+            Dispatcher.UIThread.Post(ShowToastAsNote);
         }
+    }
+
+    private void ShowToastAsNote()
+    {
+        toastNoteQueued = false;
+        if (IsVisible || trayIcon is null || !Toast.IsOpen || Toast.Severity is not (FAInfoBarSeverity.Warning or FAInfoBarSeverity.Error))
+            return;
+
+        string title = Toast.Title ?? "", message = Toast.Message ?? "";
+        bool error = Toast.Severity == FAInfoBarSeverity.Error;
+        ShowTrayNote(note => note.ShowMessage(this, title, message, error));
     }
 
     /// <summary>

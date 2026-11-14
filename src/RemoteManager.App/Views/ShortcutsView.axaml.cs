@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Resources;
 using RemoteManager.App.Services;
@@ -26,6 +27,9 @@ public sealed class ShortcutRow
     public IBrush? ChipBrush { get; init; }
     public bool HasChip => Chip is not null;
 
+    /// <summary>0 on the rows that follow one of the same type: the plate is drawn once per run and keeps its column.</summary>
+    public double ChipOpacity { get; set; } = 1;
+
     /// <summary>A line above every row but the first of its area.</summary>
     public Thickness Divider { get; set; }
 
@@ -44,7 +48,7 @@ public sealed record ShortcutArea(string Title, IReadOnlyList<ShortcutRow> Rows,
 /// hand next to the code that handles the keys: MainWindow.OnKeyDown and the list KeyDown handler (overview and
 /// connection), MainWindow.Groups.cs (sidebar), QuickLauncherWindow.OnPreviewKeyDown (launcher), terminal.html and
 /// SftpWindow (sessions). A new shortcut needs a line in <see cref="Create"/>; the self-test compares the list with
-/// the gestures the menus show.
+/// the gestures the menus show. F1 again or Esc closes it.
 /// </summary>
 public partial class ShortcutsView : UserControl
 {
@@ -60,7 +64,7 @@ public partial class ShortcutsView : UserControl
         RightColumn.ItemsSource = Areas.Skip(2);
     }
 
-    /// <summary>The dialog and its content while open (self-test, and F1 does not open a second one).</summary>
+    /// <summary>The dialog and its content while open (self-test, and F1 closes it again).</summary>
     public static FAContentDialog? OpenDialog { get; private set; }
     public static ShortcutsView? OpenContent { get; private set; }
 
@@ -68,10 +72,20 @@ public partial class ShortcutsView : UserControl
 
     public IEnumerable<ShortcutRow> Rows => Areas.SelectMany(a => a.Rows);
 
+    /// <summary>F1: opens the overview, or closes it when it is open.</summary>
+    public static void Toggle(MainWindow window)
+    {
+        if (OpenDialog is { } open)
+            open.Hide();
+        else
+            _ = ShowAsync(window);
+    }
+
     /// <summary>Shows the overview in <paramref name="window"/>; the launcher row shows the hotkey that is registered right now.</summary>
     public static async Task ShowAsync(MainWindow window)
     {
-        if (OpenDialog is not null)
+        // Not on top of another dialog of the overview (the editor, an import): that one keeps the keyboard.
+        if (OpenDialog is not null || window.GetVisualDescendants().OfType<FAContentDialog>().Any())
             return;
 
         var content = new ShortcutsView(window.Hotkey?.Gesture);
@@ -79,8 +93,8 @@ public partial class ShortcutsView : UserControl
         {
             Title = Strings.Shortcuts_Title,
             Content = content,
+            // A plain button: there is nothing to confirm here, so the signal color stays out of it.
             CloseButtonText = Strings.Action_Close,
-            DefaultButton = FAContentDialogButton.Close,
         };
         // Two columns need more room than the default dialog width.
         dialog.Resources["ContentDialogMaxWidth"] = 860.0;
@@ -116,16 +130,17 @@ public partial class ShortcutsView : UserControl
                 Row(Strings.Shortcuts_Sidebar, new KeyGesture(Key.B, Ctrl)),
                 Row(Strings.Shortcuts_Details, new KeyGesture(Key.I, Ctrl)),
                 Row(Strings.Shortcuts_Refresh, new KeyGesture(Key.F5)),
+                // MainWindow.Groups.cs (OnNavigationKeyDown)
+                Row(Strings.Shortcuts_SidebarDelete, new KeyGesture(Key.Delete)),
                 Row(Strings.Shortcuts_Help, new KeyGesture(Key.F1)),
             ]),
-            // The KeyDown handler of the tile and row list, Ctrl+A of the list box itself, MainWindow.Groups.cs.
+            // The KeyDown handler of the tile and row list, Ctrl+A of the list box itself.
             new(Strings.Shortcuts_Area_Connection,
             [
                 Row(Strings.Shortcuts_Connect, new KeyGesture(Key.Enter)),
                 Row(Strings.Shortcuts_Edit, new KeyGesture(Key.F2)),
                 Row(Strings.Shortcuts_Delete, new KeyGesture(Key.Delete)),
                 Row(Strings.Shortcuts_SelectAll, new KeyGesture(Key.A, Ctrl)),
-                Row(Strings.Shortcuts_SidebarDelete, new KeyGesture(Key.Delete)),
             ], Strings.Shortcuts_Area_Connection_Hint),
             // GlobalHotkey, MainWindow.OnKeyDown (Ctrl+K), QuickLauncherWindow.OnPreviewKeyDown
             new(Strings.Shortcuts_Area_Launcher,
@@ -154,8 +169,12 @@ public partial class ShortcutsView : UserControl
 
         foreach (ShortcutArea area in areas)
         {
-            foreach (ShortcutRow row in area.Rows.Skip(1))
-                row.Divider = new Thickness(0, 1, 0, 0);
+            for (int i = 1; i < area.Rows.Count; i++)
+            {
+                area.Rows[i].Divider = new Thickness(0, 1, 0, 0);
+                if (area.Rows[i].Chip is { } chip && chip == area.Rows[i - 1].Chip)
+                    area.Rows[i].ChipOpacity = 0;
+            }
         }
 
         return areas;

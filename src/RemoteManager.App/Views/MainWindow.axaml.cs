@@ -875,7 +875,7 @@ public partial class MainWindow : Window, IConnectionHost
         }
         else if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.F1)
         {
-            _ = ShortcutsView.ShowAsync(this);
+            ShortcutsView.Toggle(this);
             e.Handled = true;
         }
 
