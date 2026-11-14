@@ -1605,6 +1605,7 @@
   </data>
   <data name="RemoteTool_Arguments" xml:space="preserve">
     <value>Zusätzliche Startparameter (optional)</value>
+  </data>
   <data name="RemoteTool_Missing_DownloadLabel" xml:space="preserve">
     <value>Download-Seite</value>
   </data>
@@ -1845,6 +1846,7 @@
   </data>
   <data name="Sftp_Transfer_Cancel" xml:space="preserve">
     <value>Übertragung abbrechen</value>
+  </data>
   <data name="Sftp_StartFolder" xml:space="preserve">
     <value>Startordner</value>
   </data>
@@ -2003,6 +2005,7 @@
   </data>
   <data name="Ssh_Card_PassphraseLabel" xml:space="preserve">
     <value>Passphrase des Schlüssels</value>
+  </data>
   <data name="Ssh_Auth" xml:space="preserve">
     <value>Anmeldeverfahren</value>
   </data>
