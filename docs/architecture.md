@@ -25,6 +25,17 @@ The self-test writes `selftest.log` and probe screenshots to `%LOCALAPPDATA%\Rem
 The VNC checks use an in-process test server; `RM_VNC_HOST` (with `RM_VNC_PORT`, `RM_VNC_PASSWORD`, `RM_VNC_KEYS`)
 adds a session against a real VNC server.
 
+More switches and variables for runs without your own data or screen:
+
+| Switch / variable | Effect |
+| --- | --- |
+| `REMOTE_MANAGER_SCREEN` | `secondary`, a 1-based screen number, or part of a display name: the overview opens on that screen (session windows follow it). Use it for every test run on a machine someone works on. |
+| `--tour` | Fills an empty `REMOTE_MANAGER_DATA` folder with demo connections and saves pictures of the main screens (`spike\tour-*.png`). Refuses to run without `REMOTE_MANAGER_DATA`. |
+| `--livetest` | Only the checks against a real RDP server, without the rest of the self-test (`spike\selftest-live.log`). |
+| `RM_SPIKE_HOST`, `_PORT`, `_USER`, `_DOMAIN`, `_PASSWORD`, `_AUTH_LEVEL` | The server for the live RDP checks. `tools/rdp-nla-testbed/start.ps1` sets them for a FreeRDP server with network level authentication in Docker (stands in for GNOME Remote Desktop and KRdp). |
+| `RM_SPIKE_CONNECTION` | Instead of the above: name or id of a saved connection; the live checks use it with the password the app has stored for it. |
+| `RM_SPIKE_CLOSE_DIALOGS=1` | Dialogs the RDP control opens by itself are closed (answered "no") after they were logged and pictured, so an unattended run cannot wait for a person. |
+
 ## Model (`Core/Model`)
 
 - `Connection`: id, name, `ConnectionType`, host (or remote ID), port (0 = type default, see `DefaultPorts`),
@@ -83,6 +94,9 @@ adds a session against a real VNC server.
 - `StatusChecker` runs probes on the thread pool with a hard timeout per check and bounded parallelism and
   raises `StatusChanged` off the UI thread. The main window marshals results to the UI thread, checks at
   start, every two minutes, and on the refresh button.
+- Answer time: for an online result of a probe with `MeasuresLatency` (the TCP connect) the event carries how
+  long the probe took (`StatusChangedEventArgs.Latency`). `ConnectionItem` keeps the last 24 results for the line
+  in the detail column; a check without an answer is a gap.
 
 ## Extension points
 
@@ -121,6 +135,21 @@ viewer as fallback), `Ssh/*` (terminal and SFTP, see below). Every type is built
 remains for a new type that has no `Open` yet. To build one
 out, replace its `Open` and add a settings editor; a brand-new type also needs a `ConnectionType` value and
 its settings record in `ConnectionSettings.TypeFor`.
+
+## Look and window placement (`App/Theme`, `App/Services`)
+
+The design language, its tokens, and the rules are in [ui.md](ui.md). In code:
+
+- `Theme/Palette.axaml`: brushes per theme (dark, light), fonts, radii. `Rm*` keys are the app's own; the other
+  keys replace FluentAvalonia's neutral brushes so dialogs, flyouts, and inputs sit on the same surfaces.
+  `Theme/Controls.axaml`: templates for list items and the app's own buttons, and the window frame for windows
+  that extend into the title bar (`RmWindowDecorations`: only the caption buttons). `Theme/Styles.axaml`: classes.
+- `Services/Appearance`: theme, signal color, tile size (settings `appearance.*`). It writes the accent brushes
+  and the accent button's resources into the application resources, because they depend on the preset and on the
+  theme that is actually shown, and sets FluentAvalonia's `CustomAccentColor` for its own controls.
+- `Services/WindowPlacement`: the overview's saved place (`window.main`), session windows on the overview's
+  monitor, and the `REMOTE_MANAGER_SCREEN` override.
+- `Controls/`: `HostGlyph` (the lamp-panel picture of a connection), `HealthBar`, `Sparkline`.
 
 ## Overview (`App/Views`)
 
@@ -174,10 +203,16 @@ Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md
   - "Ändern" (or the action "Globalen Hotkey ändern") swaps the search for the hotkey view: what the hotkey is,
     the current one, and a recorder that stays open until a combination is accepted or Esc. A combination
     Windows refuses leaves the previous one registered and says so.
-- **Sidebar note:** FANavigationView re-posts its selection animation until the selected item has an
-  indicator; selecting a freshly created or hidden (collapsed parent) item starves the UI thread. The main
-  window therefore rebuilds the sidebar only when groups or tags changed, clears the selection before
-  replacing items, selects again after layout, and never selects an item inside a collapsed group.
+- **Sidebar** (`MainWindow.Sidebar.cs`, `SidebarEntry`): a plain `ListBox` of rows, not a navigation control.
+  `BuildNavigation` rebuilds the rows (fixed filters, the group tree flattened with depth, tags) and their
+  counts, keeps the current filter selected, and applies the filter; a filter whose group or tag is gone falls
+  back to "all". Section labels are rows too and never stay selected. Expanded, icons only, or floating over the
+  content on a narrow window: `SidebarMode`, `IsSidebarFloating`, see ui.md.
+- **Filters** (`MainWindow.Filters.cs`): the type chips and "Nur online" narrow what the sidebar filter and the
+  search show. They are session state, not settings.
+- **Notification area** (`MainWindow.Tray.cs`): the icon, its menu (favorites, the five used last), and
+  "Beim Schließen im Infobereich weiterlaufen" (`app.closeToTray`). `OnClosing` decides between hiding and ending;
+  "Beenden", an update restart, and the self-test always end the process.
 
 ## Live preview (`Core/Preview`, `Views/MainWindow.LivePreview.cs`)
 
@@ -207,6 +242,19 @@ Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md
   admin become mstsc switches, and the stored password is written as `TERMSRV/<host>` (domain password, persisted
   for the logon session only) unless the user already has such an entry. File and entry are removed when mstsc exits.
 - The gateway's own password is a `CredentialRef` in `RdpSettings.GatewayCredential` (key `gateway-<guid>`).
+- When a session counts as up (`SessionWindow.MarkSessionUp`): by the server's logon notification
+  (`LoginCompleted`), or, for servers that never send one (FreeRDP based: GNOME Remote Desktop, KRdp; some xrdp
+  setups), six seconds after the view reports the transport as connected. A typed password with "Passwort
+  speichern" is only saved once it is confirmed: by the notification, or by network level authentication, which
+  checks it before the transport connects.
+- A stored password without a user name does not connect by itself; the card asks for the user. With a password
+  from the app the control's own credential prompt is off (`AllowPromptingForCredentials`), so a refusal comes
+  back to the card: the specific logon reasons (2055 and its relatives) with a plain text, reason 519 (network
+  level authentication refused without a cause) with a hint at the separate RDP credentials of Linux desktops.
+- "An Fenster anpassen" asks the server for the window's size. When the server keeps its own (a mirrored screen),
+  `ScaleIfServerKeepsItsSize` switches to client-side scaling 2.5 seconds after the last size change.
+- The status lines of the RDP view are English; `SessionWindow.Translate` maps them for the session bar, the log
+  keeps the original.
 
 ## Import and export (`Core/ImportExport`)
 
@@ -360,3 +408,11 @@ until connect and while the connect card is shown; `SessionWindow` subscribes to
 event itself (MsRdpEx 2026.10.26 never raises `Disconnected` for the v11 control); views are disposed
 explicitly on close; native popups (`OverlayPopups` off) so menus draw above the session; periodic in-memory
 frames so a server disconnect still leaves a preview.
+
+Found later, with a GNOME Remote Desktop server: `app.manifest` must request Common Controls 6. The RDP control
+(mstscax.dll) shows its own dialogs, the certificate warning first of all, with `TaskDialogIndirect`, which only
+version 6 has; without the dependency the first such dialog ends the process with a delay-load failure
+(exception C06D007F) and no managed stack.
+
+Session windows extend their content into the title bar; the session bar (`Connections/SessionBar`) is the title
+bar. It lies above the session surface in the layout, never over it, so the airspace rule holds.
