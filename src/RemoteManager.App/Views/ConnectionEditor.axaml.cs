@@ -1,7 +1,10 @@
 using System.ComponentModel;
 using System.Globalization;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
+using Avalonia.Media;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Connections;
 using RemoteManager.App.Credentials;
@@ -11,6 +14,13 @@ using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
 
 namespace RemoteManager.App.Views;
+
+/// <summary>One entry of the editor's type selector: the type's plate (initials on its color) and its name.</summary>
+public sealed record ConnectionTypeChoice(string Name, string Initials, IBrush Brush)
+{
+    /// <summary>The name, so typing a letter in the open list jumps to the type.</summary>
+    public override string ToString() => Name;
+}
 
 /// <summary>
 /// Form for the add/edit dialog. The main window shows it in an FAContentDialog. The fields and the
@@ -30,7 +40,9 @@ public partial class ConnectionEditor : UserControl
         InitializeComponent();
         app = AppHost.Current;
         handlers = [.. app.Handlers.All];
-        TypeBox.ItemsSource = handlers.Select(h => h.DisplayName).ToList();
+        TypeBox.ItemsSource = handlers.Select(h => new ConnectionTypeChoice(TypeName(h), h.Initials, new SolidColorBrush(h.AccentColor))).ToList();
+        FormFields.LinkLabels(this);
+        AutomationProperties.SetLabeledBy(NotesBox, NotesHeading);
 
         TypeBox.SelectionChanged += (_, _) => UpdateTypeFields();
         SavePasswordBox.IsCheckedChanged += (_, _) => UpdatePasswordState();
@@ -71,6 +83,8 @@ public partial class ConnectionEditor : UserControl
     public AutoCompleteBox Group => GroupBox;
     public TextBox User => UserBox;
     public ISettingsEditor? SettingsEditor => settingsEditor;
+    public ComboBox TypeSelector => TypeBox;
+    public Control ErrorBanner => ErrorNote;
 
     /// <summary>The group logon flyout while open (used by the self-test).</summary>
     public GroupLogonPanel? OpenGroupLogon { get; private set; }
@@ -89,6 +103,7 @@ public partial class ConnectionEditor : UserControl
             CloseButtonText = Strings.Action_Cancel,
             DefaultButton = FAContentDialogButton.Primary,
         };
+        dialog.Resources["ContentDialogMaxWidth"] = FormFields.WideDialogWidth;
         dialog.PrimaryButtonClick += async (_, e) =>
         {
             var deferral = e.GetDeferral();
@@ -142,6 +157,13 @@ public partial class ConnectionEditor : UserControl
 
     private IConnectionHandler Handler => handlers[Math.Max(0, TypeBox.SelectedIndex)];
 
+    /// <summary>
+    /// "Remotedesktop" next to the plate "RDP" says more than "RDP" twice. Types without such a name
+    /// (the remote tools, any new handler) show their display name.
+    /// </summary>
+    private static string TypeName(IConnectionHandler handler) =>
+        Strings.ResourceManager.GetString($"Editor_TypeName_{handler.Type}", Strings.Culture) ?? handler.DisplayName;
+
     private void Load(Connection c)
     {
         original = c;
@@ -182,7 +204,10 @@ public partial class ConnectionEditor : UserControl
     private void ShowError(string? error)
     {
         ErrorText.Text = error;
-        ErrorText.IsVisible = error is not null;
+        ErrorNote.IsVisible = error is not null;
+        // The message is the last thing in a form that scrolls: bring it to where the user is looking.
+        if (error is not null)
+            Dispatcher.UIThread.Post(() => ErrorNote.BringIntoView(), DispatcherPriority.Loaded);
     }
 
     private void Store(Connection c)
@@ -208,9 +233,11 @@ public partial class ConnectionEditor : UserControl
         bool save = SavePasswordBox.IsChecked == true;
         StoredRow.IsVisible = hasStoredPassword;
         StoredText.Text = save ? Strings.Password_Stored : Strings.Password_WillBeRemoved;
-        StoredIcon.Opacity = save ? 1 : 0.4;
+        // A password that is about to go no longer reads as "safely stored".
+        StoredRow.Classes.Set("removing", !save);
         RemovePasswordButton.IsVisible = save;
-        PasswordBox.PlaceholderText = hasStoredPassword ? Strings.Password_NewPlaceholder : Strings.Field_Password;
+        PasswordLabel.Text = hasStoredPassword ? Strings.Password_New : Strings.Field_Password;
+        PasswordBox.PlaceholderText = hasStoredPassword && save ? Strings.Password_NewPlaceholder : "";
         PasswordHint.Text = Handler.PasswordHint;
     }
 
@@ -222,10 +249,15 @@ public partial class ConnectionEditor : UserControl
     {
         ConnectionGroup? group = FindGroup(GroupBox.Text);
         GroupLogonButton.IsVisible = Handler.UsesUserName && group is not null;
+        GroupLogonNote.IsVisible = GroupLogonButton.IsVisible;
         EffectiveCredential inherited = app.Credentials.Resolve(new Connection { GroupId = group?.Id });
         bool own = UserBox.Text?.Trim().Length > 0 || SourcePanel.IsExternal
             || (SavePasswordBox.IsChecked == true && (hasStoredPassword || PasswordBox.Text?.Length > 0));
         InheritedHint.IsVisible = Handler.UsesUserName && inherited.IsInherited;
+        // A group without a logon still gets the note: it is where the group's logon is set.
+        NoGroupLogonHint.IsVisible = GroupLogonButton.IsVisible && !InheritedHint.IsVisible;
+        if (NoGroupLogonHint.IsVisible)
+            NoGroupLogonHint.Text = string.Format(CultureInfo.CurrentCulture, Strings.Editor_NoGroupLogon, app.Library.PathOf(group!.Id));
         if (!InheritedHint.IsVisible)
             return;
 
@@ -273,9 +305,14 @@ public partial class ConnectionEditor : UserControl
     {
         IConnectionHandler handler = Handler;
         UserRow.IsVisible = handler.UsesUserName;
-        PortBox.IsVisible = handler.HasPort;
-        PortBox.PlaceholderText = string.Format(CultureInfo.CurrentCulture, Strings.Editor_PortPlaceholder, DefaultPorts.For(handler.Type));
-        HostBox.PlaceholderText = handler.HostPlaceholder;
+        // Without a port the address takes the whole row.
+        PortField.IsVisible = handler.HasPort;
+        Grid.SetColumnSpan(HostField, handler.HasPort ? 3 : 4);
+        // The default port as the example: leaving the field empty uses it.
+        PortBox.PlaceholderText = DefaultPorts.For(handler.Type).ToString(CultureInfo.InvariantCulture);
+        HostLabel.Text = handler.HostPlaceholder;
+        // A type without a port is addressed by an ID, not by a host name.
+        HostBox.PlaceholderText = handler.HasPort ? Strings.Editor_HostExample : Strings.Editor_RemoteIdExample;
         PasswordHint.Text = handler.PasswordHint;
 
         settingsEditor = handler.CreateSettingsEditor();
@@ -287,6 +324,7 @@ public partial class ConnectionEditor : UserControl
         }
 
         SettingsHost.Content = settingsEditor?.View;
+        SettingsHead.IsVisible = settingsEditor is not null;
         UpdateInheritedHint();
     }
 }

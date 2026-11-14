@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia.Controls;
 using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.Model.Settings;
 using RemoteManager.Core.RemoteTools;
@@ -50,7 +51,7 @@ public partial class RemoteToolSettingsEditor : UserControl, ISettingsEditor
         AnyDeskRow.IsVisible = type == ConnectionType.AnyDesk;
         PasswordOnLineBox.IsVisible = type != ConnectionType.AnyDesk;
         PasswordOnLineBox.Content = type == ConnectionType.TeamViewer ? Strings.RemoteTool_PasswordOnLine_TeamViewer : Strings.RemoteTool_PasswordOnLine_RustDesk;
-        PasswordWarning.Message = string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_PasswordWarning_Message, info.ProductName);
+        PasswordWarningText.Text = string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_PasswordWarning_Message, info.ProductName);
         PasswordInfo.Text = type == ConnectionType.AnyDesk ? Strings.RemoteTool_PasswordInfo_AnyDesk : Strings.RemoteTool_PasswordInfo_Clipboard;
 
         ModeBox.SelectionChanged += (_, _) => UpdatePreview();
@@ -60,6 +61,7 @@ public partial class RemoteToolSettingsEditor : UserControl, ISettingsEditor
         PlainBox.IsCheckedChanged += (_, _) => UpdatePreview();
         PasswordOnLineBox.IsCheckedChanged += (_, _) => UpdatePreview();
         ArgumentsBox.TextChanged += (_, _) => UpdatePreview();
+        FormFields.LinkLabels(this);
     }
 
     public Control View => this;
@@ -69,7 +71,7 @@ public partial class RemoteToolSettingsEditor : UserControl, ISettingsEditor
 
     /// <summary>The previewed arguments without the executable path (self-test; the path may contain anything).</summary>
     public IReadOnlyList<string> PreviewArguments { get; private set; } = [];
-    public bool IsPasswordWarningShown => PasswordWarning.IsOpen;
+    public bool IsPasswordWarningShown => PasswordWarning.IsVisible;
     public CheckBox CommandLineCredentialBox => PasswordOnLineBox;
     public TextBox Arguments => ArgumentsBox;
 
@@ -109,7 +111,7 @@ public partial class RemoteToolSettingsEditor : UserControl, ISettingsEditor
     private void UpdatePreview()
     {
         RemoteToolSettings settings = Current();
-        PasswordWarning.IsOpen = settings.CredentialOnCommandLine;
+        PasswordWarning.IsVisible = settings.CredentialOnCommandLine;
         // The preview assumes a stored password, so the reader sees where it would go (masked).
         RemoteToolCommand command = RemoteToolCommandLine.Build(type, toolPath, Strings.RemoteTool_PreviewId, settings, hasPassword: true);
         PreviewArguments = command.Arguments;

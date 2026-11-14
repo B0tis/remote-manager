@@ -3,105 +3,254 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:res="using:RemoteManager.App.Resources"
              x:Class="RemoteManager.App.Connections.Rdp.RdpSettingsEditor">
-  <!-- RDP start parameters: one expander per topic, all closed except the display. -->
-  <StackPanel Spacing="6">
-    <Expander x:Name="DisplayExpander" Header="{x:Static res:Strings.Rdp_Section_Display}" HorizontalAlignment="Stretch" IsExpanded="True">
-      <StackPanel Spacing="10">
-        <ComboBox x:Name="DisplayBox" HorizontalAlignment="Stretch" SelectedIndex="0">
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_Fit}" />
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_SmartSizing}" />
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_Fixed}" />
-        </ComboBox>
-        <Grid x:Name="SizeRow" ColumnDefinitions="*,Auto,*" IsVisible="False">
-          <TextBox x:Name="WidthBox" PlaceholderText="{x:Static res:Strings.Rdp_Width}" />
-          <TextBlock Grid.Column="1" Text="×" VerticalAlignment="Center" Margin="8,0" />
-          <TextBox x:Name="HeightBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Rdp_Height}" />
-        </Grid>
-        <ComboBox x:Name="KeyboardBox" HorizontalAlignment="Stretch" SelectedIndex="0">
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Keyboard_Session}" />
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Keyboard_Local}" />
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Keyboard_FullScreen}" />
-        </ComboBox>
-        <CheckBox x:Name="MultimonBox" Content="{x:Static res:Strings.Rdp_Multimon}" />
-        <CheckBox x:Name="LivePreviewBox" Content="{x:Static res:Strings.LivePreview_Connection}" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.LivePreview_ConnectionHint}" />
-        <CheckBox x:Name="ExternalBox" Content="{x:Static res:Strings.Rdp_OpenExternally}" />
-        <TextBlock x:Name="ExternalHint" Text="{x:Static res:Strings.Rdp_OpenExternallyHint}" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
-      </StackPanel>
-    </Expander>
+  <UserControl.Resources>
+    <!-- The row that opens and closes a topic: chevron, name, and (while closed) what is set. -->
+    <ControlTheme x:Key="TopicHeader" TargetType="ToggleButton">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border x:Name="Row" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+            <Grid ColumnDefinitions="Auto,*">
+              <ui:FASymbolIcon x:Name="Chevron" Symbol="ChevronRight" FontSize="11" Margin="1,0,11,0"
+                               Foreground="{DynamicResource RmTextSecondaryBrush}" />
+              <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ Border#Row">
+        <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+      </Style>
+      <Style Selector="^:pressed /template/ Border#Row">
+        <Setter Property="Background" Value="{DynamicResource RmPressedBrush}" />
+      </Style>
+      <Style Selector="^:checked /template/ ui|FASymbolIcon#Chevron">
+        <Setter Property="RenderTransform" Value="rotate(90deg)" />
+      </Style>
+    </ControlTheme>
 
-    <Expander x:Name="SecurityExpander" Header="{x:Static res:Strings.Rdp_Section_Security}" HorizontalAlignment="Stretch">
-      <StackPanel Spacing="10">
-        <CheckBox x:Name="NlaBox" Content="{x:Static res:Strings.Rdp_Nla}" IsChecked="True" />
-        <StackPanel Spacing="4">
-          <TextBlock Text="{x:Static res:Strings.Rdp_AuthLevel}" FontSize="12" Opacity="0.7" />
-          <ComboBox x:Name="AuthLevelBox" HorizontalAlignment="Stretch" SelectedIndex="0">
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_AuthLevel_Warn}" />
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_AuthLevel_Refuse}" />
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_AuthLevel_Connect}" />
-          </ComboBox>
-        </StackPanel>
-        <CheckBox x:Name="AdminBox" Content="{x:Static res:Strings.Rdp_Admin}" />
-        <StackPanel Spacing="4">
-          <TextBlock Text="{x:Static res:Strings.Rdp_CredentialMode}" FontSize="12" Opacity="0.7" />
-          <ComboBox x:Name="CredentialModeBox" HorizontalAlignment="Stretch" SelectedIndex="0">
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_CredentialMode_Normal}" />
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_CredentialMode_RestrictedAdmin}" />
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_CredentialMode_RemoteGuard}" />
-          </ComboBox>
-        </StackPanel>
-      </StackPanel>
-    </Expander>
+    <!-- A topic of the start parameters. All topics share one frame; hairlines separate them. -->
+    <ControlTheme x:Key="Topic" TargetType="Expander">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <StackPanel>
+            <ToggleButton Theme="{StaticResource TopicHeader}" IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"
+                          Content="{TemplateBinding Header}" />
+            <ContentPresenter x:Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                              IsVisible="{TemplateBinding IsExpanded}" Margin="12,2,12,16" />
+          </StackPanel>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+  </UserControl.Resources>
 
-    <Expander x:Name="GatewayExpander" Header="{x:Static res:Strings.Rdp_Section_Gateway}" HorizontalAlignment="Stretch">
-      <StackPanel Spacing="10">
-        <ComboBox x:Name="GatewayUsageBox" HorizontalAlignment="Stretch" SelectedIndex="0">
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Gateway_None}" />
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Gateway_Always}" />
-          <ComboBoxItem Content="{x:Static res:Strings.Rdp_Gateway_Detect}" />
-        </ComboBox>
-        <StackPanel x:Name="GatewayFields" Spacing="10">
-          <TextBox x:Name="GatewayHostBox" PlaceholderText="{x:Static res:Strings.Rdp_Gateway_Host}" />
-          <CheckBox x:Name="GatewaySameLogonBox" Content="{x:Static res:Strings.Rdp_Gateway_SameLogon}" IsChecked="True" />
-          <Grid x:Name="GatewayLogonRow" ColumnDefinitions="*,12,*">
-            <TextBox x:Name="GatewayUserBox" PlaceholderText="{x:Static res:Strings.Rdp_Gateway_User}" />
-            <TextBox x:Name="GatewayPasswordBox" Grid.Column="2" PasswordChar="●" Classes="revealPasswordButton" />
+  <UserControl.Styles>
+    <Style Selector="Expander">
+      <Setter Property="Theme" Value="{StaticResource Topic}" />
+    </Style>
+    <Style Selector="TextBlock.topic">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- What a closed topic holds; an open one shows it in its fields. -->
+    <Style Selector="TextBlock.summary">
+      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+      <Setter Property="TextAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Expander:expanded TextBlock.summary">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="Border.divider">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Background" Value="{DynamicResource RmStrokeBrush}" />
+    </Style>
+    <!-- Remarks under a checkbox start where its text starts. -->
+    <Style Selector="TextBlock.underCheck">
+      <Setter Property="Margin" Value="28,-2,0,4" />
+    </Style>
+  </UserControl.Styles>
+
+  <!-- RDP start parameters: one topic each, closed unless it holds something other than the defaults. -->
+  <Border Classes="well" Padding="0" ClipToBounds="True">
+    <StackPanel>
+      <Expander x:Name="DisplayExpander" IsExpanded="True">
+        <Expander.Header>
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+            <TextBlock Classes="topic" Text="{x:Static res:Strings.Rdp_Section_Display}" />
+            <TextBlock x:Name="DisplaySummary" Grid.Column="1" Classes="hint summary" />
           </Grid>
+        </Expander.Header>
+        <StackPanel Spacing="12">
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Display}" />
+            <ComboBox x:Name="DisplayBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_Fit}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_SmartSizing}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Display_Fixed}" />
+            </ComboBox>
+          </StackPanel>
+          <Grid x:Name="SizeRow" ColumnDefinitions="*,*" ColumnSpacing="12" IsVisible="False">
+            <StackPanel>
+              <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Width}" />
+              <TextBox x:Name="WidthBox" Classes="mono" PlaceholderText="{x:Static res:Strings.Rdp_WidthExample}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+              <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Height}" />
+              <TextBox x:Name="HeightBox" Classes="mono" PlaceholderText="{x:Static res:Strings.Rdp_HeightExample}" />
+            </StackPanel>
+          </Grid>
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Keyboard}" />
+            <ComboBox x:Name="KeyboardBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Keyboard_Session}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Keyboard_Local}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Keyboard_FullScreen}" />
+            </ComboBox>
+          </StackPanel>
+          <StackPanel>
+            <CheckBox x:Name="MultimonBox" Content="{x:Static res:Strings.Rdp_Multimon}" />
+            <CheckBox x:Name="LivePreviewBox" Content="{x:Static res:Strings.LivePreview_Connection}" IsChecked="True" ToolTip.Tip="{x:Static res:Strings.LivePreview_ConnectionHint}" />
+            <CheckBox x:Name="ExternalBox" Content="{x:Static res:Strings.Rdp_OpenExternally}" />
+            <TextBlock x:Name="ExternalHint" Classes="hint underCheck" Text="{x:Static res:Strings.Rdp_OpenExternallyHint}" />
+          </StackPanel>
         </StackPanel>
-        <StackPanel Spacing="4">
-          <TextBlock Text="{x:Static res:Strings.Rdp_SshTunnel}" FontSize="12" Opacity="0.7" />
-          <ComboBox x:Name="JumpBox" HorizontalAlignment="Stretch" ToolTip.Tip="{x:Static res:Strings.Rdp_SshTunnelTip}" />
-        </StackPanel>
-      </StackPanel>
-    </Expander>
+      </Expander>
 
-    <Expander x:Name="RedirectionExpander" Header="{x:Static res:Strings.Rdp_Section_Redirections}" HorizontalAlignment="Stretch">
-      <StackPanel Spacing="8">
-        <UniformGrid Columns="2">
-          <CheckBox x:Name="ClipboardBox" Content="{x:Static res:Strings.Rdp_Redirect_Clipboard}" IsChecked="True" />
-          <CheckBox x:Name="DrivesBox" Content="{x:Static res:Strings.Rdp_Redirect_Drives}" />
-          <CheckBox x:Name="PrintersBox" Content="{x:Static res:Strings.Rdp_Redirect_Printers}" />
-          <CheckBox x:Name="SmartCardsBox" Content="{x:Static res:Strings.Rdp_Redirect_SmartCards}" />
-          <CheckBox x:Name="PortsBox" Content="{x:Static res:Strings.Rdp_Redirect_Ports}" />
-          <CheckBox x:Name="MicrophoneBox" Content="{x:Static res:Strings.Rdp_Redirect_Microphone}" />
-        </UniformGrid>
-        <StackPanel Spacing="4">
-          <TextBlock Text="{x:Static res:Strings.Rdp_Audio}" FontSize="12" Opacity="0.7" />
-          <ComboBox x:Name="AudioBox" HorizontalAlignment="Stretch" SelectedIndex="0">
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_Audio_Local}" />
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_Audio_Remote}" />
-            <ComboBoxItem Content="{x:Static res:Strings.Rdp_Audio_None}" />
-          </ComboBox>
+      <Border Classes="divider" />
+      <Expander x:Name="SecurityExpander">
+        <Expander.Header>
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+            <TextBlock Classes="topic" Text="{x:Static res:Strings.Rdp_Section_Security}" />
+            <TextBlock x:Name="SecuritySummary" Grid.Column="1" Classes="hint summary" />
+          </Grid>
+        </Expander.Header>
+        <StackPanel Spacing="12">
+          <StackPanel>
+            <CheckBox x:Name="NlaBox" Content="{x:Static res:Strings.Rdp_Nla}" IsChecked="True" />
+            <CheckBox x:Name="AdminBox" Content="{x:Static res:Strings.Rdp_Admin}" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_AuthLevel}" />
+            <ComboBox x:Name="AuthLevelBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_AuthLevel_Warn}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_AuthLevel_Refuse}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_AuthLevel_Connect}" />
+            </ComboBox>
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_CredentialMode}" />
+            <ComboBox x:Name="CredentialModeBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_CredentialMode_Normal}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_CredentialMode_RestrictedAdmin}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_CredentialMode_RemoteGuard}" />
+            </ComboBox>
+          </StackPanel>
         </StackPanel>
-      </StackPanel>
-    </Expander>
+      </Expander>
 
-    <Expander x:Name="ProgramExpander" Header="{x:Static res:Strings.Rdp_Section_Program}" HorizontalAlignment="Stretch">
-      <StackPanel Spacing="10">
-        <TextBox x:Name="RemoteAppBox" PlaceholderText="{x:Static res:Strings.Rdp_RemoteApp}" />
-        <TextBox x:Name="StartProgramBox" PlaceholderText="{x:Static res:Strings.Rdp_StartProgram}" />
-        <TextBox x:Name="WorkingDirectoryBox" PlaceholderText="{x:Static res:Strings.Rdp_WorkingDirectory}" />
-        <TextBlock Text="{x:Static res:Strings.Rdp_RemoteAppHint}" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
-      </StackPanel>
-    </Expander>
-  </StackPanel>
+      <Border Classes="divider" />
+      <Expander x:Name="GatewayExpander">
+        <Expander.Header>
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+            <TextBlock Classes="topic" Text="{x:Static res:Strings.Rdp_Section_Gateway}" />
+            <TextBlock x:Name="GatewaySummary" Grid.Column="1" Classes="hint summary" />
+          </Grid>
+        </Expander.Header>
+        <StackPanel Spacing="12">
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Gateway}" />
+            <ComboBox x:Name="GatewayUsageBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Gateway_None}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Gateway_Always}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Gateway_Detect}" />
+            </ComboBox>
+          </StackPanel>
+          <StackPanel x:Name="GatewayFields" Spacing="8">
+            <StackPanel>
+              <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Gateway_Host}" />
+              <TextBox x:Name="GatewayHostBox" Classes="mono" PlaceholderText="{x:Static res:Strings.Rdp_Gateway_HostExample}" />
+            </StackPanel>
+            <CheckBox x:Name="GatewaySameLogonBox" Content="{x:Static res:Strings.Rdp_Gateway_SameLogon}" IsChecked="True" />
+            <Grid x:Name="GatewayLogonRow" ColumnDefinitions="*,*" ColumnSpacing="12">
+              <StackPanel>
+                <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Gateway_User}" />
+                <TextBox x:Name="GatewayUserBox" PlaceholderText="{x:Static res:Strings.Rdp_Gateway_UserExample}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Gateway_Password}" />
+                <TextBox x:Name="GatewayPasswordBox" PasswordChar="●" Classes="revealPasswordButton" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_SshTunnel}" />
+            <ComboBox x:Name="JumpBox" HorizontalAlignment="Stretch" />
+            <TextBlock Classes="hint" Margin="1,6,0,0" Text="{x:Static res:Strings.Rdp_SshTunnelTip}" />
+          </StackPanel>
+        </StackPanel>
+      </Expander>
+
+      <Border Classes="divider" />
+      <Expander x:Name="RedirectionExpander">
+        <Expander.Header>
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+            <TextBlock Classes="topic" Text="{x:Static res:Strings.Rdp_Section_Redirections}" />
+            <TextBlock x:Name="RedirectionSummary" Grid.Column="1" Classes="hint summary" />
+          </Grid>
+        </Expander.Header>
+        <StackPanel Spacing="12">
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Margin="1,0,0,0" Text="{x:Static res:Strings.Rdp_Redirect}" />
+            <UniformGrid Columns="3">
+              <CheckBox x:Name="ClipboardBox" Content="{x:Static res:Strings.Rdp_Redirect_Clipboard}" IsChecked="True" />
+              <CheckBox x:Name="DrivesBox" Content="{x:Static res:Strings.Rdp_Redirect_Drives}" />
+              <CheckBox x:Name="PrintersBox" Content="{x:Static res:Strings.Rdp_Redirect_Printers}" />
+              <CheckBox x:Name="SmartCardsBox" Content="{x:Static res:Strings.Rdp_Redirect_SmartCards}" />
+              <CheckBox x:Name="PortsBox" Content="{x:Static res:Strings.Rdp_Redirect_Ports}" />
+              <CheckBox x:Name="MicrophoneBox" Content="{x:Static res:Strings.Rdp_Redirect_Microphone}" />
+            </UniformGrid>
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_Audio}" />
+            <ComboBox x:Name="AudioBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Audio_Local}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Audio_Remote}" />
+              <ComboBoxItem Content="{x:Static res:Strings.Rdp_Audio_None}" />
+            </ComboBox>
+          </StackPanel>
+        </StackPanel>
+      </Expander>
+
+      <Border Classes="divider" />
+      <Expander x:Name="ProgramExpander">
+        <Expander.Header>
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+            <TextBlock Classes="topic" Text="{x:Static res:Strings.Rdp_Section_Program}" />
+            <TextBlock x:Name="ProgramSummary" Grid.Column="1" Classes="hint summary" />
+          </Grid>
+        </Expander.Header>
+        <StackPanel Spacing="12">
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_RemoteApp}" />
+            <TextBox x:Name="RemoteAppBox" Classes="mono" PlaceholderText="{x:Static res:Strings.Rdp_RemoteAppExample}" />
+            <TextBlock Classes="hint" Margin="1,6,0,0" Text="{x:Static res:Strings.Rdp_RemoteAppHint}" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_StartProgram}" />
+            <TextBox x:Name="StartProgramBox" Classes="mono" PlaceholderText="{x:Static res:Strings.Rdp_StartProgramExample}" />
+          </StackPanel>
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Rdp_WorkingDirectory}" />
+            <TextBox x:Name="WorkingDirectoryBox" Classes="mono" PlaceholderText="{x:Static res:Strings.Rdp_WorkingDirectoryExample}" />
+          </StackPanel>
+        </StackPanel>
+      </Expander>
+    </StackPanel>
+  </Border>
 </UserControl>

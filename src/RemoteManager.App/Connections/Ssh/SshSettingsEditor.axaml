@@ -4,34 +4,51 @@
              x:Class="RemoteManager.App.Connections.Ssh.SshSettingsEditor">
   <!-- SSH and SFTP: logon method, jump host, forwards (SSH), start folder (SFTP), stored host key. -->
   <StackPanel Spacing="12">
-    <ComboBox x:Name="AuthBox" HorizontalAlignment="Stretch" SelectedIndex="0">
-      <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_Password}" />
-      <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_KeyFile}" />
-      <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_Agent}" />
-    </ComboBox>
-    <Grid x:Name="KeyRow" ColumnDefinitions="*,8,Auto">
-      <TextBox x:Name="KeyPathBox" PlaceholderText="{x:Static res:Strings.Ssh_KeyPathPlaceholder}" />
-      <Button x:Name="BrowseButton" Grid.Column="2" Content="{x:Static res:Strings.Ssh_Browse}" />
-    </Grid>
-    <TextBlock x:Name="AuthHint" Opacity="0.55" FontSize="12" TextWrapping="Wrap" />
+    <StackPanel>
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Ssh_Auth}" />
+      <ComboBox x:Name="AuthBox" HorizontalAlignment="Stretch" SelectedIndex="0">
+        <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_Password}" />
+        <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_KeyFile}" />
+        <ComboBoxItem Content="{x:Static res:Strings.Ssh_Auth_Agent}" />
+      </ComboBox>
+      <TextBlock x:Name="AuthHint" Classes="hint" Margin="1,6,0,0" />
+    </StackPanel>
+    <StackPanel x:Name="KeyRow">
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Ssh_KeyPath}" />
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBox x:Name="KeyPathBox" Classes="mono" PlaceholderText="{x:Static res:Strings.Ssh_KeyPathPlaceholder}" />
+        <Button x:Name="BrowseButton" Grid.Column="1" Content="{x:Static res:Strings.Ssh_Browse}" />
+      </Grid>
+    </StackPanel>
 
-    <StackPanel Spacing="4">
-      <TextBlock Text="{x:Static res:Strings.Ssh_JumpHost}" FontSize="12" Opacity="0.7" />
+    <StackPanel>
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Ssh_JumpHost}" />
       <ComboBox x:Name="JumpBox" HorizontalAlignment="Stretch" />
     </StackPanel>
 
-    <TextBox x:Name="RemoteDirectoryBox" PlaceholderText="{x:Static res:Strings.Sftp_StartFolderPlaceholder}" />
-
-    <StackPanel x:Name="ForwardsPanel" Spacing="4">
-      <TextBlock Text="{x:Static res:Strings.Ssh_Forwards}" FontSize="12" Opacity="0.7" />
-      <TextBox x:Name="ForwardsBox" AcceptsReturn="True" MinHeight="60" TextWrapping="NoWrap"
-               FontFamily="Cascadia Mono,Consolas,monospace" PlaceholderText="{x:Static res:Strings.Ssh_ForwardsPlaceholder}" />
+    <StackPanel x:Name="RemoteDirectoryField">
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Sftp_StartFolder}" />
+      <TextBox x:Name="RemoteDirectoryBox" Classes="mono" PlaceholderText="{x:Static res:Strings.Sftp_StartFolderPlaceholder}" />
     </StackPanel>
 
-    <Grid x:Name="HostKeyRow" ColumnDefinitions="*,8,Auto">
-      <TextBlock x:Name="HostKeyText" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-      <Button x:Name="ForgetHostKeyButton" Grid.Column="2" Content="{x:Static res:Strings.Ssh_HostKeyForget}"
-              ToolTip.Tip="{x:Static res:Strings.Ssh_HostKeyForgetTip}" />
-    </Grid>
+    <StackPanel x:Name="ForwardsPanel">
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Ssh_Forwards}" />
+      <TextBox x:Name="ForwardsBox" Classes="mono" AcceptsReturn="True" MinHeight="64" TextWrapping="NoWrap"
+               PlaceholderText="{x:Static res:Strings.Ssh_ForwardsPlaceholder}" />
+      <TextBlock Classes="hint" Margin="1,6,0,0" Text="{x:Static res:Strings.Ssh_ForwardsHint}" />
+    </StackPanel>
+
+    <!-- The key the server showed at the first connect; "Vergessen" makes the next connect ask again. -->
+    <StackPanel x:Name="HostKeyRow">
+      <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Ssh_HostKey}" />
+      <Border Classes="note" Padding="12,6,6,6" MinHeight="40">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <SelectableTextBlock x:Name="HostKeyText" Classes="mono" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <TextBlock x:Name="HostKeyNone" Classes="hint" VerticalAlignment="Center" Text="{x:Static res:Strings.Ssh_HostKeyNone}" />
+          <Button x:Name="ForgetHostKeyButton" Grid.Column="1" Classes="link" VerticalAlignment="Center"
+                  Content="{x:Static res:Strings.Ssh_HostKeyForget}" ToolTip.Tip="{x:Static res:Strings.Ssh_HostKeyForgetTip}" />
+        </Grid>
+      </Border>
+    </StackPanel>
   </StackPanel>
 </UserControl>
