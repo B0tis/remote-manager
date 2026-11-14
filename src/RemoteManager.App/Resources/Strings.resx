@@ -1719,7 +1719,7 @@
     <value>Für die Anmeldung fehlt der Benutzername. Trage ihn ein; ein gespeichertes Passwort wird dann verwendet.</value>
   </data>
   <data name="Session_NlaFailed" xml:space="preserve">
-    <value>Der Server hat die Anmeldung abgelehnt (Authentifizierung auf Netzwerkebene). Prüfe Benutzername und Passwort. GNOME- und KDE-Desktops erwarten die Zugangsdaten aus ihren Remotedesktop-Einstellungen, nicht die des Linux-Kontos.</value>
+    <value>Der Server hat die Anmeldung abgelehnt, ohne einen Grund zu nennen (Authentifizierung auf Netzwerkebene, Grund 519). Prüfe Benutzername und Passwort. GNOME- und KDE-Desktops erwarten die Zugangsdaten aus ihren Remotedesktop-Einstellungen, nicht die des Linux-Kontos.</value>
   </data>
   <data name="Session_NlaFailedShort" xml:space="preserve">
     <value>Anmeldung abgelehnt (Authentifizierung auf Netzwerkebene, Grund 519)</value>
@@ -1750,6 +1750,27 @@
   </data>
   <data name="Session_ScaledToFit" xml:space="preserve">
     <value>Verbunden, Bild an das Fenster angepasst</value>
+  </data>
+  <data name="Session_Reason_LogonFailed" xml:space="preserve">
+    <value>Benutzername oder Passwort stimmen nicht</value>
+  </data>
+  <data name="Session_Reason_NoAccount" xml:space="preserve">
+    <value>Dieses Konto gibt es auf dem Server nicht</value>
+  </data>
+  <data name="Session_Reason_AccountDisabled" xml:space="preserve">
+    <value>Das Konto ist deaktiviert</value>
+  </data>
+  <data name="Session_Reason_AccountLocked" xml:space="preserve">
+    <value>Das Konto ist gesperrt</value>
+  </data>
+  <data name="Session_Reason_AccountExpired" xml:space="preserve">
+    <value>Das Konto ist abgelaufen</value>
+  </data>
+  <data name="Session_Reason_PasswordExpired" xml:space="preserve">
+    <value>Das Passwort ist abgelaufen</value>
+  </data>
+  <data name="Session_Reason_PasswordMustChange" xml:space="preserve">
+    <value>Das Passwort muss vor der Anmeldung geändert werden</value>
   </data>
   <data name="Sftp_CopyPath" xml:space="preserve">
     <value>Pfad kopieren</value>

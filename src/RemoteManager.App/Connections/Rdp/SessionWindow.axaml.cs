@@ -485,14 +485,17 @@ public partial class SessionWindow : Window, ISessionWindow
         SnapshotButton.IsEnabled = false;
         FocusItem.IsEnabled = false;
         ConnectButton.Content = Strings.Session_Reconnect;
-        if (rejectedStoredPassword)
+        if (logonRefused && reason == NlaFailedReason)
         {
-            ShowStoredPasswordRejected();
-        }
-        else if (logonRefused && reason == NlaFailedReason)
-        {
+            // Not necessarily the password: the server refused the logon without saying why. A stored password
+            // can be replaced from here all the same.
+            SavePasswordBox.IsChecked = usedStoredPassword;
             ShowCardMessage(Strings.Session_NlaFailed);
             ShowCard();
+        }
+        else if (rejectedStoredPassword)
+        {
+            ShowStoredPasswordRejected();
         }
         else
         {
@@ -529,6 +532,9 @@ public partial class SessionWindow : Window, ISessionWindow
             var client = RdpView.GetClient<IMsRdpClient10>();
             string? text = client.GetErrorDescription((uint)reason, (uint)client.ExtendedDisconnectReason);
             string code = string.Format(CultureInfo.CurrentCulture, Strings.Session_DisconnectReason, reason);
+            // Servers that are not Windows often leave the text empty; the logon refusals at least get one.
+            if (string.IsNullOrWhiteSpace(text))
+                text = DescribeLogonFailure(reason);
             return string.IsNullOrWhiteSpace(text) ? code : $"{text.Trim()} ({code})";
         }
         catch (Exception)
@@ -536,6 +542,18 @@ public partial class SessionWindow : Window, ISessionWindow
             return string.Format(CultureInfo.CurrentCulture, Strings.Session_DisconnectReason, reason);
         }
     }
+
+    private static string? DescribeLogonFailure(int reason) => reason switch
+    {
+        2055 => Strings.Session_Reason_LogonFailed,
+        2567 => Strings.Session_Reason_NoAccount,
+        2823 => Strings.Session_Reason_AccountDisabled,
+        3335 => Strings.Session_Reason_AccountLocked,
+        3591 => Strings.Session_Reason_AccountExpired,
+        3847 => Strings.Session_Reason_PasswordExpired,
+        4615 => Strings.Session_Reason_PasswordMustChange,
+        _ => null,
+    };
 
     private void ShowSessionSurface()
     {
