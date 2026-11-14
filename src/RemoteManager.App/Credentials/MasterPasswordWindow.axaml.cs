@@ -51,7 +51,7 @@ public partial class MasterPasswordWindow : Window
             Current = window;
             try
             {
-                return await window.ShowDialog<string?>(OwnerWindow());
+                return await window.ShowDialog<string?>(Services.DialogOwner.Shown(OwnerWindow()));
             }
             finally
             {

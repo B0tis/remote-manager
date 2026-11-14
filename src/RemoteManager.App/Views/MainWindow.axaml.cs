@@ -899,6 +899,11 @@ public partial class MainWindow : Window, IConnectionHost
             RefreshStatus();
             e.Handled = true;
         }
+        else if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.F1)
+        {
+            ShortcutsView.Toggle(this);
+            e.Handled = true;
+        }
 
         base.OnKeyDown(e);
     }
@@ -906,6 +911,14 @@ public partial class MainWindow : Window, IConnectionHost
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         WindowPlacement.SaveMain(this, app.Library);
+
+        // "Close to tray" (MainWindow.Tray.cs): the app keeps running, and with it the timer that clears a copied password.
+        if (HidesOnClose(CloseToTray, exitRequested, trayIcon is not null, e.CloseReason))
+        {
+            e.Cancel = true;
+            HideToTray();
+            return;
+        }
 
         // A copied password must not outlive the app on the clipboard: clear it first, then close for real.
         if (!clipboardCleared && SecretClipboard.HasPending)

@@ -192,6 +192,9 @@
   <data name="Action_Unfavorite" xml:space="preserve">
     <value>Aus Favoriten entfernen</value>
   </data>
+  <data name="Action_Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
   <data name="Column_Description" xml:space="preserve">
     <value>Beschreibung</value>
   </data>
@@ -791,6 +794,24 @@
   </data>
   <data name="Key_Space" xml:space="preserve">
     <value>Leertaste</value>
+  </data>
+  <data name="Key_Enter" xml:space="preserve">
+    <value>Eingabe</value>
+  </data>
+  <data name="Key_Delete" xml:space="preserve">
+    <value>Entf</value>
+  </data>
+  <data name="Key_Escape" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="Key_Backspace" xml:space="preserve">
+    <value>Rücktaste</value>
+  </data>
+  <data name="Key_Insert" xml:space="preserve">
+    <value>Einfg</value>
+  </data>
+  <data name="Key_Pause" xml:space="preserve">
+    <value>Pause</value>
   </data>
   <data name="LastConnected_Never" xml:space="preserve">
     <value>Nie</value>
@@ -2866,5 +2887,149 @@
   </data>
   <data name="Accent_Windows" xml:space="preserve">
     <value>Akzentfarbe von Windows</value>
+  </data>
+  <data name="Tray_Open" xml:space="preserve">
+    <value>Remote-Manager öffnen</value>
+  </data>
+  <data name="Tray_Quit" xml:space="preserve">
+    <value>Beenden</value>
+  </data>
+  <data name="Tray_AllFavorites" xml:space="preserve">
+    <value>Alle Favoriten in der Übersicht</value>
+  </data>
+  <data name="Tray_EntryTip" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="Tray_CloseToTray" xml:space="preserve">
+    <value>Beim Schließen im Infobereich weiterlaufen</value>
+  </data>
+  <data name="Tray_CloseToTray_Tip" xml:space="preserve">
+    <value>Schließen blendet die Übersicht nur aus. Sitzungen und Schnellstart laufen weiter, beendet wird über das Symbol im Infobereich neben der Uhr.</value>
+  </data>
+  <data name="Tray_Toast_Title" xml:space="preserve">
+    <value>Infobereich</value>
+  </data>
+  <data name="Tray_Toast_On" xml:space="preserve">
+    <value>Schließen blendet Remote-Manager ab jetzt nur aus. Zum Beenden: Rechtsklick auf das Symbol neben der Uhr, dann „Beenden“.</value>
+  </data>
+  <data name="Tray_Toast_Off" xml:space="preserve">
+    <value>Schließen beendet Remote-Manager wieder.</value>
+  </data>
+  <data name="Tray_Hint_Title" xml:space="preserve">
+    <value>Remote-Manager läuft weiter</value>
+  </data>
+  <data name="Tray_Hint_Text" xml:space="preserve">
+    <value>Offene Sitzungen bleiben verbunden. Das Symbol im Infobereich neben der Uhr öffnet die Übersicht wieder. Ein Rechtsklick darauf zeigt Favoriten und „Beenden“.</value>
+  </data>
+  <data name="Tray_Hint_Hotkey" xml:space="preserve">
+    <value>Schnellstart von überall</value>
+  </data>
+  <data name="Tray_Hint_Close" xml:space="preserve">
+    <value>Hinweis schließen</value>
+  </data>
+  <data name="Shortcuts_Menu" xml:space="preserve">
+    <value>Tastenkürzel …</value>
+  </data>
+  <data name="Shortcuts_Title" xml:space="preserve">
+    <value>Tastenkürzel</value>
+  </data>
+  <data name="Shortcuts_Area_Overview" xml:space="preserve">
+    <value>Übersicht</value>
+  </data>
+  <data name="Shortcuts_Area_Connection" xml:space="preserve">
+    <value>Verbindung</value>
+  </data>
+  <data name="Shortcuts_Area_Connection_Hint" xml:space="preserve">
+    <value>Gilt für die ausgewählten Verbindungen in Kacheln oder Liste.</value>
+  </data>
+  <data name="Shortcuts_Area_Launcher" xml:space="preserve">
+    <value>Schnellstart</value>
+  </data>
+  <data name="Shortcuts_Area_Launcher_Hint" xml:space="preserve">
+    <value>Der Hotkey gilt in jedem Programm, solange Remote-Manager läuft. Du änderst ihn im Schnellstart unter „Ändern“.</value>
+  </data>
+  <data name="Shortcuts_Area_Session" xml:space="preserve">
+    <value>Sitzung</value>
+  </data>
+  <data name="Shortcuts_Search" xml:space="preserve">
+    <value>Verbindungen durchsuchen</value>
+  </data>
+  <data name="Shortcuts_NewConnection" xml:space="preserve">
+    <value>Neue Verbindung</value>
+  </data>
+  <data name="Shortcuts_NewGroup" xml:space="preserve">
+    <value>Neue Gruppe</value>
+  </data>
+  <data name="Shortcuts_Tiles" xml:space="preserve">
+    <value>Kachelansicht</value>
+  </data>
+  <data name="Shortcuts_List" xml:space="preserve">
+    <value>Listenansicht</value>
+  </data>
+  <data name="Shortcuts_Sidebar" xml:space="preserve">
+    <value>Seitenleiste ein- oder ausblenden</value>
+  </data>
+  <data name="Shortcuts_Details" xml:space="preserve">
+    <value>Detailbereich ein- oder ausblenden</value>
+  </data>
+  <data name="Shortcuts_Refresh" xml:space="preserve">
+    <value>Online-Status aktualisieren</value>
+  </data>
+  <data name="Shortcuts_Help" xml:space="preserve">
+    <value>Tastenkürzel anzeigen</value>
+  </data>
+  <data name="Shortcuts_Connect" xml:space="preserve">
+    <value>Verbinden</value>
+  </data>
+  <data name="Shortcuts_Edit" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="Shortcuts_Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="Shortcuts_SelectAll" xml:space="preserve">
+    <value>Alle sichtbaren Verbindungen auswählen</value>
+  </data>
+  <data name="Shortcuts_SidebarDelete" xml:space="preserve">
+    <value>Seitenleiste: Gruppe löschen, Tag entfernen</value>
+  </data>
+  <data name="Shortcuts_LauncherGlobal" xml:space="preserve">
+    <value>Von überall öffnen</value>
+  </data>
+  <data name="Shortcuts_LauncherLocal" xml:space="preserve">
+    <value>In der Übersicht öffnen</value>
+  </data>
+  <data name="Shortcuts_LauncherChoose" xml:space="preserve">
+    <value>Treffer wählen</value>
+  </data>
+  <data name="Shortcuts_LauncherConnect" xml:space="preserve">
+    <value>Mit dem Treffer verbinden</value>
+  </data>
+  <data name="Shortcuts_LauncherReveal" xml:space="preserve">
+    <value>Treffer in der Übersicht zeigen</value>
+  </data>
+  <data name="Shortcuts_LauncherClose" xml:space="preserve">
+    <value>Schnellstart schließen</value>
+  </data>
+  <data name="Shortcuts_RdpFullScreen" xml:space="preserve">
+    <value>Vollbild verlassen</value>
+  </data>
+  <data name="Shortcuts_TerminalCopy" xml:space="preserve">
+    <value>Auswahl kopieren</value>
+  </data>
+  <data name="Shortcuts_TerminalPaste" xml:space="preserve">
+    <value>Einfügen</value>
+  </data>
+  <data name="Shortcuts_TerminalPasteAlt" xml:space="preserve">
+    <value>Einfügen, alternativ</value>
+  </data>
+  <data name="Shortcuts_SftpOpen" xml:space="preserve">
+    <value>Öffnen oder herunterladen</value>
+  </data>
+  <data name="Shortcuts_SftpUp" xml:space="preserve">
+    <value>Eine Ebene nach oben</value>
+  </data>
+  <data name="Shortcuts_SftpDelete" xml:space="preserve">
+    <value>Auswahl löschen</value>
   </data>
 </root>
