@@ -103,6 +103,7 @@ internal static partial class SelfTest
         await RunLayoutChecksAsync(window); // SelfTest.Layout.cs
         await RunCredentialChecksAsync(window);
         await RunRdpImportChecksAsync(window);
+        await RunRedesignChecksAsync(window); // SelfTest.Redesign.cs
 
         await RunRemoteToolChecksAsync(window);
         await RunVncAndVaultChecksAsync(window); // SelfTest.VncAndVaults.cs

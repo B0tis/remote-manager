@@ -19,6 +19,12 @@ public partial class MainWindow
     /// <summary>Header width (DIP) below which "Verbinden" and "Neue Verbindung" show only their icon.</summary>
     public const double NarrowHeaderWidth = 700;
 
+    /// <summary>
+    /// Header width (DIP) below which the S/M/L switch leaves its room to the page title (the sizes stay in
+    /// "Mehr"). Title, switch, and the labelled buttons need about 760; the start size gives the header 707.
+    /// </summary>
+    public const double RoomyHeaderWidth = 770;
+
     /// <summary>List width (DIP) below which group and tags hide (900), and also "zuletzt verbunden" (640).</summary>
     public const double CompactListWidth = 900, NarrowListWidth = 640;
 
@@ -45,7 +51,11 @@ public partial class MainWindow
     {
         FitToScreen();
         SizeChanged += (_, e) => UpdateLayoutMode(e.NewSize.Width);
-        Header.SizeChanged += (_, e) => Header.Classes.Set("narrow", e.NewSize.Width < NarrowHeaderWidth);
+        Header.SizeChanged += (_, e) =>
+        {
+            Header.Classes.Set("narrow", e.NewSize.Width < NarrowHeaderWidth);
+            SizeSwitch.IsVisible = e.NewSize.Width >= RoomyHeaderWidth;
+        };
         ListPanel.SizeChanged += (_, e) =>
         {
             ListPanel.Classes.Set("compact", e.NewSize.Width < CompactListWidth);
