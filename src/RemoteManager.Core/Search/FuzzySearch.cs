@@ -62,7 +62,13 @@ public static class FuzzySearch
     /// The matching items, best first. An empty query returns everything ordered by usage. Ties keep
     /// the input order, so pass the items sorted by name.
     /// </summary>
-    public static IReadOnlyList<T> Rank<T>(string query, IEnumerable<T> items, Func<T, IEnumerable<SearchField>> fields, Func<T, double>? usage = null)
+    /// <param name="minimumScorePerLetter">
+    /// A word only counts in a field when its <see cref="Score"/> there is at least this much per letter.
+    /// 0 accepts every subsequence. The launcher's actions set a bar, so that letters scattered over a label
+    /// ("srv" in "Synchronisierung") do not bring an action into a search for a server.
+    /// </param>
+    public static IReadOnlyList<T> Rank<T>(string query, IEnumerable<T> items, Func<T, IEnumerable<SearchField>> fields, Func<T, double>? usage = null,
+        int minimumScorePerLetter = 0)
     {
         string[] words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var scored = new List<(T Item, double Score, int Index)>();
@@ -78,7 +84,7 @@ public static class FuzzySearch
                 int? best = null;
                 foreach (SearchField field in itemFields)
                 {
-                    if (Score(term, field.Text) is { } s && (best is null || s * field.Weight > best))
+                    if (Score(term, field.Text) is { } s && s >= minimumScorePerLetter * term.Length && (best is null || s * field.Weight > best))
                         best = s * field.Weight;
                 }
 
