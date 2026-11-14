@@ -239,6 +239,9 @@ public partial class MainWindow
         HashSet<ConnectionItem> open = [.. sessionWindows.Select(w => ((ISessionWindow)w).Connection)];
         foreach (ConnectionItem item in items)
             item.IsSessionOpen = open.Contains(item);
+        // Also connections that are not in the library (ad-hoc, self-test).
+        foreach (ConnectionItem item in open)
+            item.IsSessionOpen = true;
         UpdateSidebarCounts();
         if (filter == SidebarEntry.ActiveTag)
             ApplyFilter();

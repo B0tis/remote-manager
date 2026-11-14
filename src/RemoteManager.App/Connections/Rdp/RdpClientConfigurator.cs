@@ -134,6 +134,19 @@ internal static class RdpClientConfigurator
         {
             System.Diagnostics.Trace.WriteLine($"Multimon not available: {ex.Message}");
         }
+
+        try
+        {
+            // Servers that hand the session over after the logon (GNOME Remote Desktop's "Remote Login", RDS
+            // farms) redirect the client to the session's own endpoint. Without this the control reconnects by
+            // the address it was sent instead of the name it was given, and the handover fails with
+            // "Authentifizierungsfehler" (reason 519). mstsc writes it as "use redirection server name:i:1".
+            view.GetClient<IMsRdpPreferredRedirectionInfo>().UseRedirectionServerName = true;
+        }
+        catch (Exception ex) when (ex is COMException or InvalidCastException)
+        {
+            System.Diagnostics.Trace.WriteLine($"Redirection by server name not available: {ex.Message}");
+        }
     }
 
     private static BinaryString Bstr(string value) => new(value);

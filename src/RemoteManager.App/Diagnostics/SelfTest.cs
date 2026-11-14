@@ -412,6 +412,13 @@ internal static partial class SelfTest
             Id = TestId("live"),
             Name = "Selftest live",
             Host = Environment.GetEnvironmentVariable("RM_SPIKE_HOST")!,
+            // 0 = the type's default port; a testbed in Docker publishes another one.
+            Port = int.TryParse(Environment.GetEnvironmentVariable("RM_SPIKE_PORT"), out int port) ? port : 0,
+            // RM_SPIKE_AUTH_LEVEL=0 connects without the certificate question (a testbed's self-signed certificate).
+            Settings = new RdpSettings
+            {
+                AuthenticationLevel = int.TryParse(Environment.GetEnvironmentVariable("RM_SPIKE_AUTH_LEVEL"), out int level) ? level : 2,
+            },
             UserName = Environment.GetEnvironmentVariable("RM_SPIKE_USER") ?? "",
             Domain = Environment.GetEnvironmentVariable("RM_SPIKE_DOMAIN") ?? "",
         });
@@ -460,6 +467,15 @@ internal static partial class SelfTest
             if (className != "#32770" && title.Length == 0)
                 return true;
             Log($"  native dialog: class \"{className}\", title \"{title}\"{(close ? " (closed by the test)" : "")}");
+            // What it says: a screen copy of the dialog (its text is not reachable as window text).
+            if (GetWindowRect(hwnd, out Rect area)
+                && SessionCapture.CaptureScreen(area.Left, area.Top, area.Right - area.Left, area.Bottom - area.Top) is { } picture)
+            {
+                string file = Path.Combine(AppPaths.Spike, $"native-dialog-{seen.Count}.png");
+                picture.SavePng(file);
+                Log($"  probe saved: {file}");
+            }
+
             if (close)
                 PostMessage(hwnd, 0x0010, 0, 0); // WM_CLOSE
             return true;
@@ -480,7 +496,12 @@ internal static partial class SelfTest
     {
         var dialogs = new HashSet<nint>();
         var dialogWatch = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
-        dialogWatch.Tick += (_, _) => ReportNativeDialogs(dialogs);
+        // A dialog needs a moment to paint before its picture is worth taking.
+        dialogWatch.Tick += async (_, _) =>
+        {
+            await Task.Delay(400);
+            ReportNativeDialogs(dialogs);
+        };
         ReportNativeDialogs(dialogs); // the windows that are already there are not dialogs of the session
         dialogWatch.Start();
         try
@@ -500,7 +521,9 @@ internal static partial class SelfTest
         await WaitFor(() => live.Rdp.IsClientReady, TimeSpan.FromSeconds(20));
         if (!stored)
             live.Connect();
-        bool loggedIn = await WaitFor(() => live.IsLoggedIn, TimeSpan.FromSeconds(90));
+        // Logged in, or back on the card with a message (refused, user missing): no need to wait out the timeout.
+        await WaitFor(() => live.IsLoggedIn || (live.IsConnectCardVisible && live.CardMessageText.Length > 0), TimeSpan.FromSeconds(90));
+        bool loggedIn = live.IsLoggedIn;
         Check($"Live session logs in without a credential prompt (NLA, {(stored ? "stored password, auto-connect" : "typed password")})",
             loggedIn && live.UsedStoredPassword == stored);
         if (!loggedIn)
@@ -532,7 +555,11 @@ internal static partial class SelfTest
         await Settle(4000);
         PixelSize viewport = live.Rdp.ViewportPixelSize;
         Log($"Resize: remote desktop {before} -> {live.LastRemoteDesktopSize}, viewport {viewport}");
-        Check("Dynamic resolution follows a window resize", live.LastRemoteDesktopSize == viewport);
+        // A Windows server follows the window. A server that mirrors a fixed screen (GNOME desktop sharing, the
+        // FreeRDP testbed) keeps its size; then the picture has to be scaled to the window.
+        Check($"After a window resize the session fits the window: the server follows, or the picture is scaled (scaled: {live.IsScaledToFit})",
+            live.LastRemoteDesktopSize == viewport || live.IsScaledToFit);
+        SaveScreenProbe(live, "session-window-live-resized.png");
 
         // Monitor move (only meaningful with a second screen at a different scaling).
         Screen? current = live.Screens.ScreenFromWindow(live);

@@ -202,6 +202,7 @@ public partial class MainWindow : Window, IConnectionHost
         {
             sessionWindows.Remove(window);
             EndHistory(connection);
+            connection.IsSessionOpen = false;
             OnSessionsChanged();
         };
         sessionWindows.Add(window);

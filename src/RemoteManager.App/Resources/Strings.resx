@@ -1187,7 +1187,7 @@
     <value>Sitzung fokussieren</value>
   </data>
   <data name="Session_Footer" xml:space="preserve">
-    <value>NLA ist immer an. Windows-Tasten gehen an die Sitzung, solange sie den Fokus hat.</value>
+    <value>Das Passwort bleibt nur bis zur Anmeldung im Speicher. Windows-Tasten gehen an die Sitzung, solange sie den Fokus hat.</value>
   </data>
   <data name="Session_FullScreenTip" xml:space="preserve">
     <value>Vollbild (Strg+Alt+Pause zum Verlassen)</value>
@@ -1237,6 +1237,33 @@
   </data>
   <data name="Session_NlaFailedShort" xml:space="preserve">
     <value>Anmeldung abgelehnt (Authentifizierung auf Netzwerkebene, Grund 519)</value>
+  </data>
+  <data name="Session_Status_Connecting" xml:space="preserve">
+    <value>Verbinde …</value>
+  </data>
+  <data name="Session_Status_SigningIn" xml:space="preserve">
+    <value>Verbunden, melde an …</value>
+  </data>
+  <data name="Session_Status_Connected" xml:space="preserve">
+    <value>Verbunden</value>
+  </data>
+  <data name="Session_Status_Certificate" xml:space="preserve">
+    <value>Warte auf Deine Antwort im Dialog der Sitzung …</value>
+  </data>
+  <data name="Session_Status_Disconnecting" xml:space="preserve">
+    <value>Trenne …</value>
+  </data>
+  <data name="Session_Status_LogonError" xml:space="preserve">
+    <value>Fehler bei der Anmeldung: {0}</value>
+  </data>
+  <data name="Session_Ended" xml:space="preserve">
+    <value>Sitzung beendet.</value>
+  </data>
+  <data name="Session_EndedByServer" xml:space="preserve">
+    <value>Der Server hat die Sitzung beendet.</value>
+  </data>
+  <data name="Session_ScaledToFit" xml:space="preserve">
+    <value>Verbunden, Bild an das Fenster angepasst</value>
   </data>
   <data name="Sftp_CopyPath" xml:space="preserve">
     <value>Pfad kopieren</value>
