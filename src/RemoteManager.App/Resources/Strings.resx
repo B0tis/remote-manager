@@ -1737,7 +1737,7 @@
     <value>Verbunden</value>
   </data>
   <data name="Session_Status_Certificate" xml:space="preserve">
-    <value>Warte auf Deine Antwort im Dialog der Sitzung …</value>
+    <value>Warte auf deine Antwort im Dialog der Sitzung …</value>
   </data>
   <data name="Session_Status_Disconnecting" xml:space="preserve">
     <value>Trenne …</value>
@@ -1774,6 +1774,9 @@
   </data>
   <data name="Session_Reason_PasswordMustChange" xml:space="preserve">
     <value>Das Passwort muss vor der Anmeldung geändert werden</value>
+  </data>
+  <data name="Session_PasswordNotSaved" xml:space="preserve">
+    <value>Verbunden. Das Passwort wurde nicht gespeichert: Der Server hat es vor der Sitzung nicht geprüft.</value>
   </data>
   <data name="Sftp_CopyPath" xml:space="preserve">
     <value>Pfad kopieren</value>
@@ -1860,7 +1863,7 @@
     <value>z. B. /var/www (leer: Home-Ordner)</value>
   </data>
   <data name="Sftp_Title" xml:space="preserve">
-    <value>{0} – Dateien</value>
+    <value>{0}: Dateien</value>
   </data>
   <data name="Sftp_TransferCanceled" xml:space="preserve">
     <value>Übertragung abgebrochen.</value>

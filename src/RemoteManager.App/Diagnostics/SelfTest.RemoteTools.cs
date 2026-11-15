@@ -141,15 +141,24 @@ internal static partial class SelfTest
 
         // TeamViewer with -p: the password is in the process list, so the user gets a visible warning.
         tv.Model.Settings = new RemoteToolSettings { CredentialOnCommandLine = true };
+        // The toast shows at launch; reading the process list afterwards can take longer than it stays open.
+        string? warned = null;
+        void OnToast(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
+        {
+            if (window.ToastBar.IsOpen && window.ToastBar.Severity == FAInfoBarSeverity.Warning)
+                warned = window.ToastBar.Message;
+        }
+
+        window.ToastBar.PropertyChanged += OnToast;
         (commandLine, _) = await LaunchFakeAsync(window, tv, null, report);
+        window.ToastBar.PropertyChanged -= OnToast;
         await Settle(300);
         SaveRenderProbe(window, "remote-tool-teamviewer-p-warning.png");
         Log($"  TeamViewer -p: command line has the password {commandLine?.Contains(secret, StringComparison.Ordinal) == true}, toast open {window.ToastBar.IsOpen}, "
             + $"severity {window.ToastBar.Severity}, title \"{window.ToastBar.Title}\", message \"{window.ToastBar.Message}\"");
         Check("TeamViewer -p: visible warning toast (and the password really is in the process list)",
-            commandLine?.Contains(secret, StringComparison.Ordinal) == true && window.ToastBar.IsOpen
-            && window.ToastBar.Severity == FAInfoBarSeverity.Warning
-            && window.ToastBar.Message == string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Warning_PasswordOnCommandLine, "TeamViewer"));
+            commandLine?.Contains(secret, StringComparison.Ordinal) == true
+            && warned == string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Warning_PasswordOnCommandLine, "TeamViewer"));
 
         // File transfer straight from the context menu.
         window.SetListView(false);

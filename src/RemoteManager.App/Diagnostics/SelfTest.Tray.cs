@@ -33,6 +33,12 @@ internal static partial class SelfTest
         Appearance look = app.Appearance;
         AppTheme themeBefore = look.Theme;
         bool closeToTrayBefore = window.CloseToTray;
+        // The checks need the defaults: setting off, one-time hint not yet shown. Both are put back afterwards.
+        string? hintBefore = app.Library.GetSetting(MainWindow.TrayHintSetting);
+        string? placeBefore = app.Library.GetSetting(WindowPlacement.MainSetting);
+        window.SetCloseToTray(false);
+        app.Library.SetSetting(MainWindow.CloseToTraySetting, null);
+        app.Library.SetSetting(MainWindow.TrayHintSetting, null);
         List<ConnectionItem> starredBefore = [.. window.Connections.Where(c => c.IsFavorite)];
         var created = new List<ConnectionItem>();
         try
@@ -64,6 +70,10 @@ internal static partial class SelfTest
         {
             look.SetTheme(themeBefore);
             window.SetCloseToTray(closeToTrayBefore);
+            if (!closeToTrayBefore)
+                app.Library.SetSetting(MainWindow.CloseToTraySetting, null);
+            app.Library.SetSetting(MainWindow.TrayHintSetting, hintBefore);
+            app.Library.SetSetting(WindowPlacement.MainSetting, placeBefore);
             if (!window.IsVisible)
                 window.ShowFromTray();
             window.TrayHint?.Close();
@@ -184,8 +194,6 @@ internal static partial class SelfTest
                 await Settle(600);
                 if (favorites.GetVisualDescendants().OfType<Popup>().FirstOrDefault()?.Child is { } submenu)
                 {
-                    foreach (Image image in submenu.GetVisualDescendants().OfType<Image>()) // TEMP
-                        Log($"  TEMP image {image.Bounds} source {image.Source?.Size} px {(image.Source as Avalonia.Media.Imaging.Bitmap)?.PixelSize} dpi {(image.Source as Avalonia.Media.Imaging.Bitmap)?.Dpi} chain {string.Join(" < ", image.GetVisualAncestors().Take(6).Select(v => $"{v.GetType().Name} {v.Bounds.Width}x{v.Bounds.Height}"))}");
                     SaveControlProbe(submenu, window, $"{name}-favorites.png");
                 }
                 favorites.Close();

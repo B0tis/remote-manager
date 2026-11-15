@@ -55,7 +55,7 @@ public partial class MainWindow : Window, IConnectionHost
     {
         InitializeComponent();
         app = AppHost.Current;
-        WindowPlacement.RestoreMain(this, app.Library); // before the first layout: FitToScreen and the breakpoints use the size
+        placeRestored = WindowPlacement.RestoreMain(this, app.Library); // before the first layout: FitToScreen and the breakpoints use the size
         foreach (Connection connection in app.Library.Connections)
             items.Add(CreateItem(connection));
 
@@ -316,6 +316,8 @@ public partial class MainWindow : Window, IConnectionHost
         ListToggle.IsChecked = list;
         // The S/M/L switch belongs to the tiles (ApplyTileSize sets it too, but only runs when the size changes).
         SizeSwitch.IsEnabled = !list;
+        if (!list)
+            Dispatcher.UIThread.Post(ApplyTileSize, DispatcherPriority.Loaded); // the panel exists once the tiles were laid out
         Select(selected);
         app.Library.SetSetting(ViewSetting, list ? "list" : "tiles");
         UpdateEmptyState();
@@ -631,17 +633,29 @@ public partial class MainWindow : Window, IConnectionHost
         {
             foreach (ConnectionItem item in items.Where(i => i.Model == e.Connection))
                 item.SetStatus(e.Status, e.Latency);
-            if (onlineOnly)
-            {
-                // "Nur online" follows the results as they come in.
-                ApplyFilter();
+            if (statusRefreshQueued)
                 return;
-            }
-
-            UpdateSubtitle();
-            UpdateHeaderCounts();
-            UpdateFilterBar(lastScope);
+            // A round reports every connection within moments: refresh once after the pending results.
+            statusRefreshQueued = true;
+            Dispatcher.UIThread.Post(RefreshAfterStatus, DispatcherPriority.Background);
         });
+
+    private bool statusRefreshQueued;
+
+    private void RefreshAfterStatus()
+    {
+        statusRefreshQueued = false;
+        // "Nur online" follows the results, but the lists are rebuilt only when the connections shown change.
+        if (onlineOnly && !visible.SequenceEqual(lastScope.Where(c => c.Status == OnlineStatus.Online && (typeFilter is not { } type || c.Model.Type == type))))
+        {
+            ApplyFilter();
+            return;
+        }
+
+        UpdateSubtitle();
+        UpdateHeaderCounts();
+        UpdateFilterCounts(lastScope);
+    }
 
     /// <summary>Online summaries of the group headers after status results.</summary>
     private void UpdateHeaderCounts()
@@ -789,6 +803,8 @@ public partial class MainWindow : Window, IConnectionHost
     /// <summary>After an add or edit: rebuild the sidebar (groups, tags), select the connection, check the status.</summary>
     private void Refresh(ConnectionItem connection)
     {
+        if ((typeFilter is { } type && connection.Model.Type != type) || (onlineOnly && connection.Status != OnlineStatus.Online))
+            ClearChipFilters();
         RefreshLabels();
         BuildNavigation();
         Select([connection]);
@@ -927,6 +943,7 @@ public partial class MainWindow : Window, IConnectionHost
         {
             e.Cancel = true;
             clipboardCleared = true;
+            exitRequested = true; // the Close() below continues this close: it must not hide to the tray
             Dispatcher.UIThread.Post(async () =>
             {
                 await SecretClipboard.ClearPendingAsync();

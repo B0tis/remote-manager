@@ -28,8 +28,22 @@ internal static class Program
         Diagnostics.CrashLog.InstallProcessHandlers();
 
         AppOptions.Parse(args);
+
+        // A second start (the window was closed to the tray) shows the running instance and ends, before any of
+        // Avalonia starts. Test runs are not guarded: they use their own data folder.
+        bool guarded = !(AppOptions.SelfTest || AppOptions.Tour || AppOptions.LiveTest);
+        using Services.SingleInstance? instance = guarded ? Services.SingleInstance.TryStart(ShowRunningWindow) : null;
+        if (guarded && instance is null)
+            return 0;
+
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
+
+    /// <summary>Another start asked for the window (thread-pool thread).</summary>
+    private static void ShowRunningWindow() =>
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            ((Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)
+                ?.MainWindow as Views.MainWindow)?.ShowFromTray());
 
     public static AppBuilder BuildAvaloniaApp()
     {

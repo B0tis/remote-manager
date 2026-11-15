@@ -102,6 +102,8 @@ public partial class MainWindow
         }
 
         SearchBox.Text = "";
+        if (typeFilter is not null || onlineOnly)
+            ClearChipFilters();
         if (connection.Model.GroupId is { } groupId)
         {
             // Expand the sections on the way to it.
@@ -153,7 +155,13 @@ public partial class MainWindow
         if (directSessions.TryGetValue(key, out ConnectionItem? open))
             return OpenSession(open);
 
-        ConnectionItem item = CreateItem(target.ToConnection(type));
+        Connection connection = target.ToConnection(type);
+        // A direct SSH or SFTP target remembers the host key it was last trusted with, so a changed key raises
+        // the alarm a saved connection gets instead of the "unknown key" question every time.
+        string hostKeySetting = $"direct.hostkey.{connection.Host.ToLowerInvariant()}:{connection.EffectivePort}";
+        if (type is ConnectionType.Ssh or ConnectionType.Sftp && app.Library.GetSetting(hostKeySetting) is { Length: > 0 } known)
+            connection.Settings = connection.SettingsAs<Core.Model.Settings.SshSettings>() with { HostKeyFingerprint = known };
+        ConnectionItem item = CreateItem(connection);
         Window? window = OpenSession(item);
         if (window is null)
             return null;
@@ -161,6 +169,12 @@ public partial class MainWindow
         directSessions[key] = item;
         window.Closed += async (_, _) =>
         {
+            if (type is ConnectionType.Ssh or ConnectionType.Sftp
+                && item.Model.SettingsAs<Core.Model.Settings.SshSettings>().HostKeyFingerprint is { Length: > 0 } trusted)
+            {
+                app.Library.SetSetting(hostKeySetting, trusted);
+            }
+
             directSessions.Remove(key);
             await DiscardConnectionAsync(item);
 

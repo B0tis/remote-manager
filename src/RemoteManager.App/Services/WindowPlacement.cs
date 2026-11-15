@@ -16,7 +16,7 @@ namespace RemoteManager.App.Services;
 public static class WindowPlacement
 {
     public const string ScreenVariable = "REMOTE_MANAGER_SCREEN";
-    private const string MainSetting = "window.main";
+    internal const string MainSetting = "window.main";
 
     /// <summary>The screen named by <see cref="ScreenVariable"/>, or null when it is not set or does not match.</summary>
     public static Screen? ForcedScreen(Screens screens)
@@ -37,21 +37,22 @@ public static class WindowPlacement
     }
 
     /// <summary>Places the overview before it is shown: forced screen, else the saved place, else centered.</summary>
-    public static void RestoreMain(Window window, ConnectionLibrary library)
+    /// <returns>True when a saved place was applied (it is then not shrunk to the default share of the screen).</returns>
+    public static bool RestoreMain(Window window, ConnectionLibrary library)
     {
         if (ForcedScreen(window.Screens) is { } forced)
         {
             Center(window, forced);
-            return;
+            return false;
         }
 
         if (library.GetSetting(MainSetting) is not { } saved || Parse(saved) is not { } place)
-            return;
+            return false;
 
         // Only when the saved place is still on a connected monitor (a docking station may be gone).
         var rect = new PixelRect(place.X, place.Y, 200, 60);
         if (!window.Screens.All.Any(s => s.WorkingArea.Intersects(rect)))
-            return;
+            return false;
 
         window.WindowStartupLocation = WindowStartupLocation.Manual;
         window.Position = new PixelPoint(place.X, place.Y);
@@ -59,6 +60,7 @@ public static class WindowPlacement
         window.Height = Math.Max(window.MinHeight, place.Height);
         if (place.Maximized)
             window.WindowState = WindowState.Maximized;
+        return true;
     }
 
     /// <summary>Remembers where the overview is; a maximized window keeps the size it had before.</summary>
@@ -70,7 +72,11 @@ public static class WindowPlacement
         bool maximized = window.WindowState == WindowState.Maximized;
         if (maximized && library.GetSetting(MainSetting) is { } before && Parse(before) is { } old)
         {
-            library.SetSetting(MainSetting, Format(old with { Maximized = true }));
+            Place kept = old with { Maximized = true };
+            // Maximized on another monitor than the saved place: keep the size, move the place there.
+            if (window.Screens.ScreenFromWindow(window) is { } screen && !screen.Bounds.Intersects(new PixelRect(old.X, old.Y, 200, 60)))
+                kept = kept with { X = screen.WorkingArea.X + 40, Y = screen.WorkingArea.Y + 40 };
+            library.SetSetting(MainSetting, Format(kept));
             return;
         }
 

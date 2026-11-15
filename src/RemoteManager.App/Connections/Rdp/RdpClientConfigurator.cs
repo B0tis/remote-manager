@@ -60,7 +60,9 @@ internal static class RdpClientConfigurator
         secured.WorkDir = Bstr(s.WorkingDirectory.Trim());
 
         ApplyGateway(client, s, logon);
-        ApplyExtended(view, s, logon.Password.Length > 0);
+        bool gatewayNeedsPrompt = s.GatewayUsage != RdpGatewayUsage.None && s.GatewayHost.Trim().Length > 0
+            && !s.GatewayUsesConnectionCredentials && logon.GatewayPassword.Length == 0;
+        ApplyExtended(view, s, logon.Password.Length > 0 && !gatewayNeedsPrompt);
 
         IMsTscNonScriptable credentials = view.GetClient<IMsTscNonScriptable>();
         if (logon.Password.Length == 0)

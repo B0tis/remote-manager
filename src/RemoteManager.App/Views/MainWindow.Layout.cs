@@ -31,6 +31,7 @@ public partial class MainWindow
     private bool detailsWanted = true;
     private bool detailsOnNarrow;
     private bool wideLayout = true;
+    private bool placeRestored;
 
     /// <summary>True while the window is at least <see cref="WideLayoutWidth"/> wide.</summary>
     public bool IsWideLayout => wideLayout;
@@ -93,8 +94,10 @@ public partial class MainWindow
         if (screen is null)
             return;
         double scaling = screen.Scaling > 0 ? screen.Scaling : 1;
-        double maxWidth = screen.WorkingArea.Width / scaling * 0.92;
-        double maxHeight = screen.WorkingArea.Height / scaling * 0.92;
+        // A place the user left the window in may fill the screen; only the default size keeps a margin.
+        double share = placeRestored ? 1 : 0.92;
+        double maxWidth = screen.WorkingArea.Width / scaling * share;
+        double maxHeight = screen.WorkingArea.Height / scaling * share;
         Width = Math.Max(MinWidth, Math.Min(Width, maxWidth));
         Height = Math.Max(MinHeight, Math.Min(Height, maxHeight));
     }

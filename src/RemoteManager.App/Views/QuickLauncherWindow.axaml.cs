@@ -338,12 +338,19 @@ public partial class QuickLauncherWindow : Window
             AddSection(Strings.Nav_Recent, recent);
             AddSection(Strings.Nav_Favorites, favorites);
         }
+        else if (targets.Count > 0 && !connections.Any(c => string.Equals(c.Model.Host, targets[0].Target.Host, StringComparison.OrdinalIgnoreCase)
+                     || string.Equals(c.Name, query, StringComparison.CurrentCultureIgnoreCase)))
+        {
+            // An address that is no saved connection: what was typed comes first, so Enter connects to exactly that.
+            AddSection(Strings.Launcher_Section_Direct, targets);
+            AddSection(Strings.Launcher_Section_Connections, connections);
+        }
         else
         {
             AddSection(Strings.Launcher_Section_Connections, connections);
+            AddSection(Strings.Launcher_Section_Direct, targets);
         }
 
-        AddSection(Strings.Launcher_Section_Direct, targets);
         AddSection(Strings.Launcher_Section_Commands, commands);
 
         ResultList.ItemsSource = rows;

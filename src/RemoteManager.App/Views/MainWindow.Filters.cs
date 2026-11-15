@@ -63,6 +63,35 @@ public partial class MainWindow
         return result;
     }
 
+    /// <summary>New counts on the chips that are there; rebuilds the bar only when the set of chips changes.</summary>
+    private void UpdateFilterCounts(IReadOnlyList<ConnectionItem> scoped)
+    {
+        List<(string Label, int Count)> wanted = [(Strings.Filter_AllTypes, scoped.Count)];
+        foreach (ConnectionType type in Enum.GetValues<ConnectionType>())
+        {
+            int count = scoped.Count(c => c.Model.Type == type);
+            if (count > 0 || typeFilter == type)
+                wanted.Add((app.Handlers[type].DisplayName, count));
+        }
+
+        wanted.Add((Strings.Filter_OnlineOnly, scoped.Count(c => c.Status == OnlineStatus.Online)));
+        List<ToggleButton> chips = [.. FilterChips];
+        if (chips.Count != wanted.Count || chips.Zip(wanted).Any(p => ChipLabel(p.First) != p.Second.Label))
+        {
+            UpdateFilterBar(scoped);
+            return;
+        }
+
+        foreach ((ToggleButton chip, (string _, int count)) in chips.Zip(wanted))
+        {
+            if (chip.Content is StackPanel { Children: [_, TextBlock number] })
+                number.Text = count.ToString(CultureInfo.CurrentCulture);
+        }
+    }
+
+    private static string? ChipLabel(ToggleButton chip) =>
+        chip.Content is StackPanel { Children: [TextBlock label, ..] } ? label.Text : null;
+
     private void UpdateFilterBar(IReadOnlyList<ConnectionItem> scoped)
     {
         FilterBar.Children.Clear();

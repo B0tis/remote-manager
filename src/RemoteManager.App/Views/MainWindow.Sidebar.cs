@@ -63,6 +63,7 @@ public partial class MainWindow
     {
         sidebarWanted = app.Library.GetSetting(SidebarSetting) != "compact";
         NavList.SelectionChanged += OnSidebarSelectionChanged;
+        NavList.AddHandler(PointerPressedEvent, OnSidebarPointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         NavList.ContainerPrepared += (_, e) => PrepareSidebarContainer(e.Container);
         NavList.KeyDown += OnNavigationKeyDown;
         // The "+" of the group label and the chevron of a group act without selecting the row.
@@ -163,19 +164,21 @@ public partial class MainWindow
     /// <summary>Counts next to the entries; cheap enough to run after every change (a session opened, a star toggled).</summary>
     private void UpdateSidebarCounts()
     {
+        // Direct connections (launcher) have a window but no row in the library: they are not counted.
+        int openSessions = items.Count(c => c.IsSessionOpen);
         foreach (SidebarEntry entry in sidebarEntries)
         {
             entry.Count = entry.Tag switch
             {
                 SidebarEntry.AllTag => items.Count,
                 SidebarEntry.FavoritesTag => items.Count(c => c.IsFavorite),
-                SidebarEntry.ActiveTag => sessionWindows.Count,
+                SidebarEntry.ActiveTag => openSessions,
                 _ when entry.Group is { } group => items.Count(c => app.Library.IsInGroup(c.Model, group.Id)),
                 _ when entry.TagName is { } tag => items.Count(c => c.Model.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase)),
                 _ => null,
             };
             if (entry.Tag == SidebarEntry.ActiveTag)
-                entry.ShowLamp = sessionWindows.Count > 0;
+                entry.ShowLamp = openSessions > 0;
         }
     }
 
@@ -198,6 +201,16 @@ public partial class MainWindow
             CloseFloatingSidebar(); // rebuilds and applies the filter
         else
             ApplyFilter();
+    }
+
+    /// <summary>A right click opens the row's menu; it does not select the row, which would switch the overview.</summary>
+    private void OnSidebarPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(NavList).Properties.IsRightButtonPressed)
+            return;
+        e.Handled = true;
+        if ((e.Source as Visual)?.FindAncestorOfType<ListBoxItem>(includeSelf: true) is { ContextMenu: { } menu } row)
+            menu.Open(row);
     }
 
     private void OnSidebarButtonClick(object? sender, RoutedEventArgs e)

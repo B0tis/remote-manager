@@ -30,10 +30,11 @@ More switches and variables for runs without your own data or screen:
 | Switch / variable | Effect |
 | --- | --- |
 | `REMOTE_MANAGER_SCREEN` | `secondary`, a 1-based screen number, or part of a display name: the overview opens on that screen (session windows follow it). Use it for every test run on a machine someone works on. |
-| `--tour` | Fills an empty `REMOTE_MANAGER_DATA` folder with demo connections and saves pictures of the main screens (`spike\tour-*.png`). Refuses to run without `REMOTE_MANAGER_DATA`. |
+| `--tour` | Fills a new, empty `REMOTE_MANAGER_DATA` folder with demo connections and saves pictures of the main screens (`spike	our-*.png`). Refuses to run without `REMOTE_MANAGER_DATA`, and on a folder with passwords, history, or anything but the sample connections; it never touches the Credential Manager. |
 | `--livetest` | Only the checks against a real RDP server, without the rest of the self-test (`spike\selftest-live.log`). |
 | `RM_SPIKE_HOST`, `_PORT`, `_USER`, `_DOMAIN`, `_PASSWORD`, `_AUTH_LEVEL` | The server for the live RDP checks. `tools/rdp-nla-testbed/start.ps1` sets them for a FreeRDP server with network level authentication in Docker (stands in for GNOME Remote Desktop and KRdp). |
 | `RM_SPIKE_CONNECTION` | Instead of the above: name or id of a saved connection; the live checks use it with the password the app has stored for it. |
+| `RM_SPIKE_FIXED_DESKTOP=1` | The live RDP server mirrors a screen of fixed size (the testbed sets it): after a resize the picture must be scaled. Without it the server must follow the window, as Windows does. |
 | `RM_SPIKE_CLOSE_DIALOGS=1` | Dialogs the RDP control opens by itself are closed (answered "no") after they were logged and pictured, so an unattended run cannot wait for a person. |
 
 ## Model (`Core/Model`)
@@ -157,7 +158,7 @@ Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md
 
 - **Sections:** in "Alle" and in a group, tiles and list show group headers (`GroupHeaderItem`: chevron, count,
   online summary when collapsed), each followed by its own connections, depth-first; ungrouped connections
-  come last under "Keine Gruppe". `SectionWrapPanel` lets a header span a whole tile row and gives tiles one shared width (240 to 320 px). Collapsing is
+  come last under "Keine Gruppe". `SectionWrapPanel` lets a header span a whole tile row and gives tiles one shared width (per tile size, see ui.md). Collapsing is
   `ConnectionGroup.IsCollapsed` (saved; the sidebar tree uses the same flag). Favorites, recent, and tags
   stay flat.
 - **List:** column headers sort ascending, descending, then back to the group order (setting `overview.sort`);
@@ -210,6 +211,8 @@ Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md
   content on a narrow window: `SidebarMode`, `IsSidebarFloating`, see ui.md.
 - **Filters** (`MainWindow.Filters.cs`): the type chips and "Nur online" narrow what the sidebar filter and the
   search show. They are session state, not settings.
+- **One instance per data folder** (`Services/SingleInstance`): a second start (the window was closed to the
+  tray) asks the running one to show its window and ends. Test switches are not guarded.
 - **Notification area** (`MainWindow.Tray.cs`): the icon, its menu (favorites, the five used last), and
   "Beim Schließen im Infobereich weiterlaufen" (`app.closeToTray`). `OnClosing` decides between hiding and ending;
   "Beenden", an update restart, and the self-test always end the process.
@@ -246,7 +249,9 @@ Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md
   (`LoginCompleted`), or, for servers that never send one (FreeRDP based: GNOME Remote Desktop, KRdp; some xrdp
   setups), three seconds after the view reports the transport as connected. A typed password with "Passwort
   speichern" is only saved once it is confirmed: by the notification, or by network level authentication, which
-  checks it before the transport connects.
+  checks it before the transport connects. Whether the server really insisted on NLA is asked separately
+  (`Core/Rdp/RdpSecurityProbe`: a connection request offering TLS only); a server that also takes TLS, such as
+  xrdp, would show its own login screen with any password, so the password is not saved there.
 - A stored password without a user name does not connect by itself; the card asks for the user. With a password
   from the app the control's own credential prompt is off (`AllowPromptingForCredentials`), so a refusal comes
   back to the card: the specific logon reasons (2055 and its relatives) with a plain text, reason 519 (network

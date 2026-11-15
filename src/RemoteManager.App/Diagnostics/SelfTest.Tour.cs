@@ -130,10 +130,20 @@ internal static partial class SelfTest
         if (library.GetSetting("tour.seeded") == "1")
             return;
 
-        foreach (ConnectionItem old in window.Connections.ToList())
-            window.RemoveConnectionAsync(old).GetAwaiter().GetResult();
+        // Only a folder that holds nothing of the user's: the sample connections of a new data folder, no passwords,
+        // no history. Anything else ends the tour without touching it.
+        if (library.Connections.Any(c => c.Credential is not null || c.LastConnectedAt is not null)
+            || library.Groups.Any(g => g.Credential is not null) || !app.StoreReport.Seeded)
+        {
+            throw new InvalidOperationException("--tour needs a new, empty data folder (REMOTE_MANAGER_DATA); this one has data of its own.");
+        }
+
+        // Removed through the library only: no Credential Manager entry is touched.
+        foreach (Connection old in library.Connections.ToList())
+            library.Remove(old);
         foreach (ConnectionGroup group in library.Groups.ToList())
             library.RemoveGroup(group, GroupRemoval.DeleteContent);
+        window.SyncWithLibrary();
 
         var now = DateTime.UtcNow;
         (string Group, string Name, ConnectionType Type, string Host, string Description, string[] Tags, bool Favorite, double? HoursAgo, bool Preview)[] demo =

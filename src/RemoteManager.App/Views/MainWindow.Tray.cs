@@ -23,7 +23,7 @@ public partial class MainWindow
     internal const string CloseToTraySetting = "app.closeToTray";
     internal const int TrayFavoritesLimit = 20;
     internal const int TrayRecentLimit = 5;
-    private const string TrayHintSetting = "app.closeToTray.hintShown";
+    internal const string TrayHintSetting = "app.closeToTray.hintShown";
 
     private readonly Dictionary<Color, Bitmap> trayLamps = [];
     private readonly Dictionary<NativeMenu, string> trayShapes = [];

@@ -64,11 +64,15 @@ public partial class ConnectionDetailPanel : UserControl
     /// <summary>Shows the selection: nothing, one connection, or the bulk actions for several.</summary>
     public void Show(IReadOnlyList<ConnectionItem> selected)
     {
-        SaveNotes();
+        // The same connection shown again (the list was rebuilt): text being typed into the notes stays as it is.
+        ConnectionItem? next = selected.Count == 1 ? selected[0] : null;
+        bool same = next is not null && next == shown;
+        if (!same)
+            SaveNotes();
         if (shown is not null)
             shown.PropertyChanged -= OnShownChanged;
         selection = selected;
-        shown = selected.Count == 1 ? selected[0] : null;
+        shown = next;
         if (shown is not null)
             shown.PropertyChanged += OnShownChanged;
 
@@ -76,7 +80,7 @@ public partial class ConnectionDetailPanel : UserControl
         SingleView.IsVisible = shown is not null;
         MultiView.IsVisible = selected.Count > 1;
         if (shown is not null)
-            ShowSingle(shown, reloadNotes: true);
+            ShowSingle(shown, reloadNotes: !(same && NotesBox.IsFocused));
         else if (selected.Count > 1)
             ShowMultiple();
     }

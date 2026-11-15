@@ -24,7 +24,7 @@ public static class PlannedConnectionDialog
         dialog.CloseButtonText = Strings.Common_Ok;
         dialog.DefaultButton = connection.HasStoredPassword ? FAContentDialogButton.Primary : FAContentDialogButton.Close;
         Current = dialog;
-        FAContentDialogResult result = await dialog.ShowAsync();
+        FAContentDialogResult result = await dialog.ShowAsync(Services.DialogOwner.Shown(host.Owner));
         Current = null;
         if (result == FAContentDialogResult.Primary)
             await host.CopyPasswordAsync(connection);

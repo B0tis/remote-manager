@@ -19,5 +19,7 @@ $env:RM_SPIKE_USER = 'rmtest'
 $env:RM_SPIKE_PASSWORD = $password
 # The server's certificate is self-signed: connect without the question, so a run needs nobody at the screen.
 $env:RM_SPIKE_AUTH_LEVEL = '0'
+# It mirrors one screen of fixed size, like GNOME desktop sharing: the picture is scaled, not resized.
+$env:RM_SPIKE_FIXED_DESKTOP = '1'
 Start-Sleep -Seconds 3
 Write-Host 'RDP NLA testbed up: 127.0.0.1:13389, user rmtest'

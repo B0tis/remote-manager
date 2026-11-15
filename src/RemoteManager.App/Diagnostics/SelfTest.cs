@@ -34,7 +34,8 @@ namespace RemoteManager.App.Diagnostics;
 /// Checks that need a real RDP server only run when RM_SPIKE_HOST is set (RM_SPIKE_USER /
 /// RM_SPIKE_DOMAIN fill the connection; RM_SPIKE_PASSWORD is stored as a temporary credential so the
 /// window logs on by itself; never logged). Credential checks use "RemoteManager:selftest-*-&lt;run&gt;" only (see SelfTest.Isolation.cs).
-/// Database checks run on a temporary folder; the real database is only read.
+/// Run it with REMOTE_MANAGER_DATA set to a scratch folder: the overview checks add and remove their own
+/// "Selftest" entries and settings in the data folder they run on (they put them back, but a crash may not).
 /// </summary>
 internal static partial class SelfTest
 {
@@ -68,22 +69,6 @@ internal static partial class SelfTest
         foreach (Screen screen in window.Screens.All)
             Log($"Screen {screen.DisplayName}: bounds {screen.Bounds}, scaling {screen.Scaling}, primary {screen.IsPrimary}");
         CheckAppIcon(window);
-        if (Environment.GetEnvironmentVariable("RM_ONLY_TRAY") == "1") { await RunTrayChecksAsync(window); return; } // TEMP
-        if (Environment.GetEnvironmentVariable("RM_ONLY_TRAY") == "exit") // TEMP
-        {
-            window.SetCloseToTray(true);
-            window.Close();
-            await Task.Delay(1500);
-            string marker = Path.Combine(Environment.GetEnvironmentVariable("REMOTE_MANAGER_DATA")!, "exit-probe.txt");
-            File.WriteAllText(marker, $"hidden {!window.IsVisible}, icon {window.Tray is not null}, sessions {window.SessionWindows.Count}|");
-            await Task.Delay(3000);
-            File.AppendAllText(marker, $"still running after 3 s, hidden {!window.IsVisible}|");
-            window.Closed += (_, _) => File.AppendAllText(marker, $"Closed raised, icon gone {window.Tray is null}|");
-            window.ExitFromTray();
-            File.AppendAllText(marker, "ExitFromTray returned|");
-            await Task.Delay(Timeout.Infinite);
-        }
-
         // --- Overview: store, tile view, list view ------------------------------------------------
         AppHost app = AppHost.Current;
         Log($"Store {app.StoreReport.DatabasePath}: schema {SqliteMigrator.LatestVersion}, migrated from json {app.StoreReport.MigratedFromJson}, seeded {app.StoreReport.Seeded}");
@@ -391,6 +376,14 @@ internal static partial class SelfTest
         try
         {
             Log($"Remote-Manager live test {DateTime.Now:O}");
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_HOST"))
+                && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_CONNECTION")))
+            {
+                Fail("--livetest needs RM_SPIKE_HOST (with RM_SPIKE_USER, RM_SPIKE_PASSWORD) or RM_SPIKE_CONNECTION.");
+                await File.WriteAllLinesAsync(Path.Combine(AppPaths.Spike, "selftest-live.log"), Lines);
+                return 2;
+            }
+
             await Settle(1500);
             await RunLiveSessionChecksAsync(window);
         }
@@ -564,8 +557,9 @@ internal static partial class SelfTest
             File.Copy(png, Path.Combine(AppPaths.Spike, "session-live-snapshot.png"), overwrite: true);
         Check($"The session bar shows the connected lamp and the time connected (\"{live.SessionBar.ClockText}\", status \"{live.LastStatus}\")",
             live.SessionBar.Lamp == SessionLamp.Connected && live.SessionBar.ClockText.Length > 0 && live.SessionBar.Connected > TimeSpan.FromSeconds(3));
-        Check("The open session is listed under \"Aktive Sitzungen\" and marked on its item",
-            connection.IsSessionOpen && window.FindSidebarEntry(SidebarEntry.ActiveTag) is { Count: > 0, ShowLamp: true });
+        bool inLibrary = window.Connections.Contains(connection);
+        Check($"The open session is marked on its item{(inLibrary ? " and listed under \"Aktive Sitzungen\"" : " (not in the library: no row in \"Aktive Sitzungen\")")}",
+            connection.IsSessionOpen && (!inLibrary || window.FindSidebarEntry(SidebarEntry.ActiveTag) is { Count: > 0, ShowLamp: true }));
         await RunLiveRdpPreviewChecksAsync(window, live, connection); // SelfTest.LivePreview.cs
 
         // Resize: dynamic resolution should follow the viewport after the debounce.
@@ -577,8 +571,13 @@ internal static partial class SelfTest
         Log($"Resize: remote desktop {before} -> {live.LastRemoteDesktopSize}, viewport {viewport}");
         // A Windows server follows the window. A server that mirrors a fixed screen (GNOME desktop sharing, the
         // FreeRDP testbed) keeps its size; then the picture has to be scaled to the window.
-        Check($"After a window resize the session fits the window: the server follows, or the picture is scaled (scaled: {live.IsScaledToFit})",
-            live.LastRemoteDesktopSize == viewport || live.IsScaledToFit);
+        // RM_SPIKE_FIXED_DESKTOP=1: the server mirrors a screen of fixed size (GNOME desktop sharing, the FreeRDP
+        // testbed) and the picture must be scaled. Otherwise the server has to follow, as Windows does.
+        bool fixedDesktop = Environment.GetEnvironmentVariable("RM_SPIKE_FIXED_DESKTOP") == "1";
+        Check(fixedDesktop
+                ? $"After a window resize the picture is scaled to the window (the server keeps its size; scaled: {live.IsScaledToFit})"
+                : $"Dynamic resolution follows a window resize ({live.LastRemoteDesktopSize} = {viewport}, scaled: {live.IsScaledToFit})",
+            fixedDesktop ? live.IsScaledToFit : live.LastRemoteDesktopSize == viewport && !live.IsScaledToFit);
         SaveScreenProbe(live, "session-window-live-resized.png");
 
         // Monitor move (only meaningful with a second screen at a different scaling).
@@ -605,7 +604,8 @@ internal static partial class SelfTest
         Check("After the disconnect the bar's lamp is idle, the clock is gone, and the reconnect card shows",
             live.SessionBar.Lamp == SessionLamp.Idle && live.SessionBar.ClockText.Length == 0 && live.IsConnectCardVisible);
         live.Close();
-        File.Delete(connection.Model.ResolvedPreviewPath);
+        if (!window.Connections.Contains(connection))
+            File.Delete(connection.Model.ResolvedPreviewPath);
     }
 
     /// <summary>

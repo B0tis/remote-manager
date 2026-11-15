@@ -43,6 +43,8 @@ public partial class SessionWindow : Window, ISessionWindow
     // After the window or the remote desktop changed size: time for the server to follow before the picture is scaled.
     private readonly DispatcherTimer fitCheck = new() { Interval = TimeSpan.FromSeconds(2.5) };
     private bool credentialsCheckedByNla;
+    // Where the last connect went (the local end of an SSH tunnel, if there is one).
+    private (string Host, int Port) endpoint;
     private SessionFrame? lastGoodFrame;
     private bool disposed;
     private bool connectWhenReady;
@@ -142,6 +144,8 @@ public partial class SessionWindow : Window, ISessionWindow
         RdpView.RemoteDesktopSizeChanged += (_, e) =>
         {
             LastRemoteDesktopSize = new PixelSize(e.Width, e.Height);
+            if (IsScaledToFit && Math.Abs(e.Width - RdpView.ViewportPixelSize.Width) <= 2 && Math.Abs(e.Height - RdpView.ViewportPixelSize.Height) <= 2)
+                StopScaling();
             Log($"Remote desktop size: {e.Width}x{e.Height} (viewport {RdpView.ViewportPixelSize.Width}x{RdpView.ViewportPixelSize.Height}).");
             RestartFitCheck();
         };
@@ -187,6 +191,25 @@ public partial class SessionWindow : Window, ISessionWindow
     /// of showing scroll bars.
     /// </summary>
     public bool IsScaledToFit { get; private set; }
+
+    /// <summary>The server followed the window after all (only slower): back to the server's own resolution.</summary>
+    private void StopScaling()
+    {
+        try
+        {
+            RdpView.GetClient<IMsRdpClient10>().AdvancedSettings9.SmartSizing = false;
+            RdpView.DisplayMode = Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.FitToWindow;
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidCastException or InvalidOperationException)
+        {
+            Log($"Leaving client-side scaling failed: {ex.Message}");
+            return;
+        }
+
+        IsScaledToFit = false;
+        Bar.Status = Strings.Session_Status_Connected;
+        Log("The server follows the window size after all; scaling is off again.");
+    }
 
     private void RestartFitCheck()
     {
@@ -255,6 +278,8 @@ public partial class SessionWindow : Window, ISessionWindow
             {
                 // Also KeePass / 1Password (locked, canceled, entry missing).
                 ShowCardMessage(Credentials.CredentialErrors.Describe(ex));
+                Bar.Lamp = SessionLamp.Idle;
+                Bar.Status = Strings.Session_NotConnected;
                 ShowCard();
                 return;
             }
@@ -291,6 +316,7 @@ public partial class SessionWindow : Window, ISessionWindow
             if (await OpenTunnelAsync(jumpHostId, host, port) is not { } end)
             {
                 passwordToSave = null;
+                Bar.Lamp = SessionLamp.Idle;
                 ShowCard();
                 return;
             }
@@ -300,6 +326,7 @@ public partial class SessionWindow : Window, ISessionWindow
 
         credentialsCheckedByNla = settings.EnableNla;
         IsScaledToFit = false;
+        endpoint = (host, port);
         RdpView.UseRemoteKeyboardShortcuts = settings.Keyboard == RdpKeyboardMode.Session;
         RdpView.DisplayMode = settings.Display == Core.Model.Settings.RdpDisplayMode.FitToWindow
             ? Devolutions.MsRdpEx.Avalonia.RdpDisplayMode.FitToWindow
@@ -416,9 +443,34 @@ public partial class SessionWindow : Window, ISessionWindow
         frameTimer.Start();
         RestartFitCheck();
         RdpView.FocusSession();
-        if (confirmedByServer || credentialsCheckedByNla)
+        if (confirmedByServer)
             SavePendingPassword();
+        else if (passwordToSave is not null)
+            _ = SaveIfServerCheckedPasswordAsync();
         SessionLoggedIn?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Without the server's logon notification a typed password is only known to be right when network level
+    /// authentication checked it, and that only happened when the server insists on NLA. A server that also takes
+    /// plain TLS (xrdp by default) shows its own login screen whatever was sent; then the password is not saved.
+    /// </summary>
+    private async Task SaveIfServerCheckedPasswordAsync()
+    {
+        bool? nla = credentialsCheckedByNla
+            ? await Core.Rdp.RdpSecurityProbe.RequiresNlaAsync(endpoint.Host, endpoint.Port, TimeSpan.FromSeconds(4))
+            : false;
+        if (!IsLoggedIn || passwordToSave is null)
+            return;
+        if (nla == true)
+        {
+            SavePendingPassword();
+            return;
+        }
+
+        passwordToSave = null;
+        Log("The server does not require network level authentication, so the password was not checked before the session started; it is not saved.");
+        Bar.Status = Strings.Session_PasswordNotSaved;
     }
 
     private void SavePendingPassword()
@@ -468,7 +520,7 @@ public partial class SessionWindow : Window, ISessionWindow
         logonFallback.Stop();
         fitCheck.Stop();
         // 1 to 3 are endings, not errors: by this window, by the user in the session, by the server.
-        bool ended = reason is 1 or 2 or 3;
+        bool ended = reason is 1 or 2 or 3 && PlainEnding();
         SetStatus(ended
             ? reason == 3 ? Strings.Session_EndedByServer : Strings.Session_Ended
             : string.Format(CultureInfo.CurrentCulture, Strings.Session_Disconnected, DescribeDisconnect(reason)));
@@ -489,7 +541,8 @@ public partial class SessionWindow : Window, ISessionWindow
         {
             // Not necessarily the password: the server refused the logon without saying why. A stored password
             // can be replaced from here all the same.
-            SavePasswordBox.IsChecked = usedStoredPassword;
+            if (usedStoredPassword)
+                SavePasswordBox.IsChecked = true;
             ShowCardMessage(Strings.Session_NlaFailed);
             ShowCard();
         }
@@ -540,6 +593,23 @@ public partial class SessionWindow : Window, ISessionWindow
         catch (Exception)
         {
             return string.Format(CultureInfo.CurrentCulture, Strings.Session_DisconnectReason, reason);
+        }
+    }
+
+    /// <summary>
+    /// Reasons 1 to 3 are endings. With an extended reason other than a plain logoff (another connection took the
+    /// session over, an idle or logon time limit, no licence, not allowed) the Windows text says why, and it stays.
+    /// </summary>
+    private bool PlainEnding()
+    {
+        try
+        {
+            return RdpView.GetClient<IMsRdpClient10>().ExtendedDisconnectReason is 0 or (ExtendedDisconnectReasonCode)1
+                or (ExtendedDisconnectReasonCode)2 or (ExtendedDisconnectReasonCode)11 or (ExtendedDisconnectReasonCode)12;
+        }
+        catch (Exception)
+        {
+            return true;
         }
     }
 

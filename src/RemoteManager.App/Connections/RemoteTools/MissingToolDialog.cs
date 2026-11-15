@@ -41,7 +41,7 @@ public static class MissingToolDialog
         dialog.SecondaryButtonText = Strings.RemoteTool_Missing_Download;
 
         Current = dialog;
-        FAContentDialogResult result = await dialog.ShowAsync();
+        FAContentDialogResult result = await dialog.ShowAsync(Services.DialogOwner.Shown(host.Owner));
         Current = null;
         if (result == FAContentDialogResult.Primary)
             await RemoteToolsDialog.ShowAsync(type);
