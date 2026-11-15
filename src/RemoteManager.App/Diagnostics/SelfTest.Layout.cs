@@ -122,7 +122,9 @@ internal static partial class SelfTest
             await Settle(300);
 
             Task<bool> editing = ConnectionEditor.ShowAsync(new Connection { Name = "Selftest Layout", Host = "layout.invalid" }, isNew: true);
-            await Settle(900);
+            // Wait for the dialog box itself, not a fixed time: on a busy machine it opens later.
+            await WaitFor(() => ConnectionEditor.OpenDialog is { } open && open.GetVisualDescendants().OfType<Border>().Any(b => b.Name == "BackgroundElement" && b.Bounds.Height > 0), TimeSpan.FromSeconds(8));
+            await Settle(400);
             bool fits = ConnectionEditor.OpenDialog is { } dialog && DialogFits(window, dialog, out string bounds);
             SaveRenderProbe(window, "layout-minimum-editor.png");
             ConnectionEditor.OpenDialog?.Hide();

@@ -144,6 +144,8 @@ internal static partial class SelfTest
         (commandLine, _) = await LaunchFakeAsync(window, tv, null, report);
         await Settle(300);
         SaveRenderProbe(window, "remote-tool-teamviewer-p-warning.png");
+        Log($"  TeamViewer -p: command line has the password {commandLine?.Contains(secret, StringComparison.Ordinal) == true}, toast open {window.ToastBar.IsOpen}, "
+            + $"severity {window.ToastBar.Severity}, title \"{window.ToastBar.Title}\", message \"{window.ToastBar.Message}\"");
         Check("TeamViewer -p: visible warning toast (and the password really is in the process list)",
             commandLine?.Contains(secret, StringComparison.Ordinal) == true && window.ToastBar.IsOpen
             && window.ToastBar.Severity == FAInfoBarSeverity.Warning

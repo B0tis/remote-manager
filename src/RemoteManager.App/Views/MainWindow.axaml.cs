@@ -255,6 +255,8 @@ public partial class MainWindow : Window, IConnectionHost
         Toast.Severity = severity;
         Toast.IsOpen = true;
         toastTimer.Stop();
+        // A confirmation can go quickly; a warning or an error is read, so it stays longer.
+        toastTimer.Interval = severity is FAInfoBarSeverity.Warning or FAInfoBarSeverity.Error ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(4);
         toastTimer.Start();
     }
 
