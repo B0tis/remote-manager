@@ -786,6 +786,9 @@
   <data name="Import_Stat_PasswordsTip" xml:space="preserve">
     <value>Die Passwörter liegen in der Windows-Anmeldeinformationsverwaltung, nie in der Datenbank.</value>
   </data>
+  <data name="Import_Where_msrd_app" xml:space="preserve">
+    <value>Die Sicherung der Microsoft-App „Remotedesktop“ (Einstellungen, „Sicherung“): RemoteDesktopWorkspace.rdb. Passwörter stehen nicht darin.</value>
+  </data>
   <data name="Key_Ctrl" xml:space="preserve">
     <value>Strg</value>
   </data>

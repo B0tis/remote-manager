@@ -227,6 +227,53 @@ public sealed class ImportTests : IDisposable
     }
 
     [Fact]
+    public async Task RemoteDesktopAppBackupBringsConnectionsUsersGroupsAndGateways()
+    {
+        ImportSummary summary = await Import(new RemoteDesktopAppImporter(), Sample("RemoteDesktopWorkspace.rdb"));
+
+        Assert.Equal(
+        [
+            new Row("linux-desktop", "linux-desktop", 3390, "jdoe", "", ""),
+            new Row("IPv6 host", "2001:db8::10", 3391, "CORP\\svc", "", ""),
+            new Row("Terminalserver", "203.0.113.20", 3389, "EXAMPLE\\admin", "", "Kunde A"),
+        ], Rows(library.Connections, library));
+        RdpSettings server = library.Connections.Single(c => c.Name == "Terminalserver").SettingsAs<RdpSettings>();
+        Assert.Equal(("rdgw.example.org", RdpGatewayUsage.Detect, false), (server.GatewayHost, server.GatewayUsage, server.Redirections.Clipboard));
+        Assert.True(library.Connections.Single(c => c.Name == "linux-desktop").SettingsAs<RdpSettings>().Redirections.Clipboard);
+        // The backup holds no passwords, only ids of entries in the app's own vault: nothing is stored, and the summary says so.
+        Assert.Empty(source.Secrets);
+        Assert.All(library.Connections, c => Assert.Null(c.Credential));
+        Assert.Contains(summary.Warnings, w => w.Contains("ohne Passwort", StringComparison.Ordinal));
+        Assert.Contains(summary.Warnings, w => w.Contains("Ohne Adresse", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task RemoteDesktopAppImporterRejectsOtherJson()
+    {
+        string path = folder.File("other.rdb");
+        File.WriteAllText(path, """{ "Version": 1, "Something": [] }""");
+        ImportResult result = await new RemoteDesktopAppImporter().ImportAsync(path, TestContext.Current.CancellationToken);
+        Assert.Empty(result.Connections);
+        Assert.Single(result.Warnings);
+
+        File.WriteAllText(path, "not json at all");
+        result = await new RemoteDesktopAppImporter().ImportAsync(path, TestContext.Current.CancellationToken);
+        Assert.Empty(result.Connections);
+        Assert.Single(result.Warnings);
+    }
+
+    [Theory]
+    [InlineData("host", "host", 0)]
+    [InlineData("host:3390", "host", 3390)]
+    [InlineData("10.0.0.5:13389", "10.0.0.5", 13389)]
+    [InlineData("[2001:db8::1]:3390", "2001:db8::1", 3390)]
+    [InlineData("[2001:db8::1]", "2001:db8::1", 0)]
+    [InlineData("2001:db8::1", "2001:db8::1", 0)]
+    [InlineData("host:notaport", "host:notaport", 0)]
+    public void RemoteDesktopAppAddressSplitsHostAndPort(string address, string host, int port) =>
+        Assert.Equal((host, port), RemoteDesktopAppImporter.SplitAddress(address));
+
+    [Fact]
     public async Task ImportingTheSameFileTwiceAddsNothing()
     {
         string path = Prepare("sample.rdg");

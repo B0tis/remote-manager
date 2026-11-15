@@ -41,6 +41,8 @@ public partial class SessionBar : UserControl
         ActionsHost[!ContentControl.ContentProperty] = this[!ActionsProperty];
         clock.Tick += (_, _) => UpdateClock();
         DetachedFromVisualTree += (_, _) => clock.Stop();
+        SizeChanged += (_, _) => FitIdentity();
+        ActionsHost.SizeChanged += (_, _) => FitIdentity();
     }
 
     /// <summary>The window's own buttons, right of the status line.</summary>
@@ -82,6 +84,7 @@ public partial class SessionBar : UserControl
             }
 
             ClockLabel.IsVisible = value == SessionLamp.Connected;
+            FitIdentity();
         }
     }
 
@@ -100,6 +103,19 @@ public partial class SessionBar : UserControl
         HostLabel.Text = connection.HostLabel;
         if (Status.Length == 0)
             Status = Strings.Session_NotConnected;
+    }
+
+    /// <summary>
+    /// On a narrow window the actions and the caption buttons come first: the host goes, then the name is
+    /// shortened, so nothing of the bar runs under the buttons on the right.
+    /// </summary>
+    private void FitIdentity()
+    {
+        const double captionButtons = 140, lampAndChip = 110, margins = 40;
+        double room = Bounds.Width - captionButtons - ActionsHost.Bounds.Width - (ClockLabel.IsVisible ? 64 : 0) - lampAndChip - margins;
+        HostLabel.IsVisible = room >= 420;
+        NameLabel.MaxWidth = Math.Clamp(HostLabel.IsVisible ? room - 240 : room, 48, 260);
+        StatusLabel.IsVisible = room >= 300;
     }
 
     private void UpdateClock()

@@ -92,4 +92,10 @@
   <data name="RdpFile_PasswordIgnored" xml:space="preserve">
     <value>{0}: Das verschlüsselte Passwort aus der Datei wurde nicht übernommen (es gilt nur auf dem PC, der es gespeichert hat).</value>
   </data>
+  <data name="RemoteDesktopApp_NotABackup" xml:space="preserve">
+    <value>{0}: keine Sicherung der Remotedesktop-App (RemoteDesktopWorkspace.rdb).</value>
+  </data>
+  <data name="RemoteDesktopApp_NoPasswords" xml:space="preserve">
+    <value>{0} Verbindungen kommen mit ihrem Benutzer, aber ohne Passwort: Die Remotedesktop-App schreibt Passwörter nicht in ihre Sicherung. Die erste Anmeldung fragt danach.</value>
+  </data>
 </root>

@@ -244,7 +244,7 @@ Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md
 - The gateway's own password is a `CredentialRef` in `RdpSettings.GatewayCredential` (key `gateway-<guid>`).
 - When a session counts as up (`SessionWindow.MarkSessionUp`): by the server's logon notification
   (`LoginCompleted`), or, for servers that never send one (FreeRDP based: GNOME Remote Desktop, KRdp; some xrdp
-  setups), six seconds after the view reports the transport as connected. A typed password with "Passwort
+  setups), three seconds after the view reports the transport as connected. A typed password with "Passwort
   speichern" is only saved once it is confirmed: by the notification, or by network level authentication, which
   checks it before the transport connects.
 - A stored password without a user name does not connect by itself; the card asks for the user. With a password
@@ -264,6 +264,7 @@ Layout breakpoints, the header, and the full menu structure are in [ui.md](ui.md
 | `RdcManImporter` | RDCMan .rdg, schema 1 and 3 | file and groups, nested | DPAPI of the current user, else reported |
 | `MRemoteNgImporter` | confCons.xml (also fully encrypted ones) | containers, nested | with mRemoteNG's default master password (AES-GCM, `MRemoteNgCrypto`), else reported |
 | `RdpFileImporter` | .rdp | none | never (`password 51:b:` is machine-bound) |
+| `RemoteDesktopAppImporter` | backup of Microsoft's "Remotedesktop" Store app (`RemoteDesktopWorkspace.rdb`, JSON) | its groups | not in the file (they stay in the app's vault); user and domain come along |
 | `JsonBackupImporter` | own backup | ids kept | references only |
 
 `JsonBackupExporter` writes everything (ids, settings, credential references) but no secret. `ImportService`

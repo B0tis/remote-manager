@@ -18,7 +18,7 @@ namespace RemoteManager.App.Views;
 public partial class ImportView : UserControl
 {
     // Most used first; any other importer (a new file in Core/ImportExport) follows by name.
-    private static readonly string[] PreferredOrder = ["1remote", "rdcman", "mremoteng", "rdp-file", "remote-manager-backup"];
+    private static readonly string[] PreferredOrder = ["1remote", "rdcman", "mremoteng", "rdp-file", "msrd-app", "remote-manager-backup"];
 
     private readonly List<IImporter> importers;
     private List<string> files = [];

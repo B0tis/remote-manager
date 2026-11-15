@@ -33,7 +33,7 @@ public partial class SessionWindow : Window, ISessionWindow
     private const int NlaFailedReason = 519;
 
     // How long after the transport is connected the session counts as up without the server's logon notification.
-    private static readonly TimeSpan LogonNotificationWait = TimeSpan.FromSeconds(6);
+    private static readonly TimeSpan LogonNotificationWait = TimeSpan.FromSeconds(3);
 
     // The RDP view's status line once the transport is up (after network level authentication, if it is on).
     private const string TransportConnectedStatus = "Transport connected. Signing in...";

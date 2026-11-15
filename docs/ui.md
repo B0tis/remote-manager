@@ -175,7 +175,7 @@ fields, and the reason of a failure as a note; after a disconnect the last pictu
 RDP details that matter for servers that are not Windows:
 
 - Servers built on FreeRDP (GNOME Remote Desktop, KRdp) and some xrdp setups never send Windows' logon
-  notification. The session counts as up six seconds after the transport is connected.
+  notification. The session counts as up three seconds after the transport is connected.
 - "An Fenster anpassen": when the server keeps its own desktop size (a mirrored screen), the picture is scaled to
   the window instead of showing scroll bars.
 - A password without a user name does not connect by itself; the card asks for the user.

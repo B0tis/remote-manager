@@ -40,7 +40,8 @@ interface is in German.
   to AnyDesk on stdin; for TeamViewer and RustDesk it is copied to the clipboard and cleared again after 30 s.
   Optional TeamViewer account sync and AnyDesk CSV import.
 - **Import:** 1Remote and PRemoteM (database or .prma export), RDCMan (.rdg), mRemoteNG (confCons.xml),
-  and .rdp files. Export and restore as a JSON backup (without passwords).
+  .rdp files, and the backup of Microsoft's Remote Desktop Store app (.rdb). Export and restore as a JSON
+  backup (without passwords).
 - **Passwords:** stored in the Windows Credential Manager, never in the database. Alternatively a reference
   to a KeePass entry (.kdbx, read-only) or a 1Password item (`op://`, via the 1Password CLI). Groups pass
   their logon on to their connections.

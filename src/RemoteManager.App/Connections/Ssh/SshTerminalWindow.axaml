@@ -5,7 +5,7 @@
         xmlns:conn="using:RemoteManager.App.Connections"
         xmlns:res="using:RemoteManager.App.Resources"
         x:Class="RemoteManager.App.Connections.Ssh.SshTerminalWindow"
-        Width="1040" Height="660" MinWidth="560" MinHeight="300"
+        Width="1040" Height="660" MinWidth="640" MinHeight="300"
         WindowStartupLocation="CenterScreen"
         ExtendClientAreaToDecorationsHint="True" ExtendClientAreaTitleBarHeightHint="44"
         WindowDecorationsTheme="{StaticResource RmWindowDecorations}"
