@@ -18,7 +18,7 @@ namespace RemoteManager.App.Views;
 public partial class ImportView : UserControl
 {
     // Most used first; any other importer (a new file in Core/ImportExport) follows by name.
-    private static readonly string[] PreferredOrder = ["1remote", "rdcman", "mremoteng", "rdp-file", "remote-manager-backup"];
+    private static readonly string[] PreferredOrder = ["1remote", "rdcman", "mremoteng", "rdp-file", "msrd-app", "remote-manager-backup"];
 
     private readonly List<IImporter> importers;
     private List<string> files = [];
@@ -30,9 +30,15 @@ public partial class ImportView : UserControl
         importers = [.. app.Importers.OrderBy(i => Array.IndexOf(PreferredOrder, i.Id) is >= 0 and var index ? index : PreferredOrder.Length).ThenBy(i => i.FormatName, StringComparer.CurrentCulture)];
         FormatBox.ItemsSource = importers.Select(i => i.FormatName).ToList();
         FormatBox.SelectedIndex = 0;
-        FormatBox.SelectionChanged += (_, _) => SetFiles([]);
+        FormatBox.SelectionChanged += (_, _) =>
+        {
+            SetFiles([]);
+            UpdateFormatHint();
+        };
         TargetBox.ItemsSource = app.Library.GroupPaths().ToList();
         BrowseButton.Click += async (_, _) => await BrowseAsync();
+        UpdateFormatHint();
+        FormFields.LinkLabels(this);
     }
 
     public IImporter Importer => importers[Math.Max(0, FormatBox.SelectedIndex)];
@@ -147,6 +153,18 @@ public partial class ImportView : UserControl
     private void ShowError(string? message)
     {
         ErrorText.Text = message;
-        ErrorText.IsVisible = message is not null;
+        ErrorNote.IsVisible = message is not null;
+    }
+
+    /// <summary>
+    /// Says where the chosen program keeps its file ("Import_Where_&lt;importer id&gt;" in the strings). An importer
+    /// without such a text (a new one) simply shows none.
+    /// </summary>
+    private void UpdateFormatHint()
+    {
+        string key = "Import_Where_" + new string([.. Importer.Id.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '_')]);
+        string? hint = Strings.ResourceManager.GetString(key, Strings.Culture);
+        FormatHint.Text = hint;
+        FormatHint.IsVisible = hint is not null;
     }
 }

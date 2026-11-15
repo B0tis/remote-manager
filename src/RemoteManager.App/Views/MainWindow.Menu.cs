@@ -39,24 +39,28 @@ public partial class MainWindow
         ToolTip.SetTip(tools, Strings.RemoteTool_Settings_Tip);
         tools.Click += async (_, _) => await RemoteToolsDialog.ShowAsync();
 
+        var shortcuts = Item(Strings.Shortcuts_Menu, FASymbol.BulletList, new KeyGesture(Key.F1));
+        shortcuts.Click += async (_, _) => await ShortcutsView.ShowAsync(this);
         var check = Item(Strings.Update_CheckMenu, FASymbol.Download);
         check.Click += async (_, _) => await CheckForUpdatesAsync(startup: false);
         var about = Item(Strings.About_Menu, FASymbol.Help);
         about.Click += async (_, _) => await AboutView.ShowAsync(this);
 
+        MenuItem closeToTray = CreateCloseToTrayMenuItem(); // MainWindow.Tray.cs
         var menu = new MenuFlyout();
         foreach (Control entry in new Control[]
         {
             newGroup, launcherMenuItem, new Separator(),
-            CreateViewMenu(), new Separator(),
+            CreateViewMenu(), CreateAppearanceMenu(), new Separator(),
             import, export, new Separator(),
-            sync, tools, new Separator(),
-            check, about,
+            sync, tools, closeToTray, new Separator(),
+            shortcuts, check, about,
         })
         {
             menu.Items.Add(entry);
         }
 
+        menu.Opening += (_, _) => closeToTray.IsChecked = CloseToTray;
         return menu;
     }
 
@@ -74,16 +78,20 @@ public partial class MainWindow
         detailsMenuItem = Item(Strings.Menu_Details, FASymbol.DockRight, new KeyGesture(Key.I, KeyModifiers.Control));
         detailsMenuItem.ToggleType = MenuItemToggleType.CheckBox;
         detailsMenuItem.Click += (_, _) => SetDetailsVisible(!IsDetailsVisible);
+        var sidebarMenuItem = Item(Strings.Menu_Sidebar, FASymbol.DockLeft, new KeyGesture(Key.B, KeyModifiers.Control));
+        sidebarMenuItem.ToggleType = MenuItemToggleType.CheckBox;
+        sidebarMenuItem.Click += (_, _) => ToggleSidebar();
         var refresh = Item(Strings.Status_RefreshTip, FASymbol.Refresh, new KeyGesture(Key.F5));
         refresh.Click += (_, _) => RefreshStatus();
 
         var view = Item(Strings.Menu_View, FASymbol.View);
-        view.ItemsSource = new Control[] { tilesMenuItem, listMenuItem, new Separator(), detailsMenuItem, new Separator(), refresh, CreateLivePreviewMenu() };
+        view.ItemsSource = new Control[] { tilesMenuItem, listMenuItem, new Separator(), sidebarMenuItem, detailsMenuItem, new Separator(), refresh, CreateLivePreviewMenu() };
         view.SubmenuOpened += (_, _) =>
         {
             tilesMenuItem.IsChecked = !IsListView;
             listMenuItem.IsChecked = IsListView;
             detailsMenuItem.IsChecked = IsDetailsVisible;
+            sidebarMenuItem.IsChecked = SidebarMode == SidebarMode.Expanded || IsSidebarFloating;
         };
         return view;
     }

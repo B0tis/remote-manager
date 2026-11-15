@@ -43,9 +43,13 @@ internal static partial class SelfTest
         string shortcuts = string.Join(", ", new[] { Strings.Action_NewGroup, Strings.Menu_Launcher, Strings.Menu_ViewList, Strings.Status_RefreshTip }.Select(Gesture));
         Check($"Menu shortcuts are shown in German ({shortcuts})", shortcuts == "Strg+Umschalt+N, Strg+K, Strg+2, F5");
 
-        bool branding = window.Nav.GetVisualDescendants().OfType<TextBlock>().Any(t => t.IsEffectivelyVisible && t.Text == "Remote-Manager")
+        // The app draws its own title bar; icon and name appear there once, as in a window frame, and nowhere below it.
+        bool branding = window.Navigation.GetVisualDescendants().OfType<TextBlock>().Any(t => t.IsEffectivelyVisible && t.Text == "Remote-Manager")
+            || window.ContentGrid.GetVisualDescendants().OfType<TextBlock>().Any(t => t.IsEffectivelyVisible && t.Text == "Remote-Manager")
             || window.Header.GetVisualDescendants().OfType<Image>().Any();
-        Check("No logo or app name inside the window (the title bar shows them)", !branding && window.Title == "Remote-Manager");
+        bool titleBar = window.TitleBarContent.GetVisualDescendants().OfType<TextBlock>().Count(t => t.Text == "Remote-Manager") == 1
+            && window.TitleBarContent.GetVisualDescendants().OfType<Image>().Count() == 1;
+        Check("Logo and app name show once, in the title bar, and nowhere else in the window", !branding && titleBar && window.Title == "Remote-Manager");
     }
 
     /// <summary>Screenshots of "Mehr" and "Ansicht" (native popups: render the menu's own visual).</summary>
@@ -81,11 +85,11 @@ internal static partial class SelfTest
 
             await ResizeAsync(window, 1320, 840);
             Check($"1320 x 840: sidebar expanded, detail column open, header fits ({Describe(window)})",
-                window.Nav.DisplayMode == FANavigationViewDisplayMode.Expanded && window.IsDetailsVisible && HeaderFits(window) && TilesFit(window));
+                window.SidebarMode == SidebarMode.Expanded && window.IsDetailsVisible && HeaderFits(window) && TilesFit(window));
             SaveRenderProbe(window, "layout-1320x840.png");
 
             await ResizeAsync(window, 1024, 640);
-            bool compact = window.Nav.DisplayMode == FANavigationViewDisplayMode.Compact && !window.IsDetailsVisible;
+            bool compact = window.SidebarMode == SidebarMode.Compact && !window.IsDetailsVisible;
             Check($"1024 x 640: sidebar shows icons, detail column closed, header and tiles fit ({Describe(window)})",
                 compact && HeaderFits(window) && TilesFit(window));
             SaveRenderProbe(window, "layout-1024x640.png");
@@ -98,7 +102,7 @@ internal static partial class SelfTest
             // 1366 x 768 at 125 %: 1093 x 614 DIP minus the taskbar.
             await ResizeAsync(window, 1093, 580);
             Check($"1366 x 768 at 125 % (1093 x 580): compact sidebar, header fits ({Describe(window)})",
-                window.Nav.DisplayMode == FANavigationViewDisplayMode.Compact && HeaderFits(window) && TilesFit(window));
+                window.SidebarMode == SidebarMode.Compact && HeaderFits(window) && TilesFit(window));
 
             await ResizeAsync(window, window.MinWidth, window.MinHeight);
             window.SetDetailsVisible(true);
@@ -118,7 +122,9 @@ internal static partial class SelfTest
             await Settle(300);
 
             Task<bool> editing = ConnectionEditor.ShowAsync(new Connection { Name = "Selftest Layout", Host = "layout.invalid" }, isNew: true);
-            await Settle(900);
+            // Wait for the dialog box itself, not a fixed time: on a busy machine it opens later.
+            await WaitFor(() => ConnectionEditor.OpenDialog is { } open && open.GetVisualDescendants().OfType<Border>().Any(b => b.Name == "BackgroundElement" && b.Bounds.Height > 0), TimeSpan.FromSeconds(8));
+            await Settle(400);
             bool fits = ConnectionEditor.OpenDialog is { } dialog && DialogFits(window, dialog, out string bounds);
             SaveRenderProbe(window, "layout-minimum-editor.png");
             ConnectionEditor.OpenDialog?.Hide();
@@ -129,7 +135,7 @@ internal static partial class SelfTest
             window.SetDetailsVisible(true);
             await Settle(300);
             Check("Back at 1320 x 840 the sidebar expands and the saved detail setting applies again",
-                window.Nav.DisplayMode == FANavigationViewDisplayMode.Expanded && window.IsDetailsVisible);
+                window.SidebarMode == SidebarMode.Expanded && window.IsDetailsVisible);
         }
         finally
         {
@@ -181,7 +187,7 @@ internal static partial class SelfTest
     }
 
     private static string Describe(MainWindow window) =>
-        $"client {window.ClientSize.Width:0}x{window.ClientSize.Height:0}, nav {window.Nav.DisplayMode}, details {window.IsDetailsVisible}, " +
+        $"client {window.ClientSize.Width:0}x{window.ClientSize.Height:0}, sidebar {window.SidebarMode}, details {window.IsDetailsVisible}, " +
         $"toolbar {window.Toolbar.Bounds.Right:0}/{window.Header.Bounds.Width:0}, tile {window.TilePanel?.TileWidth:0}";
 
     /// <summary>The header row (search and buttons) lies inside the header, and the header inside the window.</summary>

@@ -1,6 +1,12 @@
 using System.Globalization;
+using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Shapes;
+using Avalonia.Controls.Templates;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Diagnostics;
@@ -96,38 +102,80 @@ internal static class ImportExportCommands
 
     public static async Task ShowSummaryAsync(ImportSummary summary)
     {
-        var content = new StackPanel { Spacing = 10, Width = 480 };
-        content.Children.Add(new TextBlock
+        // The figures side by side, like a row of counters: what came in, what was already there, what else was created.
+        var figures = new UniformGrid { Rows = 1 };
+        figures.Children.Add(Figure(summary.AddedConnections, Strings.Import_Stat_Added, null, first: true));
+        figures.Children.Add(Figure(summary.ReplacedConnections, Strings.Import_Stat_Replaced));
+        figures.Children.Add(Figure(summary.SkippedDuplicates, Strings.Import_Stat_Skipped, Strings.Import_Stat_SkippedTip));
+        figures.Children.Add(Figure(summary.AddedGroups, Strings.Import_Stat_Groups));
+        figures.Children.Add(Figure(summary.StoredPasswords, Strings.Import_Stat_Passwords));
+        var counters = new Border { Child = figures, Padding = new Thickness(0, 12) };
+        counters.Classes.Add("well");
+        // A screen reader gets the figures as one sentence instead of ten loose words.
+        AutomationProperties.SetName(counters, string.Format(CultureInfo.CurrentCulture, Strings.Import_Summary, summary.AddedConnections,
+            summary.ReplacedConnections, summary.SkippedDuplicates, summary.AddedGroups, summary.StoredPasswords));
+
+        var content = new StackPanel { Width = 520, Children = { counters } };
+        if (summary.StoredPasswords > 0)
         {
-            Text = string.Format(CultureInfo.CurrentCulture, Strings.Import_Summary, summary.AddedConnections, summary.ReplacedConnections,
-                summary.SkippedDuplicates, summary.AddedGroups, summary.StoredPasswords),
-            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-        });
+            Border stored = FormFields.Note(Strings.Import_Stat_PasswordsTip, NoteKind.Secret);
+            stored.Margin = new Thickness(0, 12, 0, 0);
+            content.Children.Add(stored);
+        }
+
         if (summary.Warnings.Count > 0)
         {
-            content.Children.Add(new TextBlock
-            {
-                Text = string.Format(CultureInfo.CurrentCulture, Strings.Import_Warnings, summary.Warnings.Count),
-                FontWeight = Avalonia.Media.FontWeight.SemiBold,
-                Margin = new Avalonia.Thickness(0, 6, 0, 0),
-            });
+            content.Children.Add(FormFields.SectionHead(string.Format(CultureInfo.CurrentCulture, Strings.Import_Warnings, summary.Warnings.Count)));
             content.Children.Add(new ScrollViewer
             {
                 MaxHeight = 220,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                Content = new ItemsControl
-                {
-                    ItemsSource = summary.Warnings,
-                    ItemTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<string>((text, _) =>
-                        new TextBlock { Text = $"• {text}", TextWrapping = Avalonia.Media.TextWrapping.Wrap, Opacity = 0.75, FontSize = 12, Margin = new Avalonia.Thickness(0, 2) }),
-                },
+                Content = new ItemsControl { ItemsSource = summary.Warnings, ItemTemplate = new FuncDataTemplate<string>((text, _) => Warning(text)) },
             });
         }
 
         var dialog = new FAContentDialog { Title = Strings.Import_SummaryTitle, Content = content, CloseButtonText = Strings.Common_Ok };
+        // Five counters side by side need the wide dialog, or "übersprungen" breaks in the middle of the word.
+        dialog.Resources["ContentDialogMaxWidth"] = FormFields.WideDialogWidth;
         OpenSummary = dialog;
         await dialog.ShowAsync();
         OpenSummary = null;
+    }
+
+    /// <summary>One counter of the summary: the figure in the display face, below it what it counts. A zero steps back.</summary>
+    private static Border Figure(int value, string label, string? tip = null, bool first = false)
+    {
+        var figure = new TextBlock { Text = value.ToString(CultureInfo.CurrentCulture), FontSize = 26, FontWeight = FontWeight.SemiBold };
+        figure.Classes.Add("display");
+        if (value == 0)
+            figure.Classes.Add("faint");
+        var caption = new TextBlock { Text = label };
+        caption.Classes.Add("hint");
+        var cell = new Border
+        {
+            Padding = new Thickness(14, 0, 8, 0),
+            BorderThickness = new Thickness(first ? 0 : 1, 0, 0, 0),
+            Child = new StackPanel { Spacing = 2, Children = { figure, caption } },
+        };
+        cell.Bind(Border.BorderBrushProperty, cell.GetResourceObservable("RmStrokeBrush"));
+        if (tip is not null)
+        {
+            ToolTip.SetTip(cell, tip);
+            // The stroke alone does not take the pointer; the whole cell should show the tip.
+            cell.Background = Brushes.Transparent;
+        }
+
+        return cell;
+    }
+
+    /// <summary>One remark of the importer (something it left out or changed), as a line of a list.</summary>
+    private static Grid Warning(string text)
+    {
+        var mark = new Ellipse { Width = 5, Height = 5, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(1, 7, 0, 0) };
+        mark.Bind(Shape.FillProperty, mark.GetResourceObservable("SystemFillColorCautionBrush"));
+        var line = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, FontSize = 12.5 };
+        Grid.SetColumn(line, 1);
+        return new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 10, Margin = new Thickness(0, 0, 0, 8), Children = { mark, line } };
     }
 
     public static async Task ExportAsync(MainWindow window)

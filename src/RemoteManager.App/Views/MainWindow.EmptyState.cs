@@ -8,7 +8,7 @@ namespace RemoteManager.App.Views;
 public partial class MainWindow
 {
     /// <summary>The kinds of empty overview (self-test).</summary>
-    public enum EmptyKind { None, NoConnections, NoMatches, EmptyGroup, NoFavorites, NoRecent, Empty }
+    public enum EmptyKind { None, NoConnections, Filtered, NoMatches, EmptyGroup, NoFavorites, NoRecent, NoSessions, Empty }
 
     private Action? emptyPrimary, emptySecondary;
 
@@ -29,10 +29,12 @@ public partial class MainWindow
         string search = SearchBox.Text?.Trim() ?? "";
         EmptyKind kind = visible.Count > 0 ? EmptyKind.None
             : items.Count == 0 ? EmptyKind.NoConnections
+            : ChipsHideConnections ? EmptyKind.Filtered
             : search.Length > 0 ? EmptyKind.NoMatches
             : CurrentGroupId is not null ? EmptyKind.EmptyGroup
             : filter == "fav" ? EmptyKind.NoFavorites
             : filter == "recent" ? EmptyKind.NoRecent
+            : filter == SidebarEntry.ActiveTag ? EmptyKind.NoSessions
             : EmptyKind.Empty;
         CurrentEmptyKind = kind;
         EmptyState.IsVisible = kind != EmptyKind.None;
@@ -45,6 +47,9 @@ public partial class MainWindow
             EmptyKind.NoConnections => new EmptyContent(FASymbol.Library, Strings.Empty_NoConnections_Title, Strings.Empty_NoConnections_Message,
                 Strings.Action_New, () => AddConnection(), Strings.Action_Import,
                 () => _ = ImportExportCommands.ShowImportAsync(this)),
+            EmptyKind.Filtered => new EmptyContent(FASymbol.Find, Strings.Empty_Filtered_Title, Strings.Empty_Filtered_Message,
+                Strings.Empty_ClearFilters, ClearChipFilters),
+            EmptyKind.NoSessions => new EmptyContent(FASymbol.Remote, Strings.Empty_Active_Title, Strings.Empty_Active_Message),
             EmptyKind.NoMatches => new EmptyContent(FASymbol.Find, string.Format(CultureInfo.CurrentCulture, Strings.Empty_NoMatches_Title, search),
                 Strings.Empty_NoMatches_Message, Strings.Empty_ClearSearch, () => SearchBox.Text = "", null, null),
             EmptyKind.EmptyGroup => new EmptyContent(FASymbol.Folder, Strings.Empty_Group_Title, Strings.Empty_Group_Message,

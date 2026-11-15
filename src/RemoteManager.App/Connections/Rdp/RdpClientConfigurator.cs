@@ -60,7 +60,9 @@ internal static class RdpClientConfigurator
         secured.WorkDir = Bstr(s.WorkingDirectory.Trim());
 
         ApplyGateway(client, s, logon);
-        ApplyExtended(view, s);
+        bool gatewayNeedsPrompt = s.GatewayUsage != RdpGatewayUsage.None && s.GatewayHost.Trim().Length > 0
+            && !s.GatewayUsesConnectionCredentials && logon.GatewayPassword.Length == 0;
+        ApplyExtended(view, s, logon.Password.Length > 0 && !gatewayNeedsPrompt);
 
         IMsTscNonScriptable credentials = view.GetClient<IMsTscNonScriptable>();
         if (logon.Password.Length == 0)
@@ -104,7 +106,7 @@ internal static class RdpClientConfigurator
     }
 
     /// <summary>Restricted Admin and Remote Credential Guard go through IMsRdpExtendedSettings.</summary>
-    private static void ApplyExtended(RdpClientView view, RdpSettings s)
+    private static void ApplyExtended(RdpClientView view, RdpSettings s, bool hasPassword)
     {
         try
         {
@@ -123,11 +125,29 @@ internal static class RdpClientConfigurator
 
         try
         {
-            view.GetClient<IMsRdpClientNonScriptable5>().UseMultimon = s.UseMultimon;
+            IMsRdpClientNonScriptable5 nonScriptable = view.GetClient<IMsRdpClientNonScriptable5>();
+            nonScriptable.UseMultimon = s.UseMultimon;
+            // With a password from the app the control must not ask again in a Windows dialog of its own when the
+            // server refuses it: the session window shows the refusal on its card and takes the correction there.
+            // Without a password the Windows prompt stays (smart card, Windows Hello, other accounts).
+            nonScriptable.AllowPromptingForCredentials = !hasPassword;
         }
         catch (Exception ex) when (ex is COMException or InvalidCastException)
         {
             System.Diagnostics.Trace.WriteLine($"Multimon not available: {ex.Message}");
+        }
+
+        try
+        {
+            // Servers that hand the session over after the logon (GNOME Remote Desktop's "Remote Login", RDS
+            // farms) redirect the client to the session's own endpoint. Without this the control reconnects by
+            // the address it was sent instead of the name it was given, and the handover fails with
+            // "Authentifizierungsfehler" (reason 519). mstsc writes it as "use redirection server name:i:1".
+            view.GetClient<IMsRdpPreferredRedirectionInfo>().UseRedirectionServerName = true;
+        }
+        catch (Exception ex) when (ex is COMException or InvalidCastException)
+        {
+            System.Diagnostics.Trace.WriteLine($"Redirection by server name not available: {ex.Message}");
         }
     }
 

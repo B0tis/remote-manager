@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
 using RemoteManager.Core.Model.Settings;
 using RemoteManager.Core.Ssh;
 
@@ -32,7 +33,8 @@ public partial class SshSettingsEditor : UserControl, ISettingsEditor
         };
         // SFTP has no shell to forward with; SSH has no start folder.
         ForwardsPanel.IsVisible = !sftp;
-        RemoteDirectoryBox.IsVisible = sftp;
+        RemoteDirectoryField.IsVisible = sftp;
+        FormFields.LinkLabels(this);
     }
 
     public Control View => this;
@@ -89,9 +91,9 @@ public partial class SshSettingsEditor : UserControl, ISettingsEditor
     private void UpdateHostKey()
     {
         string fingerprint = forgetHostKey ? "" : loaded.HostKeyFingerprint;
-        HostKeyText.Text = fingerprint.Length > 0
-            ? string.Format(CultureInfo.CurrentCulture, Strings.Ssh_HostKeyStored, fingerprint)
-            : Strings.Ssh_HostKeyNone;
+        HostKeyText.Text = fingerprint;
+        HostKeyText.IsVisible = fingerprint.Length > 0;
+        HostKeyNone.IsVisible = fingerprint.Length == 0;
         ForgetHostKeyButton.IsVisible = fingerprint.Length > 0;
     }
 

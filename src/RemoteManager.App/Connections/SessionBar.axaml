@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="RemoteManager.App.Connections.SessionBar"
+             Height="44">
+  <!--
+    The bar at the top of every session window. It is the window's title bar (the windows extend their content
+    into it): which connection this is, how the session stands, how long it has been connected, and the window's
+    own actions. Dragging the bar moves the window. Nothing of it ever lies over the session surface below.
+  -->
+  <Panel>
+    <Border x:Name="DragArea" Classes="sessionBar" WindowDecorationProperties.ElementRole="TitleBar" />
+    <Grid x:Name="Layout" ColumnDefinitions="Auto,*,Auto,Auto,140" Margin="14,0,0,1">
+      <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" IsHitTestVisible="False">
+        <Ellipse x:Name="LampDot" Classes="lamp" Fill="{DynamicResource RmUnknownBrush}" />
+        <Border x:Name="TypeChip" Classes="typeChip" VerticalAlignment="Center">
+          <TextBlock x:Name="TypeChipText" />
+        </Border>
+        <TextBlock x:Name="NameLabel" Classes="name" FontSize="14.5" VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis" />
+        <TextBlock x:Name="HostLabel" Classes="mono faint" VerticalAlignment="Center" MaxWidth="220" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+      <TextBlock x:Name="StatusLabel" Grid.Column="1" Classes="caption" Margin="16,0,12,0" VerticalAlignment="Center"
+                 TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+      <!-- How long the session has been connected. -->
+      <TextBlock x:Name="ClockLabel" Grid.Column="2" Classes="mono muted" Margin="0,0,10,0" VerticalAlignment="Center"
+                 IsVisible="False" IsHitTestVisible="False" />
+      <ContentControl x:Name="ActionsHost" Grid.Column="3" VerticalAlignment="Center" />
+    </Grid>
+  </Panel>
+</UserControl>

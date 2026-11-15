@@ -16,17 +16,15 @@ public static class PlannedConnectionDialog
 
     public static async void Show(ConnectionItem connection, IConnectionHost host, string message)
     {
-        var dialog = new FAContentDialog
-        {
-            Title = string.Format(CultureInfo.CurrentCulture, Strings.Planned_Title, connection.TypeLabel, connection.Name),
-            Content = message,
-            CloseButtonText = Strings.Common_Ok,
-            // An empty text hides the button.
-            PrimaryButtonText = connection.HasStoredPassword ? Strings.Action_CopyPassword : "",
-            DefaultButton = connection.HasStoredPassword ? FAContentDialogButton.Primary : FAContentDialogButton.Close,
-        };
+        // An empty verb hides the primary button; "OK" is then the only one.
+        FAContentDialog dialog = DialogKit.Question(
+            string.Format(CultureInfo.CurrentCulture, Strings.Planned_Title, connection.TypeLabel, connection.Name),
+            message,
+            connection.HasStoredPassword ? Strings.Action_CopyPassword : "");
+        dialog.CloseButtonText = Strings.Common_Ok;
+        dialog.DefaultButton = connection.HasStoredPassword ? FAContentDialogButton.Primary : FAContentDialogButton.Close;
         Current = dialog;
-        FAContentDialogResult result = await dialog.ShowAsync();
+        FAContentDialogResult result = await dialog.ShowAsync(Services.DialogOwner.Shown(host.Owner));
         Current = null;
         if (result == FAContentDialogResult.Primary)
             await host.CopyPasswordAsync(connection);

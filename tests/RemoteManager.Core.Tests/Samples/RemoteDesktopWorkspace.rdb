@@ -1,0 +1,78 @@
+{
+  "Version": 0.2,
+  "GeneralSettings": {
+    "UseThumbnails": true,
+    "LastAppVersion": "10.2.4012.0",
+    "ConnectFullscreen": true,
+    "PersistentModelId": "00000000-0000-0000-0000-000000000000"
+  },
+  "Credentials": [
+    {
+      "Username": "jdoe",
+      "FriendlyName": "Jane",
+      "ImportHadSavedPassword": true,
+      "PasswordVaultResourceID": "11111111-aaaa-4bbb-8ccc-000000000001",
+      "PersistentModelId": "c0000000-0000-4000-8000-000000000001"
+    },
+    {
+      "Username": "EXAMPLE/admin",
+      "ImportHadSavedPassword": true,
+      "PasswordVaultResourceID": "11111111-aaaa-4bbb-8ccc-000000000002",
+      "PersistentModelId": "c0000000-0000-4000-8000-000000000002"
+    },
+    {
+      "Username": "CORP\\svc",
+      "PersistentModelId": "c0000000-0000-4000-8000-000000000003"
+    }
+  ],
+  "Groups": [
+    {
+      "FriendlyName": "Kunde A",
+      "PersistentModelId": "90000000-0000-4000-8000-000000000001"
+    }
+  ],
+  "Gateways": [
+    {
+      "HostName": "rdgw.example.org",
+      "PersistentModelId": "70000000-0000-4000-8000-000000000001"
+    }
+  ],
+  "Connections": [
+    {
+      "HostName": "203.0.113.20",
+      "FriendlyName": "Terminalserver",
+      "CredentialsId": "c0000000-0000-4000-8000-000000000002",
+      "GroupId": "90000000-0000-4000-8000-000000000001",
+      "GatewayId": "70000000-0000-4000-8000-000000000001",
+      "LocalResourcesSettings": {
+        "RedirectClipboard": false,
+        "PersistentModelId": "00000000-0000-0000-0000-000000000000"
+      },
+      "PersistentModelId": "a0000000-0000-4000-8000-000000000001"
+    },
+    {
+      "HostName": "linux-desktop:3390",
+      "FriendlyName": "",
+      "CredentialsId": "c0000000-0000-4000-8000-000000000001",
+      "LocalResourcesSettings": {
+        "RedirectClipboard": true,
+        "PersistentModelId": "00000000-0000-0000-0000-000000000000"
+      },
+      "PersistentModelId": "a0000000-0000-4000-8000-000000000002"
+    },
+    {
+      "HostName": "[2001:db8::10]:3391",
+      "FriendlyName": "IPv6 host",
+      "CredentialsId": "c0000000-0000-4000-8000-000000000003",
+      "PersistentModelId": "a0000000-0000-4000-8000-000000000003"
+    },
+    {
+      "HostName": "",
+      "FriendlyName": "Ohne Adresse",
+      "PersistentModelId": "a0000000-0000-4000-8000-000000000004"
+    }
+  ],
+  "OnPremWorkspaces": [],
+  "Subscriptions": [],
+  "AzureUsers": []
+}

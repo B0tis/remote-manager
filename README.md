@@ -14,15 +14,22 @@ organized in groups and tags, with live previews and online status. RDP, SSH, SF
 embedded in the app; TeamViewer, AnyDesk, and RustDesk are launched with the right parameters. The user
 interface is in German.
 
-![Overview with tiles, groups, and tags](docs/screenshots/ui/layout-1320x840.png)
+![Overview with tiles, groups, tags, and the detail column](docs/screenshots/redesign/overview.png)
 
 ## Features
 
 - **Overview:** tile and list views with groups (nested, collapsible, drag and drop), tags, favorites,
-  recently used, a detail panel, search, and a quick launcher (Strg+Alt+R anywhere, Strg+K in the app).
+  recently used, open sessions, a detail panel, search, and filters by type and "only online". Tiles come in
+  three sizes; the sidebar folds to icons.
+- **Quick launcher** (Strg+Alt+R anywhere, Strg+K in the app): a command palette that finds connections, runs
+  the app's commands, and connects to an address you type (`ssh root@host:2222`) without saving it first.
 - **Previews and status:** tiles show a snapshot of the last session, refreshed live while an RDP or VNC
-  session is open. A TCP check shows online, offline, or unknown.
-- **Embedded RDP** through [MsRdpEx](https://github.com/Devolutions/MsRdpEx), each session in its own window.
+  session is open; until then every connection has its own lamp pattern. A TCP check shows online, offline, or
+  unknown, with the answer time and its history.
+- **Look:** dark and light theme, a signal color of your choice, and a notification-area icon with your
+  favorites; the app can keep running there when you close the window.
+- **Embedded RDP** through [MsRdpEx](https://github.com/Devolutions/MsRdpEx), each session in its own window,
+  also against Linux desktops (GNOME Remote Desktop, KRdp, xrdp).
   Extended options per connection: NLA, admin session, Restricted Admin and Remote Credential Guard, RD
   Gateway, redirections, audio, start program, multi-monitor, direct Windows logon with the stored password.
   RemoteApp and "open with mstsc" go through a temporary .rdp file.
@@ -33,7 +40,8 @@ interface is in German.
   to AnyDesk on stdin; for TeamViewer and RustDesk it is copied to the clipboard and cleared again after 30 s.
   Optional TeamViewer account sync and AnyDesk CSV import.
 - **Import:** 1Remote and PRemoteM (database or .prma export), RDCMan (.rdg), mRemoteNG (confCons.xml),
-  and .rdp files. Export and restore as a JSON backup (without passwords).
+  .rdp files, and the backup of Microsoft's Remote Desktop Store app (.rdb). Export and restore as a JSON
+  backup (without passwords).
 - **Passwords:** stored in the Windows Credential Manager, never in the database. Alternatively a reference
   to a KeePass entry (.kdbx, read-only) or a 1Password item (`op://`, via the 1Password CLI). Groups pass
   their logon on to their connections.
@@ -45,8 +53,9 @@ interface is in German.
 
 | | |
 | --- | --- |
-| ![List view, sorted, with multi-select](docs/screenshots/p1-overview-ux/overview-list-sorted-multiselect.png) | ![Live preview of a running session](docs/screenshots/p4-live-preview/live-preview-overview.png) |
-| ![Embedded RDP session](docs/screenshots/session-window.png) | ![SSH terminal](docs/screenshots/p3-ssh-sftp/ssh-terminal-htop.png) |
+| ![List view](docs/screenshots/redesign/overview-list.png) | ![Light theme](docs/screenshots/redesign/overview-light.png) |
+| ![Quick launcher](docs/screenshots/redesign/quick-launcher.png) | ![Connection editor](docs/screenshots/redesign/editor.png) |
+| ![Embedded RDP session](docs/screenshots/redesign/session-rdp.png) | ![SSH terminal](docs/screenshots/redesign/session-ssh.png) |
 
 ## Install
 

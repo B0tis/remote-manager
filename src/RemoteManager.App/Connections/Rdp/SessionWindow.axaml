@@ -2,27 +2,33 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:rdp="using:Devolutions.MsRdpEx.Avalonia"
+        xmlns:conn="using:RemoteManager.App.Connections"
         xmlns:res="using:RemoteManager.App.Resources"
         x:Class="RemoteManager.App.Connections.Rdp.SessionWindow"
         Width="1280" Height="800" MinWidth="640" MinHeight="420"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+        ExtendClientAreaToDecorationsHint="True" ExtendClientAreaTitleBarHeightHint="44"
+        WindowDecorationsTheme="{StaticResource RmWindowDecorations}"
+        Background="{DynamicResource RmBaseBrush}">
   <!-- One RDP session per window. No Mica here: the native RDP child window should sit on an opaque surface. -->
   <DockPanel>
-    <Border DockPanel.Dock="Top" Padding="14,6" BorderThickness="0,0,0,1"
-            Background="{DynamicResource LayerFillColorDefaultBrush}"
-            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <Ellipse x:Name="StatusDot" Width="8" Height="8" VerticalAlignment="Center" Fill="#9CA3AF" />
-        <TextBlock x:Name="StatusText" Grid.Column="1" Margin="10,0" VerticalAlignment="Center"
-                   Opacity="0.8" Text="{x:Static res:Strings.Session_NotConnected}" TextTrimming="CharacterEllipsis" />
-        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
-          <Button x:Name="DisconnectButton" Classes="toolbar" IsEnabled="False" Content="{x:Static res:Strings.Session_Disconnect}" />
-          <Button x:Name="FullScreenButton" Classes="toolbar" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Session_FullScreenTip}">
+    <conn:SessionBar x:Name="Bar" DockPanel.Dock="Top">
+      <conn:SessionBar.Actions>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <Button x:Name="DisconnectButton" Classes="ghost" IsEnabled="False" Padding="9,6">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <ui:FASymbolIcon Symbol="Cancel" FontSize="13" />
+              <TextBlock Text="{x:Static res:Strings.Session_Disconnect}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button x:Name="SnapshotButton" Classes="icon" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Session_SaveSnapshot}">
+            <ui:FASymbolIcon Symbol="Camera" FontSize="16" />
+          </Button>
+          <Button x:Name="FullScreenButton" Classes="icon" IsEnabled="False" ToolTip.Tip="{x:Static res:Strings.Session_FullScreenTip}">
             <ui:FASymbolIcon Symbol="FullScreenMaximize" FontSize="16" />
           </Button>
           <!-- Menus and flyouts are native popup windows (OverlayPopups stays off), so they draw above the session. -->
-          <Button x:Name="MoreButton" Classes="toolbar" ToolTip.Tip="{x:Static res:Strings.Session_More}">
+          <Button x:Name="MoreButton" Classes="icon" ToolTip.Tip="{x:Static res:Strings.Session_More}">
             <ui:FASymbolIcon Symbol="More" FontSize="16" />
             <Button.Flyout>
               <MenuFlyout Placement="BottomEdgeAlignedRight">
@@ -32,44 +38,42 @@
             </Button.Flyout>
           </Button>
         </StackPanel>
-      </Grid>
-    </Border>
+      </conn:SessionBar.Actions>
+    </conn:SessionBar>
 
     <Grid>
-      <Image x:Name="ThumbnailImage" Stretch="Uniform" IsVisible="False" Opacity="0.35" />
+      <!-- The last picture of the session, dimmed, behind the card after a disconnect. -->
+      <Image x:Name="ThumbnailImage" Stretch="Uniform" IsVisible="False" Opacity="0.3" />
 
       <!-- Connect / reconnect card. Only shown while the RDP surface is hidden (no airspace conflict). -->
-      <Border x:Name="ConnectCard" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center"
-              Padding="28,24" CornerRadius="12" BorderThickness="1"
-              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-              BoxShadow="0 8 32 0 #33000000">
-        <StackPanel Spacing="14">
-          <StackPanel Orientation="Horizontal" Spacing="12">
-            <Border x:Name="TypeBadge" Width="44" Height="44" CornerRadius="10">
-              <TextBlock x:Name="TypeBadgeText" HorizontalAlignment="Center" VerticalAlignment="Center"
-                         FontWeight="SemiBold" Foreground="White" />
-            </Border>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock x:Name="NameText" FontSize="20" FontWeight="SemiBold" />
-              <TextBlock x:Name="HostText" Opacity="0.7" />
-            </StackPanel>
-          </StackPanel>
-          <TextBlock x:Name="DescriptionText" Opacity="0.7" TextWrapping="Wrap" />
-          <Grid ColumnDefinitions="*,10,*">
-            <TextBox x:Name="UserBox" PlaceholderText="{x:Static res:Strings.Field_User}" />
-            <TextBox x:Name="DomainBox" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Field_DomainOptional}" />
+      <Border x:Name="ConnectCard" Classes="dialogCard" Width="420" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Spacing="16">
+          <conn:ConnectionHeader x:Name="CardHeader" />
+          <TextBlock x:Name="DescriptionText" Classes="muted" TextWrapping="Wrap" />
+
+          <Grid ColumnDefinitions="*,10,*" RowDefinitions="Auto,Auto">
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Field_User}" />
+            <TextBlock Grid.Column="2" Classes="fieldLabel" Text="{x:Static res:Strings.Session_Domain}" />
+            <TextBox x:Name="UserBox" Grid.Row="1" />
+            <TextBox x:Name="DomainBox" Grid.Row="1" Grid.Column="2" PlaceholderText="{x:Static res:Strings.Session_Optional}" />
           </Grid>
+
           <!-- The password only lives in this TextBox until Connect; it is cleared afterwards and never logged.
                With "Passwort speichern" it is kept in memory until logon succeeds, then written to the Credential Manager. -->
-          <TextBox x:Name="PasswordBox" PasswordChar="●" PlaceholderText="{x:Static res:Strings.Field_Password}" Classes="revealPasswordButton" />
-          <CheckBox x:Name="SavePasswordBox" Content="{x:Static res:Strings.Password_Save}"
-                    ToolTip.Tip="{x:Static res:Strings.Session_SavePasswordTip}" />
-          <TextBlock x:Name="CardMessage" TextWrapping="Wrap" IsVisible="False"
-                     Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
-          <Button x:Name="ConnectButton" Classes="accent" HorizontalAlignment="Stretch" Height="36"
+          <StackPanel>
+            <TextBlock Classes="fieldLabel" Text="{x:Static res:Strings.Field_Password}" />
+            <TextBox x:Name="PasswordBox" PasswordChar="●" Classes="revealPasswordButton" />
+            <CheckBox x:Name="SavePasswordBox" Margin="0,8,0,0" Content="{x:Static res:Strings.Password_Save}"
+                      ToolTip.Tip="{x:Static res:Strings.Session_SavePasswordTip}" />
+          </StackPanel>
+
+          <Border Classes="note error" IsVisible="{Binding #CardMessage.IsVisible}">
+            <TextBlock x:Name="CardMessage" TextWrapping="Wrap" IsVisible="False" FontSize="12.5" />
+          </Border>
+
+          <Button x:Name="ConnectButton" Classes="accent" HorizontalAlignment="Stretch" Height="38"
                   Content="{x:Static res:Strings.Action_Connect}" IsDefault="True" />
-          <TextBlock Opacity="0.5" FontSize="12" TextWrapping="Wrap" Text="{x:Static res:Strings.Session_Footer}" />
+          <TextBlock Classes="hint" Text="{x:Static res:Strings.Session_Footer}" />
         </StackPanel>
       </Border>
 

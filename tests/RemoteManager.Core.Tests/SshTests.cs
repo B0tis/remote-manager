@@ -129,7 +129,8 @@ public sealed class SshTests : IDisposable
 
         Assert.Equal(("admin", "group-secret", 22, "SHA256:known"), (stored.UserName, stored.Secret, stored.Port, stored.KnownHostKey));
         Assert.Equal("typed", typed.Secret);
-        Assert.Equal(Path.Combine(Path.GetTempPath().TrimEnd('\\'), "id"), stored.KeyPath);
+        // The variable is expanded as the environment has it (on a CI runner the short 8.3 form of the user folder).
+        Assert.Equal(Environment.ExpandEnvironmentVariables("%TEMP%\\id"), stored.KeyPath);
         Assert.DoesNotContain("group-secret", stored.ToString(), StringComparison.Ordinal);
     }
 

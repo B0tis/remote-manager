@@ -1,0 +1,308 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    List items without FluentAvalonia's row chrome (selection pill, hover fill): the tile, row, or sidebar entry
+    inside draws its own states. Border properties stay bindable because drag and drop marks its target with them.
+  -->
+  <ControlTheme x:Key="RmBareItem" TargetType="ListBoxItem">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    <Setter Property="FocusAdorner" Value="{x:Null}" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <ContentPresenter x:Name="PART_ContentPresenter"
+                          Background="{TemplateBinding Background}"
+                          BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}"
+                          CornerRadius="{TemplateBinding CornerRadius}"
+                          Padding="{TemplateBinding Padding}"
+                          Content="{TemplateBinding Content}"
+                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
+  <!-- A row that highlights as a whole: list view, sidebar, launcher results. -->
+  <ControlTheme x:Key="RmRowItem" TargetType="ListBoxItem" BasedOn="{StaticResource RmBareItem}">
+    <Style Selector="^:pointerover">
+      <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+    </Style>
+    <Style Selector="^:selected">
+      <Setter Property="Background" Value="{DynamicResource RmAccentSoftBrush}" />
+    </Style>
+    <Style Selector="^:selected:pointerover">
+      <Setter Property="Background" Value="{DynamicResource RmAccentSoftBrush}" />
+    </Style>
+  </ControlTheme>
+
+  <!--
+    Buttons with their own small template, so hover, pressed, and checked states do not depend on the inner
+    parts of FluentAvalonia's button. Applied through style classes (Theme/Styles.axaml): ghost, icon, segment,
+    chip, tileConnect.
+  -->
+  <ControlTheme x:Key="RmGhostButton" TargetType="Button">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <ContentPresenter x:Name="PART_ContentPresenter"
+                          Background="{TemplateBinding Background}"
+                          BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}"
+                          CornerRadius="{TemplateBinding CornerRadius}"
+                          Padding="{TemplateBinding Padding}"
+                          Content="{TemplateBinding Content}"
+                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                          RecognizesAccessKey="True"
+                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+    </Style>
+    <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmPressedBrush}" />
+    </Style>
+    <Style Selector="^:disabled">
+      <Setter Property="Opacity" Value="0.38" />
+    </Style>
+  </ControlTheme>
+
+  <ControlTheme x:Key="RmGhostToggle" TargetType="ToggleButton">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <ContentPresenter x:Name="PART_ContentPresenter"
+                          Background="{TemplateBinding Background}"
+                          BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}"
+                          CornerRadius="{TemplateBinding CornerRadius}"
+                          Padding="{TemplateBinding Padding}"
+                          Content="{TemplateBinding Content}"
+                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+    </Style>
+    <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmPressedBrush}" />
+    </Style>
+    <Style Selector="^:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmAccentSoftBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource RmAccentTextBrush}" />
+    </Style>
+    <Style Selector="^:disabled">
+      <Setter Property="Opacity" Value="0.38" />
+    </Style>
+  </ControlTheme>
+
+  <!-- One choice inside a segmented frame. -->
+  <ControlTheme x:Key="RmSegmentToggle" TargetType="ToggleButton" BasedOn="{StaticResource RmGhostToggle}">
+    <Setter Property="Padding" Value="9,5" />
+    <Setter Property="MinWidth" Value="34" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+    <Style Selector="^:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmCardHoverBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeStrongBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource RmTextBrush}" />
+    </Style>
+  </ControlTheme>
+
+  <!-- Filter chip. -->
+  <ControlTheme x:Key="RmChipToggle" TargetType="ToggleButton" BasedOn="{StaticResource RmGhostToggle}">
+    <Setter Property="Padding" Value="11,4,11,5" />
+    <Setter Property="CornerRadius" Value="15" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+    <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeStrongBrush}" />
+    </Style>
+    <Style Selector="^:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmAccentSoftBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource RmAccentBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource RmTextBrush}" />
+    </Style>
+  </ControlTheme>
+
+  <!-- Round button in the signal color: connect on a tile. -->
+  <ControlTheme x:Key="RmRoundAccentButton" TargetType="Button" BasedOn="{StaticResource RmGhostButton}">
+    <Setter Property="Background" Value="{DynamicResource RmAccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource RmOnAccentBrush}" />
+    <Setter Property="CornerRadius" Value="17" />
+    <Setter Property="Width" Value="34" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="0" />
+    <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmAccentHoverBrush}" />
+    </Style>
+    <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource RmAccentPressedBrush}" />
+    </Style>
+  </ControlTheme>
+
+  <!--
+    Window frame for windows that extend their content into the title bar (ExtendClientAreaToDecorationsHint):
+    only the three caption buttons, as tall as the title bar. No title text: the window draws its own title bar
+    content (icon, name, search). Glyph outlines as in Avalonia's Fluent theme (MIT).
+  -->
+  <ControlTheme x:Key="RmCaptionButton" TargetType="Button">
+    <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmPressedBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextBrush}" />
+    <Setter Property="Width" Value="46" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="(WindowDecorationProperties.ElementRole)" Value="DecorationsElement" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <ContentPresenter Name="PART_ContentPresenter" Background="Transparent" Content="{TemplateBinding Content}" />
+      </ControlTemplate>
+    </Setter>
+    <Style Selector="^:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{TemplateBinding Background}" />
+    </Style>
+    <Style Selector="^:pressed /template/ ContentPresenter">
+      <Setter Property="Background" Value="{TemplateBinding BorderBrush}" />
+    </Style>
+  </ControlTheme>
+
+  <ControlTheme x:Key="RmWindowDecorations" TargetType="WindowDrawnDecorations">
+    <Setter Property="DefaultTitleBarHeight" Value="44" />
+    <Setter Property="DefaultFrameThickness" Value="1" />
+    <Setter Property="DefaultShadowThickness" Value="8" />
+    <Setter Property="Template">
+      <WindowDrawnDecorationsTemplate>
+        <WindowDrawnDecorationsContent>
+          <WindowDrawnDecorationsContent.Underlay>
+            <Panel x:Name="PART_UnderlayWrapper">
+              <Border x:Name="PART_WindowBorder" Background="Transparent" BorderThickness="{TemplateBinding FrameThickness}"
+                      BorderBrush="{DynamicResource RmStrokeStrongBrush}" IsHitTestVisible="False" />
+              <Panel x:Name="PART_TitleBar" VerticalAlignment="Top" Height="{TemplateBinding TitleBarHeight}"
+                     Background="Transparent" IsVisible="{TemplateBinding HasTitleBar}"
+                     WindowDecorationProperties.ElementRole="TitleBar" />
+            </Panel>
+          </WindowDrawnDecorationsContent.Underlay>
+
+          <WindowDrawnDecorationsContent.Overlay>
+            <Panel x:Name="PART_OverlayWrapper">
+              <StackPanel x:Name="PART_OverlayPanel" VerticalAlignment="Top" HorizontalAlignment="Right"
+                          Height="{TemplateBinding TitleBarHeight}" IsVisible="{TemplateBinding HasTitleBar}"
+                          Orientation="Horizontal">
+                <Button x:Name="PART_FullScreenButton" Theme="{StaticResource RmCaptionButton}" IsVisible="False"
+                        WindowDecorationProperties.ElementRole="FullScreenButton" />
+                <Button x:Name="PART_MinimizeButton" Theme="{StaticResource RmCaptionButton}"
+                        WindowDecorationProperties.ElementRole="MinimizeButton">
+                  <Viewbox Width="10" Height="10">
+                    <Path Stretch="UniformToFill" Fill="{DynamicResource RmTextBrush}" Data="M2048 1229v-205h-2048v205h2048z" />
+                  </Viewbox>
+                </Button>
+                <Button x:Name="PART_MaximizeButton" Theme="{StaticResource RmCaptionButton}"
+                        WindowDecorationProperties.ElementRole="MaximizeButton">
+                  <Viewbox Width="10" Height="10">
+                    <Viewbox.RenderTransform>
+                      <RotateTransform Angle="-90" />
+                    </Viewbox.RenderTransform>
+                    <Path Name="RestoreButtonPath" Stretch="UniformToFill" Fill="{DynamicResource RmTextBrush}"
+                          Data="M2048 2048v-2048h-2048v2048h2048zM1843 1843h-1638v-1638h1638v1638z" />
+                  </Viewbox>
+                </Button>
+                <Button x:Name="PART_CloseButton" Background="#E81123" BorderBrush="#F1707A" Theme="{StaticResource RmCaptionButton}"
+                        WindowDecorationProperties.ElementRole="CloseButton">
+                  <Viewbox Width="10" Height="10">
+                    <Path Stretch="UniformToFill" Fill="{DynamicResource RmTextBrush}"
+                          Data="M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z" />
+                  </Viewbox>
+                </Button>
+              </StackPanel>
+            </Panel>
+          </WindowDrawnDecorationsContent.Overlay>
+
+          <WindowDrawnDecorationsContent.FullscreenPopover>
+            <Panel Height="{TemplateBinding DefaultTitleBarHeight}" VerticalAlignment="Top"
+                   Background="{DynamicResource RmBaseBrush}" WindowDecorationProperties.ElementRole="DecorationsElement">
+              <TextBlock Text="{TemplateBinding Title}" VerticalAlignment="Center" Margin="14,0,0,0" FontSize="12" />
+              <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button x:Name="PART_PopoverFullScreenButton" Theme="{StaticResource RmCaptionButton}"
+                        WindowDecorationProperties.ElementRole="FullScreenButton">
+                  <Viewbox Width="10" Height="10">
+                    <Path Stretch="UniformToFill" Fill="{DynamicResource RmTextBrush}"
+                          Data="M205 1024h819v-819h-205v469l-674 -674l-145 145l674 674h-469v205zM1374 1229h469v-205h-819v819h205v-469l674 674l145 -145z" />
+                  </Viewbox>
+                </Button>
+                <Button x:Name="PART_PopoverCloseButton" Background="#E81123" BorderBrush="#F1707A" Theme="{StaticResource RmCaptionButton}"
+                        WindowDecorationProperties.ElementRole="CloseButton">
+                  <Viewbox Width="10" Height="10">
+                    <Path Stretch="UniformToFill" Fill="{DynamicResource RmTextBrush}"
+                          Data="M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z" />
+                  </Viewbox>
+                </Button>
+              </StackPanel>
+            </Panel>
+          </WindowDrawnDecorationsContent.FullscreenPopover>
+        </WindowDrawnDecorationsContent>
+      </WindowDrawnDecorationsTemplate>
+    </Setter>
+
+    <Style Selector="^:has-shadow /template/ Panel#PART_UnderlayWrapper">
+      <Setter Property="Margin" Value="{TemplateBinding ShadowThickness}" />
+    </Style>
+    <Style Selector="^:has-shadow /template/ Border#PART_WindowBorder">
+      <Setter Property="BoxShadow" Value="0 2 10 2 #80000000" />
+    </Style>
+    <Style Selector="^:has-shadow /template/ Panel#PART_OverlayWrapper">
+      <Setter Property="Margin" Value="{TemplateBinding ShadowThickness}" />
+    </Style>
+    <Style Selector="^:has-border /template/ Panel#PART_TitleBar">
+      <Setter Property="Margin" Value="1,1,1,0" />
+    </Style>
+    <Style Selector="^:has-border /template/ StackPanel#PART_OverlayPanel">
+      <Setter Property="Margin" Value="0,1,1,0" />
+    </Style>
+    <Style Selector="^:maximized /template/ Path#RestoreButtonPath">
+      <Setter Property="Data" Value="M2048 410h-410v-410h-1638v1638h410v410h1638v-1638zM1434 1434h-1229v-1229h1229v1229zM1843 1843h-1229v-205h1024v-1024h205v1229z" />
+    </Style>
+    <Style Selector="^ /template/ Button:disabled">
+      <Setter Property="Opacity" Value="0.25" />
+    </Style>
+    <Style Selector="^:not(:has-minimize) /template/ Button#PART_MinimizeButton">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="^:not(:has-maximize) /template/ Button#PART_MaximizeButton">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="^:not(:has-fullscreen) /template/ Button#PART_PopoverFullScreenButton">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="^:fullscreen /template/ StackPanel#PART_OverlayPanel">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="^:fullscreen /template/ Panel#PART_TitleBar">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+  </ControlTheme>
+</ResourceDictionary>

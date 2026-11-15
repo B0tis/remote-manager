@@ -145,19 +145,11 @@ public partial class MainWindow
 
     private async Task<bool> ConfirmEndSessionsAsync(int count)
     {
-        var dialog = new FAContentDialog
-        {
-            Title = Strings.Update_SessionsTitle,
-            Content = new TextBlock
-            {
-                Text = count == 1 ? Strings.Update_SessionsTextOne : string.Format(CultureInfo.CurrentCulture, Strings.Update_SessionsText, count),
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                MaxWidth = 420,
-            },
-            PrimaryButtonText = Strings.Update_SessionsConfirm,
-            CloseButtonText = Strings.Action_Cancel,
-            DefaultButton = FAContentDialogButton.Close,
-        };
+        // Ending sessions is the risky part of this answer, so Cancel stays the default.
+        FAContentDialog dialog = DialogKit.Question(
+            count == 1 ? Strings.Update_SessionsTitleOne : Strings.Update_SessionsTitle,
+            count == 1 ? Strings.Update_SessionsTextOne : string.Format(CultureInfo.CurrentCulture, Strings.Update_SessionsText, count),
+            Strings.Update_SessionsConfirm, destructive: true);
         UpdateSessionsDialog = dialog;
         FAContentDialogResult result = await dialog.ShowAsync();
         UpdateSessionsDialog = null;

@@ -23,16 +23,34 @@ public partial class App : Application
         {
             AppHost host = AppHost.Start();
             desktop.Exit += (_, _) => host.Dispose();
+            host.Appearance.Attach(this); // theme and signal color, before the first window is built
 
             var window = new MainWindow();
             desktop.MainWindow = window;
             desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            window.InitializeTray(); // notification-area icon, Views/MainWindow.Tray.cs
 
             if (AppOptions.SelfTest)
-                window.Opened += async (_, _) => desktop.Shutdown(await SelfTest.RunAsync(window));
+                OnFirstOpened(window, async () => desktop.Shutdown(await SelfTest.RunAsync(window)));
+            else if (AppOptions.Tour)
+                OnFirstOpened(window, async () => desktop.Shutdown(await SelfTest.RunTourAsync(window)));
+            else if (AppOptions.LiveTest)
+                OnFirstOpened(window, async () => desktop.Shutdown(await SelfTest.RunLiveOnlyAsync(window)));
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>Opened is raised every time a hidden window is shown again (back from the notification area); this runs once.</summary>
+    private static void OnFirstOpened(Window window, Action action)
+    {
+        void Handler(object? sender, EventArgs e)
+        {
+            window.Opened -= Handler;
+            action();
+        }
+
+        window.Opened += Handler;
     }
 
     /// <summary>

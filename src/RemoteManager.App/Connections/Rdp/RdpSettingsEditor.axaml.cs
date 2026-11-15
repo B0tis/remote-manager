@@ -2,7 +2,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.LogicalTree;
 using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
 using RemoteManager.Core.Credentials;
 using RemoteManager.Core.Model;
 using RemoteManager.App.Connections.Ssh;
@@ -14,7 +17,7 @@ namespace RemoteManager.App.Connections.Rdp;
 /// The RDP part of the connection editor: display, keyboard, security (NLA, server authentication,
 /// admin session, Restricted Admin / Remote Credential Guard), gateway, redirections, RemoteApp and
 /// start program, and "open with mstsc". A typed gateway password goes to the Credential Manager on
-/// save; the settings only keep the reference.
+/// save; the settings only keep the reference. Each topic can be closed; its header then says what is set.
 /// </summary>
 public partial class RdpSettingsEditor : UserControl, ISettingsEditor
 {
@@ -35,11 +38,28 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
         GatewayUsageBox.SelectionChanged += (_, _) => UpdateVisibility();
         GatewaySameLogonBox.IsCheckedChanged += (_, _) => UpdateVisibility();
         RemoteAppBox.TextChanged += (_, _) => UpdateVisibility();
+
+        // Any change may alter what a closed topic says about itself.
+        foreach (ILogical input in this.GetLogicalDescendants())
+        {
+            switch (input)
+            {
+                case ComboBox box: box.SelectionChanged += (_, _) => UpdateSummaries(); break;
+                case ToggleButton check: check.IsCheckedChanged += (_, _) => UpdateSummaries(); break;
+                case TextBox text: text.TextChanged += (_, _) => UpdateSummaries(); break;
+            }
+        }
+
+        FormFields.LinkLabels(this);
     }
 
     public Control View => this;
 
     public CheckBox LivePreview => LivePreviewBox;
+
+    /// <summary>What the closed topics say in their headers, top to bottom (self-test).</summary>
+    public IReadOnlyList<string> TopicSummaries =>
+        [DisplaySummary.Text ?? "", SecuritySummary.Text ?? "", GatewaySummary.Text ?? "", RedirectionSummary.Text ?? "", ProgramSummary.Text ?? ""];
 
     /// <summary>Opens every section (self-test screenshots).</summary>
     public void ExpandAll()
@@ -70,7 +90,7 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
         GatewaySameLogonBox.IsChecked = s.GatewayUsesConnectionCredentials;
         GatewayUserBox.Text = s.GatewayUserName;
         GatewayPasswordBox.Text = "";
-        GatewayPasswordBox.PlaceholderText = s.GatewayCredential is null ? Strings.Field_Password : Strings.Password_NewPlaceholder;
+        GatewayPasswordBox.PlaceholderText = s.GatewayCredential is null ? "" : Strings.Password_NewPlaceholder;
 
         RdpRedirections r = s.Redirections;
         ClipboardBox.IsChecked = r.Clipboard;
@@ -92,6 +112,7 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
         RedirectionExpander.IsExpanded = r != new RdpRedirections();
         ProgramExpander.IsExpanded = s.RemoteAppProgram.Length > 0 || s.StartProgram.Length > 0;
         UpdateVisibility();
+        UpdateSummaries();
     }
 
     public string? Validate()
@@ -203,6 +224,64 @@ public partial class RdpSettingsEditor : UserControl, ISettingsEditor
         ExternalBox.IsEnabled = !remoteApp;
         if (remoteApp)
             ExternalBox.IsChecked = true;
+    }
+
+    /// <summary>One line per topic for its header: enough to see the setup without opening anything.</summary>
+    private void UpdateSummaries()
+    {
+        var display = new List<string>
+        {
+            SelectedDisplay switch
+            {
+                RdpDisplayMode.SmartSizing => Strings.Rdp_Summary_Smart,
+                RdpDisplayMode.FixedResolution when ParseSize(WidthBox.Text) is { } width && ParseSize(HeightBox.Text) is { } height =>
+                    string.Format(CultureInfo.CurrentCulture, Strings.Rdp_Summary_Size, width, height),
+                RdpDisplayMode.FixedResolution => Strings.Rdp_Display_Fixed,
+                _ => Strings.Rdp_Summary_Fit,
+            },
+        };
+        if (MultimonBox.IsChecked == true)
+            display.Add(Strings.Rdp_Summary_Multimon);
+        if (ExternalBox.IsChecked == true)
+            display.Add(Strings.Rdp_Summary_External);
+        DisplaySummary.Text = string.Join(", ", display);
+
+        var security = new List<string> { NlaBox.IsChecked == true ? Strings.Rdp_Summary_Nla : Strings.Rdp_Summary_NoNla };
+        if (AdminBox.IsChecked == true)
+            security.Add(Strings.Rdp_Summary_Admin);
+        if (CredentialModeBox.SelectedIndex == 1)
+            security.Add(Strings.Rdp_Summary_RestrictedAdmin);
+        else if (CredentialModeBox.SelectedIndex == 2)
+            security.Add(Strings.Rdp_CredentialMode_RemoteGuard);
+        SecuritySummary.Text = string.Join(", ", security);
+
+        string gatewayHost = GatewayHostBox.Text?.Trim() ?? "";
+        var gateway = new List<string>
+        {
+            SelectedGateway switch
+            {
+                RdpGatewayUsage.None => Strings.Rdp_Summary_NoGateway,
+                _ when gatewayHost.Length > 0 => gatewayHost,
+                RdpGatewayUsage.Detect => Strings.Rdp_Summary_GatewayAuto,
+                _ => Strings.Rdp_Gateway,
+            },
+        };
+        if (JumpHostPicker.SelectedId(JumpBox) is { Length: > 0 })
+            gateway.Add(Strings.Rdp_Summary_Tunnel);
+        GatewaySummary.Text = string.Join(", ", gateway);
+
+        List<string> redirected = [.. new[] { ClipboardBox, DrivesBox, PrintersBox, SmartCardsBox, PortsBox, MicrophoneBox }
+            .Where(box => box.IsChecked == true).Select(box => box.Content as string ?? "")];
+        if (redirected.Count == 0)
+            redirected.Add(Strings.Rdp_Summary_NoRedirect);
+        if (AudioModes[Math.Max(0, AudioBox.SelectedIndex)] is var audio && audio != RdpAudioMode.Local)
+            redirected.Add(audio == RdpAudioMode.Remote ? Strings.Rdp_Summary_AudioRemote : Strings.Rdp_Summary_AudioNone);
+        RedirectionSummary.Text = string.Join(", ", redirected);
+
+        ProgramSummary.Text =
+            RemoteAppBox.Text?.Trim() is { Length: > 0 } remoteApp ? remoteApp :
+            StartProgramBox.Text?.Trim() is { Length: > 0 } program ? program :
+            Strings.Rdp_Summary_Desktop;
     }
 
     private static int? ParseSize(string? text) =>

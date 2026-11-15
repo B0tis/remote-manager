@@ -7,8 +7,8 @@ namespace RemoteManager.App.Views;
 
 /// <summary>
 /// Responsive layout (docs/ui.md). One breakpoint for the window: from <see cref="WideLayoutWidth"/> the sidebar is
-/// expanded (FANavigationView "Auto", same threshold in MainWindow.axaml) and the detail column follows the saved
-/// setting; below it the sidebar shows icons only and the detail column is closed unless opened for the moment.
+/// expanded (MainWindow.Sidebar.cs) and the detail column follows the saved setting; below it the sidebar shows
+/// icons only and the detail column is closed unless opened for the moment.
 /// The header drops button labels below <see cref="NarrowHeaderWidth"/>; the list hides low-priority columns.
 /// </summary>
 public partial class MainWindow
@@ -19,12 +19,19 @@ public partial class MainWindow
     /// <summary>Header width (DIP) below which "Verbinden" and "Neue Verbindung" show only their icon.</summary>
     public const double NarrowHeaderWidth = 700;
 
+    /// <summary>
+    /// Header width (DIP) below which the S/M/L switch leaves its room to the page title (the sizes stay in
+    /// "Mehr"). Title, switch, and the labelled buttons need about 760; the start size gives the header 707.
+    /// </summary>
+    public const double RoomyHeaderWidth = 770;
+
     /// <summary>List width (DIP) below which group and tags hide (900), and also "zuletzt verbunden" (640).</summary>
     public const double CompactListWidth = 900, NarrowListWidth = 640;
 
     private bool detailsWanted = true;
     private bool detailsOnNarrow;
     private bool wideLayout = true;
+    private bool placeRestored;
 
     /// <summary>True while the window is at least <see cref="WideLayoutWidth"/> wide.</summary>
     public bool IsWideLayout => wideLayout;
@@ -45,7 +52,11 @@ public partial class MainWindow
     {
         FitToScreen();
         SizeChanged += (_, e) => UpdateLayoutMode(e.NewSize.Width);
-        Header.SizeChanged += (_, e) => Header.Classes.Set("narrow", e.NewSize.Width < NarrowHeaderWidth);
+        Header.SizeChanged += (_, e) =>
+        {
+            Header.Classes.Set("narrow", e.NewSize.Width < NarrowHeaderWidth);
+            SizeSwitch.IsVisible = e.NewSize.Width >= RoomyHeaderWidth;
+        };
         ListPanel.SizeChanged += (_, e) =>
         {
             ListPanel.Classes.Set("compact", e.NewSize.Width < CompactListWidth);
@@ -61,7 +72,9 @@ public partial class MainWindow
             return;
         wideLayout = wide;
         detailsOnNarrow = false; // a column opened on a narrow window does not stay open across modes
+        sidebarFloating = false; // nor does a sidebar opened over the content
         ApplyDetailsVisibility();
+        ApplySidebarMode();
     }
 
     private void ApplyDetailsVisibility()
@@ -81,8 +94,10 @@ public partial class MainWindow
         if (screen is null)
             return;
         double scaling = screen.Scaling > 0 ? screen.Scaling : 1;
-        double maxWidth = screen.WorkingArea.Width / scaling * 0.92;
-        double maxHeight = screen.WorkingArea.Height / scaling * 0.92;
+        // A place the user left the window in may fill the screen; only the default size keeps a margin.
+        double share = placeRestored ? 1 : 0.92;
+        double maxWidth = screen.WorkingArea.Width / scaling * share;
+        double maxHeight = screen.WorkingArea.Height / scaling * share;
         Width = Math.Max(MinWidth, Math.Min(Width, maxWidth));
         Height = Math.Max(MinHeight, Math.Min(Height, maxHeight));
     }

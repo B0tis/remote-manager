@@ -1,10 +1,12 @@
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Resources;
+using RemoteManager.App.Views;
 using RemoteManager.Core.ImportExport;
 using RemoteManager.Core.Model;
 using RemoteManager.Core.RemoteTools;
@@ -12,9 +14,9 @@ using RemoteManager.Core.RemoteTools;
 namespace RemoteManager.App.Connections.RemoteTools;
 
 /// <summary>
-/// Settings of the remote tools: executable paths (detected, or set here), the TeamViewer Web API token
-/// with "Jetzt abgleichen", and the AnyDesk CSV import. Opened from the overview header and from
-/// <see cref="MissingToolDialog"/>.
+/// Settings of the remote tools, a card per topic: executable paths (detected, or set here; a lamp shows whether
+/// the tool can start), the TeamViewer Web API token with "Jetzt abgleichen", and the AnyDesk CSV import. Opened
+/// from the "Mehr" menu and from <see cref="MissingToolDialog"/>.
 /// </summary>
 public partial class RemoteToolsDialog : UserControl
 {
@@ -66,6 +68,8 @@ public partial class RemoteToolsDialog : UserControl
             DefaultButton = FAContentDialogButton.Primary,
         };
         dialog.PrimaryButtonClick += (_, e) => e.Cancel = !content.TrySavePaths();
+        // Three cards: on a window with the room they all show at once.
+        DialogKit.AllowHeight(dialog, 920);
         if (focus is { } type)
             dialog.Opened += (_, _) => content.paths[type].Box.Focus();
 
@@ -79,6 +83,9 @@ public partial class RemoteToolsDialog : UserControl
     /// <summary>Sets a path box (self-test).</summary>
     internal void SetPath(ConnectionType type, string path) => paths[type].Box.Text = path;
 
+    /// <summary>The message under a path box, or null while there is none (self-test).</summary>
+    internal string? PathError(ConnectionType type) => paths[type].State.IsVisible ? paths[type].State.Text : null;
+
     /// <summary>Writes the path settings; false (and an error under the row) when a path is not an existing .exe.</summary>
     internal bool TrySavePaths()
     {
@@ -86,10 +93,11 @@ public partial class RemoteToolsDialog : UserControl
         foreach ((ConnectionType type, (TextBox box, TextBlock state)) in paths)
         {
             string path = box.Text?.Trim().Trim('"') ?? "";
-            if (path.Length > 0 && (!path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || !File.Exists(path)))
+            bool wrong = path.Length > 0 && (!path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || !File.Exists(path));
+            state.IsVisible = wrong;
+            if (wrong)
             {
                 state.Text = string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Paths_Invalid, path);
-                state.Foreground = (Avalonia.Media.IBrush?)this.FindResource("SystemFillColorCriticalBrush");
                 valid = false;
             }
         }
@@ -162,59 +170,93 @@ public partial class RemoteToolsDialog : UserControl
             + (result.Warnings.Count > 0 ? "\n" + string.Join("\n", result.Warnings.Take(5)) : ""));
     }
 
+    /// <summary>
+    /// One tool: a lamp with its name and what was found, then the path box. The detected path shows as the
+    /// placeholder of the empty box, so the box always reads as the path in use.
+    /// </summary>
     private Control CreatePathRow(RemoteToolInfo info)
     {
         ToolLocation location = RemoteToolLauncher.Locator.Locate(info.Type);
         string? configured = app.Library.Store.GetSetting(info.SettingKey);
         string? detected = RemoteToolLauncher.Locator.Detect(info.Type);
 
+        var lamp = new Ellipse { Classes = { "lamp" } };
+        DialogKit.SetLamp(lamp, location switch
+        {
+            { ConfiguredPathMissing: true } => "fault",
+            { Path: not null } => "ok",
+            _ => "idle",
+        });
+        var name = new TextBlock { Text = info.ProductName, FontWeight = Avalonia.Media.FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+        var found = new TextBlock
+        {
+            Classes = { "caption" },
+            VerticalAlignment = VerticalAlignment.Center,
+            Text = location switch
+            {
+                { ConfiguredPathMissing: true } => Strings.RemoteTool_State_SetMissing,
+                { Path: not null, FromSetting: true } => Strings.RemoteTool_State_Set,
+                { Path: not null } => Strings.RemoteTool_State_Found,
+                _ => Strings.RemoteTool_State_Missing,
+            },
+        };
+        // Only offered while there is nothing to start.
+        var download = new Button
+        {
+            Classes = { "link" },
+            Content = Strings.RemoteTool_Missing_Download,
+            IsVisible = location.Path is null,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Avalonia.Thickness(0, -3, -6, -3),
+        };
+        ToolTip.SetTip(download, info.DownloadUrl);
+        download.Click += (_, _) => MissingToolDialog.OpenUrl(info.DownloadUrl);
+
         var box = new TextBox
         {
+            Classes = { "mono" },
             Text = configured ?? "",
-            PlaceholderText = detected is not null
-                ? string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Paths_Detected, detected)
-                : Strings.RemoteTool_Paths_Auto,
+            PlaceholderText = detected ?? Strings.RemoteTool_Paths_Auto,
         };
-        var browse = new Button { Content = new FASymbolIcon { Symbol = FASymbol.OpenFolder, FontSize = 16 }, Padding = new Avalonia.Thickness(9) };
+        var browse = new Button { Content = new FASymbolIcon { Symbol = FASymbol.OpenFolder, FontSize = 15 }, Width = 36, Height = 32, Padding = new Avalonia.Thickness(0) };
         ToolTip.SetTip(browse, Strings.RemoteTool_Paths_Browse);
         browse.Click += async (_, _) =>
         {
             if (await PickFileAsync(info.ProductName, info.ProductName, info.ExeName, "*.exe") is { } file)
                 box.Text = file;
         };
-        var download = new HyperlinkButton
-        {
-            Content = Strings.RemoteTool_Missing_Download,
-            NavigateUri = new Uri(info.DownloadUrl),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+
+        // Shown only for a path that cannot be used: the configured one is gone, or the typed one is no .exe.
         var state = new TextBlock
         {
-            FontSize = 12,
-            Opacity = 0.7,
+            FontSize = 12.5,
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-            Text = location switch
-            {
-                { ConfiguredPathMissing: true } => string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Paths_ConfiguredMissing, configured),
-                { Path: { } p, FromSetting: true } => string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Paths_UsingSetting, p),
-                { Path: { } p } => string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Paths_UsingDetected, p),
-                _ => string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Paths_Missing, info.ProductName),
-            },
+            IsVisible = location.ConfiguredPathMissing,
+            Text = location.ConfiguredPathMissing
+                ? string.Format(CultureInfo.CurrentCulture, Strings.RemoteTool_Paths_ConfiguredMissing, configured)
+                : "",
         };
+        // The frame shows and hides with its text.
+        Border problem = DialogKit.Note(state, "error");
+        problem.Margin = new Avalonia.Thickness(0, 8, 0, 0);
+        problem[!IsVisibleProperty] = state[!IsVisibleProperty];
         paths[info.Type] = (box, state);
 
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("82,*,8,Auto,4,Auto") };
-        grid.Children.Add(new TextBlock { Text = info.ProductName, VerticalAlignment = VerticalAlignment.Center });
-        Grid.SetColumn(box, 1);
-        Grid.SetColumn(browse, 3);
-        Grid.SetColumn(download, 5);
-        grid.Children.Add(box);
-        grid.Children.Add(browse);
-        grid.Children.Add(download);
-        Grid.SetColumn(state, 1);
-        var stateRow = new Grid { ColumnDefinitions = new ColumnDefinitions("82,*") };
-        stateRow.Children.Add(state);
-        return new StackPanel { Spacing = 4, Children = { grid, stateRow } };
+        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,8,Auto,10,*,Auto"), Margin = new Avalonia.Thickness(1, 0, 0, 6) };
+        Place(header, lamp, 0);
+        Place(header, name, 2);
+        Place(header, found, 4);
+        Place(header, download, 5);
+        var input = new Grid { ColumnDefinitions = new ColumnDefinitions("*,8,Auto") };
+        Place(input, box, 0);
+        Place(input, browse, 2);
+        return new StackPanel { Children = { header, input, problem } };
+    }
+
+    private static void Place(Grid grid, Control control, int column)
+    {
+        Grid.SetColumn(control, column);
+        grid.Children.Add(control);
     }
 
     private async Task SaveTokenAsync()
@@ -243,6 +285,7 @@ public partial class RemoteToolsDialog : UserControl
     {
         bool has = await TeamViewerAccount.HasTokenAsync();
         TokenState.Text = has ? Strings.RemoteTool_Sync_TokenStored : Strings.RemoteTool_Sync_NoToken;
+        DialogKit.SetLamp(TokenLamp, has ? "ok" : "idle");
         DeleteTokenButton.IsEnabled = has;
         SyncButton.IsEnabled = has;
     }

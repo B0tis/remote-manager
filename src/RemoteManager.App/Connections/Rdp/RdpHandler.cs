@@ -46,6 +46,7 @@ public sealed class RdpHandler : ConnectionHandler
         };
         window.PasswordSaved += (_, _) => host.Save(connection);
         window.SessionLoggedIn += (_, _) => host.MarkConnected(connection);
+        Services.WindowPlacement.OpenOnScreenOf(window, host.Owner);
         window.Show();
         return window;
     }

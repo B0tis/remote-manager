@@ -34,7 +34,8 @@ namespace RemoteManager.App.Diagnostics;
 /// Checks that need a real RDP server only run when RM_SPIKE_HOST is set (RM_SPIKE_USER /
 /// RM_SPIKE_DOMAIN fill the connection; RM_SPIKE_PASSWORD is stored as a temporary credential so the
 /// window logs on by itself; never logged). Credential checks use "RemoteManager:selftest-*-&lt;run&gt;" only (see SelfTest.Isolation.cs).
-/// Database checks run on a temporary folder; the real database is only read.
+/// Run it with REMOTE_MANAGER_DATA set to a scratch folder: the overview checks add and remove their own
+/// "Selftest" entries and settings in the data folder they run on (they put them back, but a crash may not).
 /// </summary>
 internal static partial class SelfTest
 {
@@ -68,7 +69,6 @@ internal static partial class SelfTest
         foreach (Screen screen in window.Screens.All)
             Log($"Screen {screen.DisplayName}: bounds {screen.Bounds}, scaling {screen.Scaling}, primary {screen.IsPrimary}");
         CheckAppIcon(window);
-
         // --- Overview: store, tile view, list view ------------------------------------------------
         AppHost app = AppHost.Current;
         Log($"Store {app.StoreReport.DatabasePath}: schema {SqliteMigrator.LatestVersion}, migrated from json {app.StoreReport.MigratedFromJson}, seeded {app.StoreReport.Seeded}");
@@ -99,16 +99,21 @@ internal static partial class SelfTest
         Check("Edit dialog opens and Cancel leaves the connection unchanged", !await editing && edited.Name == nameBefore);
 
         await RunOverviewChecksAsync(window);
+        await RunPaletteChecksAsync(window); // SelfTest.Palette.cs
         await RunGroupDeleteChecksAsync(window); // SelfTest.GroupDelete.cs
         await RunLayoutChecksAsync(window); // SelfTest.Layout.cs
         await RunCredentialChecksAsync(window);
         await RunRdpImportChecksAsync(window);
+        await RunRedesignChecksAsync(window); // SelfTest.Redesign.cs
 
         await RunRemoteToolChecksAsync(window);
+        await RunFormChecksAsync(window); // SelfTest.Forms.cs
         await RunVncAndVaultChecksAsync(window); // SelfTest.VncAndVaults.cs
         await RunLivePreviewChecksAsync(window); // SelfTest.LivePreview.cs
+        await RunDialogChecksAsync(window); // SelfTest.Dialogs.cs
         await RunSshChecksAsync(window);
         await RunUpdateChecksAsync(window); // SelfTest.Updates.cs
+        await RunTrayChecksAsync(window); // SelfTest.Tray.cs
         await RunSyncChecksAsync(window); // SelfTest.Sync.cs
 
         // --- Two session windows, each with its own RDP client -------------------------------------
@@ -163,7 +168,8 @@ internal static partial class SelfTest
             && window.SessionWindows.Count == 1 && window.SessionWindows[0] == first);
 
         // --- Real server (optional) --------------------------------------------------------------------
-        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_HOST")))
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_HOST"))
+            || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_CONNECTION")))
             await RunLiveSessionChecksAsync(window);
         else
             Log("SKIP live-session checks (RM_SPIKE_HOST not set): logon, snapshot as preview, live RDP preview, resize, DPI.");
@@ -360,13 +366,72 @@ internal static partial class SelfTest
             raised && s.Rdp.IsClientReady && !s.IsSessionActive && !s.Rdp.IsVisible);
     }
 
+    /// <summary>
+    /// <c>--livetest</c>: only the checks that need a real server, without the rest of the self-test. Uses
+    /// RM_SPIKE_CONNECTION (name or id of a saved connection, with its stored password) or RM_SPIKE_HOST / _USER /
+    /// _PASSWORD. Writes selftest-live.log and the session probes to the spike folder.
+    /// </summary>
+    public static async Task<int> RunLiveOnlyAsync(MainWindow window)
+    {
+        try
+        {
+            Log($"Remote-Manager live test {DateTime.Now:O}");
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_HOST"))
+                && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RM_SPIKE_CONNECTION")))
+            {
+                Fail("--livetest needs RM_SPIKE_HOST (with RM_SPIKE_USER, RM_SPIKE_PASSWORD) or RM_SPIKE_CONNECTION.");
+                await File.WriteAllLinesAsync(Path.Combine(AppPaths.Spike, "selftest-live.log"), Lines);
+                return 2;
+            }
+
+            await Settle(1500);
+            await RunLiveSessionChecksAsync(window);
+        }
+        catch (Exception ex)
+        {
+            Fail($"Unhandled exception: {ex}");
+        }
+
+        Log(failures == 0 ? "RESULT: PASS" : $"RESULT: FAIL ({failures} failed checks)");
+        await File.WriteAllLinesAsync(Path.Combine(AppPaths.Spike, "selftest-live.log"), Lines);
+        return failures == 0 ? 0 : 1;
+    }
+
     private static async Task RunLiveSessionChecksAsync(MainWindow window)
     {
+        // A saved connection with its own stored password: nothing secret passes through the environment.
+        if (Environment.GetEnvironmentVariable("RM_SPIKE_CONNECTION") is { Length: > 0 } saved)
+        {
+            ConnectionItem? existing = window.Connections.FirstOrDefault(c => c.Id == saved || string.Equals(c.Name, saved, StringComparison.OrdinalIgnoreCase));
+            if (existing is null)
+            {
+                Fail($"RM_SPIKE_CONNECTION: no saved connection \"{saved}\".");
+                return;
+            }
+
+            if (existing.Model.Type != ConnectionType.Rdp)
+            {
+                Fail($"RM_SPIKE_CONNECTION: \"{existing.Name}\" is {existing.TypeLabel}, the live checks need RDP.");
+                return;
+            }
+
+            Log($"Live checks against the saved connection \"{existing.Name}\" ({existing.HostLabel}), stored password: {existing.HasStoredPassword}.");
+            await RunLiveSessionAsync(window, existing, existing.HasStoredPassword);
+            return;
+        }
+
         ConnectionItem connection = window.CreateItem(new Connection
         {
             Id = TestId("live"),
             Name = "Selftest live",
             Host = Environment.GetEnvironmentVariable("RM_SPIKE_HOST")!,
+            // 0 = the type's default port; a testbed in Docker publishes another one.
+            Port = int.TryParse(Environment.GetEnvironmentVariable("RM_SPIKE_PORT"), out int port) ? port : 0,
+            // RM_SPIKE_AUTH_LEVEL=0 connects without the certificate question (a testbed's self-signed certificate).
+            Settings = new RdpSettings
+            {
+                AuthenticationLevel = int.TryParse(Environment.GetEnvironmentVariable("RM_SPIKE_AUTH_LEVEL"), out int level) ? level : 2,
+            },
             UserName = Environment.GetEnvironmentVariable("RM_SPIKE_USER") ?? "",
             Domain = Environment.GetEnvironmentVariable("RM_SPIKE_DOMAIN") ?? "",
         });
@@ -391,18 +456,94 @@ internal static partial class SelfTest
         }
     }
 
+    /// <summary>
+    /// Windows of this process that are not Avalonia's: dialogs the RDP control opens by itself (certificate
+    /// warning, credential prompt, error). Logged once each, so a run without a person shows what blocked it;
+    /// with RM_SPIKE_CLOSE_DIALOGS=1 they are closed, which answers them with "no".
+    /// </summary>
+    private static void ReportNativeDialogs(HashSet<nint> seen)
+    {
+        uint pid = (uint)Environment.ProcessId;
+        bool close = Environment.GetEnvironmentVariable("RM_SPIKE_CLOSE_DIALOGS") == "1";
+        EnumWindows((hwnd, _) =>
+        {
+            GetWindowThreadProcessId(hwnd, out uint owner);
+            if (owner != pid || !IsWindowVisible(hwnd) || !seen.Add(hwnd))
+                return true;
+            var name = new StringBuilder(256);
+            GetClassName(hwnd, name, name.Capacity);
+            string className = name.ToString();
+            if (className.StartsWith("Avalonia", StringComparison.Ordinal))
+                return true;
+            var title = new StringBuilder(256);
+            GetWindowText(hwnd, title, title.Capacity);
+            if (className != "#32770" && title.Length == 0)
+                return true;
+            Log($"  native dialog: class \"{className}\", title \"{title}\"{(close ? " (closed by the test)" : "")}");
+            // What it says: a screen copy of the dialog (its text is not reachable as window text).
+            if (GetWindowRect(hwnd, out Rect area)
+                && SessionCapture.CaptureScreen(area.Left, area.Top, area.Right - area.Left, area.Bottom - area.Top) is { } picture)
+            {
+                string file = Path.Combine(AppPaths.Spike, $"native-dialog-{seen.Count}.png");
+                picture.SavePng(file);
+                Log($"  probe saved: {file}");
+            }
+
+            if (close)
+                PostMessage(hwnd, 0x0010, 0, 0); // WM_CLOSE
+            return true;
+        }, 0);
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(nint window, StringBuilder name, int capacity);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(nint window, StringBuilder text, int capacity);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PostMessage(nint window, uint message, nint wParam, nint lParam);
+
     private static async Task RunLiveSessionAsync(MainWindow window, ConnectionItem connection, bool stored)
+    {
+        var dialogs = new HashSet<nint>();
+        var dialogWatch = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
+        // A dialog needs a moment to paint before its picture is worth taking.
+        dialogWatch.Tick += async (_, _) =>
+        {
+            await Task.Delay(400);
+            ReportNativeDialogs(dialogs);
+        };
+        ReportNativeDialogs(dialogs); // the windows that are already there are not dialogs of the session
+        dialogWatch.Start();
+        try
+        {
+            await RunLiveSessionCoreAsync(window, connection, stored);
+        }
+        finally
+        {
+            dialogWatch.Stop();
+        }
+    }
+
+    private static async Task RunLiveSessionCoreAsync(MainWindow window, ConnectionItem connection, bool stored)
     {
         var live = (SessionWindow)window.OpenSession(connection)!;
         live.StatusLogged += (_, message) => Log($"  [{live.Title}] {message}");
         await WaitFor(() => live.Rdp.IsClientReady, TimeSpan.FromSeconds(20));
         if (!stored)
             live.Connect();
-        bool loggedIn = await WaitFor(() => live.IsLoggedIn, TimeSpan.FromSeconds(90));
+        // Logged in, or back on the card with a message (refused, user missing): no need to wait out the timeout.
+        await WaitFor(() => live.IsLoggedIn || (live.IsConnectCardVisible && live.CardMessageText.Length > 0), TimeSpan.FromSeconds(90));
+        bool loggedIn = live.IsLoggedIn;
         Check($"Live session logs in without a credential prompt (NLA, {(stored ? "stored password, auto-connect" : "typed password")})",
             loggedIn && live.UsedStoredPassword == stored);
         if (!loggedIn)
         {
+            await Settle(500);
+            Log($"  not logged in: card visible {live.IsConnectCardVisible}, card message \"{live.CardMessageText}\", status \"{live.LastStatus}\", reason {live.LastDisconnectReason}");
+            SaveRenderProbe(live, "session-window-live-failed.png");
             live.Close();
             return;
         }
@@ -412,6 +553,13 @@ internal static partial class SelfTest
         Check($"Live snapshot is a non-blank PNG ({png})", png is not null && File.Exists(png) && !CapturedBlank(live));
         Check("Snapshot becomes the connection preview", connection.HasPreview);
         SaveScreenProbe(live, "session-window-live.png");
+        if (png is not null)
+            File.Copy(png, Path.Combine(AppPaths.Spike, "session-live-snapshot.png"), overwrite: true);
+        Check($"The session bar shows the connected lamp and the time connected (\"{live.SessionBar.ClockText}\", status \"{live.LastStatus}\")",
+            live.SessionBar.Lamp == SessionLamp.Connected && live.SessionBar.ClockText.Length > 0 && live.SessionBar.Connected > TimeSpan.FromSeconds(3));
+        bool inLibrary = window.Connections.Contains(connection);
+        Check($"The open session is marked on its item{(inLibrary ? " and listed under \"Aktive Sitzungen\"" : " (not in the library: no row in \"Aktive Sitzungen\")")}",
+            connection.IsSessionOpen && (!inLibrary || window.FindSidebarEntry(SidebarEntry.ActiveTag) is { Count: > 0, ShowLamp: true }));
         await RunLiveRdpPreviewChecksAsync(window, live, connection); // SelfTest.LivePreview.cs
 
         // Resize: dynamic resolution should follow the viewport after the debounce.
@@ -421,7 +569,16 @@ internal static partial class SelfTest
         await Settle(4000);
         PixelSize viewport = live.Rdp.ViewportPixelSize;
         Log($"Resize: remote desktop {before} -> {live.LastRemoteDesktopSize}, viewport {viewport}");
-        Check("Dynamic resolution follows a window resize", live.LastRemoteDesktopSize == viewport);
+        // A Windows server follows the window. A server that mirrors a fixed screen (GNOME desktop sharing, the
+        // FreeRDP testbed) keeps its size; then the picture has to be scaled to the window.
+        // RM_SPIKE_FIXED_DESKTOP=1: the server mirrors a screen of fixed size (GNOME desktop sharing, the FreeRDP
+        // testbed) and the picture must be scaled. Otherwise the server has to follow, as Windows does.
+        bool fixedDesktop = Environment.GetEnvironmentVariable("RM_SPIKE_FIXED_DESKTOP") == "1";
+        Check(fixedDesktop
+                ? $"After a window resize the picture is scaled to the window (the server keeps its size; scaled: {live.IsScaledToFit})"
+                : $"Dynamic resolution follows a window resize ({live.LastRemoteDesktopSize} = {viewport}, scaled: {live.IsScaledToFit})",
+            fixedDesktop ? live.IsScaledToFit : live.LastRemoteDesktopSize == viewport && !live.IsScaledToFit);
+        SaveScreenProbe(live, "session-window-live-resized.png");
 
         // Monitor move (only meaningful with a second screen at a different scaling).
         Screen? current = live.Screens.ScreenFromWindow(live);
@@ -442,8 +599,13 @@ internal static partial class SelfTest
         bool gone = await WaitFor(() => !live.IsSessionActive, TimeSpan.FromSeconds(20));
         Check($"User disconnect leaves a thumbnail ({live.LastThumbnailPath})",
             gone && live.LastThumbnailPath is not null && File.Exists(live.LastThumbnailPath));
+        await Settle(600);
+        SaveRenderProbe(live, "session-window-after-disconnect.png");
+        Check("After the disconnect the bar's lamp is idle, the clock is gone, and the reconnect card shows",
+            live.SessionBar.Lamp == SessionLamp.Idle && live.SessionBar.ClockText.Length == 0 && live.IsConnectCardVisible);
         live.Close();
-        File.Delete(connection.Model.ResolvedPreviewPath);
+        if (!window.Connections.Contains(connection))
+            File.Delete(connection.Model.ResolvedPreviewPath);
     }
 
     /// <summary>

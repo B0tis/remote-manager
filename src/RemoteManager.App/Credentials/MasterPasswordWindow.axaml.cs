@@ -19,9 +19,10 @@ public partial class MasterPasswordWindow : Window
         InitializeComponent();
         DatabaseText.Text = Path.GetFileName(request.DatabasePath);
         ToolTip.SetTip(DatabaseText, request.DatabasePath);
-        KeyFileText.IsVisible = request.KeyFilePath is not null;
-        KeyFileText.Text = string.Format(CultureInfo.CurrentCulture, Strings.Unlock_KeyFile, Path.GetFileName(request.KeyFilePath));
-        ErrorText.IsVisible = request.PreviousAttemptFailed;
+        KeyFileLabel.IsVisible = KeyFileText.IsVisible = request.KeyFilePath is not null;
+        KeyFileText.Text = Path.GetFileName(request.KeyFilePath);
+        ToolTip.SetTip(KeyFileText, request.KeyFilePath);
+        ErrorNote.IsVisible = request.PreviousAttemptFailed;
         HintText.Text = string.Format(CultureInfo.CurrentCulture, Strings.Unlock_Hint, keyLifetime.TotalMinutes);
 
         UnlockButton.Click += (_, _) => Unlock();
@@ -33,7 +34,7 @@ public partial class MasterPasswordWindow : Window
     public static MasterPasswordWindow? Current { get; private set; }
 
     public TextBox Password => PasswordBox;
-    public bool ShowsWrongPassword => ErrorText.IsVisible;
+    public bool ShowsWrongPassword => ErrorNote.IsVisible;
 
     public void Unlock()
     {
@@ -50,7 +51,7 @@ public partial class MasterPasswordWindow : Window
             Current = window;
             try
             {
-                return await window.ShowDialog<string?>(OwnerWindow());
+                return await window.ShowDialog<string?>(Services.DialogOwner.Shown(OwnerWindow()));
             }
             finally
             {

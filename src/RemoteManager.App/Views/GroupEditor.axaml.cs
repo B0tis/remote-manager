@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using RemoteManager.App.Credentials;
 using RemoteManager.App.Resources;
@@ -35,6 +36,7 @@ public partial class GroupEditor : UserControl
             SavePasswordBox.IsChecked = false;
         };
         SourcePanel.KindChanged += (_, _) => OwnPasswordPanel.IsVisible = !SourcePanel.IsExternal;
+        FormFields.LinkLabels(this);
     }
 
     /// <summary>The dialog and its form while open (used by the self-test).</summary>
@@ -159,14 +161,18 @@ public partial class GroupEditor : UserControl
         bool save = SavePasswordBox.IsChecked == true;
         StoredRow.IsVisible = hasStoredPassword;
         StoredText.Text = save ? Strings.Password_Stored : Strings.Password_WillBeRemoved;
-        StoredIcon.Opacity = save ? 1 : 0.4;
+        // A password that is about to go no longer reads as "safely stored".
+        StoredRow.Classes.Set("removing", !save);
         RemovePasswordButton.IsVisible = save;
-        PasswordBox.PlaceholderText = hasStoredPassword ? Strings.Password_NewPlaceholder : Strings.Field_Password;
+        PasswordLabel.Text = hasStoredPassword ? Strings.Password_New : Strings.Field_Password;
+        PasswordBox.PlaceholderText = hasStoredPassword && save ? Strings.Password_NewPlaceholder : "";
     }
 
     private void ShowError(string? error)
     {
         ErrorText.Text = error;
-        ErrorText.IsVisible = error is not null;
+        ErrorNote.IsVisible = error is not null;
+        if (error is not null)
+            Dispatcher.UIThread.Post(() => ErrorNote.BringIntoView(), DispatcherPriority.Loaded);
     }
 }

@@ -12,6 +12,12 @@ public enum OnlineStatus { Unknown, Online, Offline }
 public interface IStatusProbe
 {
     Task<OnlineStatus> ProbeAsync(Connection connection, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Whether the time the probe takes says something about the target (a real connect), so the status check
+    /// reports it as the answer time. False for probes that read a cache or ask a third-party service.
+    /// </summary>
+    bool MeasuresLatency => false;
 }
 
 /// <summary>
@@ -22,6 +28,8 @@ public interface IStatusProbe
 public sealed class TcpPortProbe : IStatusProbe
 {
     public static readonly TcpPortProbe Instance = new();
+
+    public bool MeasuresLatency => true;
 
     public async Task<OnlineStatus> ProbeAsync(Connection connection, CancellationToken cancellationToken)
     {

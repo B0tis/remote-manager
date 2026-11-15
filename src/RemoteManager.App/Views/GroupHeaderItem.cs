@@ -29,6 +29,12 @@ public sealed class GroupHeaderItem(ConnectionGroup? group, int depth) : INotify
 
     public string CountLabel => count.ToString(CultureInfo.CurrentCulture);
 
+    /// <summary>Lamps next to the count: how many connections of the group answer, how many refuse.</summary>
+    public bool HasOnline => online > 0;
+    public bool HasOffline => offline > 0;
+    public string OnlineLabel => online.ToString(CultureInfo.CurrentCulture);
+    public string OfflineLabel => offline.ToString(CultureInfo.CurrentCulture);
+
     /// <summary>Shown while collapsed: "5 online, 2 offline".</summary>
     public string Summary => IsCollapsed
         ? string.Format(CultureInfo.CurrentCulture, Strings.GroupHeader_Summary, online, offline)

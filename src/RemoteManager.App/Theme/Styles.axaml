@@ -1,0 +1,492 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- ===== Type ===== -->
+  <Style Selector="TextBlock.display, SelectableTextBlock.display">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+  </Style>
+  <Style Selector="TextBlock.pageTitle">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+    <Setter Property="FontSize" Value="26" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="0.2" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <Style Selector="TextBlock.subtitle">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.caption">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+  </Style>
+  <Style Selector="TextBlock.heading, SelectableTextBlock.heading">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.name">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+    <Setter Property="FontSize" Value="15.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="0.15" />
+  </Style>
+  <Style Selector="TextBlock.section">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+    <Setter Property="FontSize" Value="13.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="0.3" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.mono, SelectableTextBlock.mono">
+    <Setter Property="FontFamily" Value="{StaticResource RmMonoFont}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="FontWeight" Value="Light" />
+  </Style>
+  <Style Selector="TextBox.mono">
+    <Setter Property="FontFamily" Value="{StaticResource RmMonoFont}" />
+    <Setter Property="FontSize" Value="12.5" />
+  </Style>
+  <Style Selector="TextBlock.muted, SelectableTextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+  </Style>
+  <Style Selector="TextBlock.faint, SelectableTextBlock.faint">
+    <Setter Property="Foreground" Value="{DynamicResource RmTextTertiaryBrush}" />
+  </Style>
+  <Style Selector="TextBlock.hint">
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- The name of a form field, above its input. A placeholder alone disappears once the field is filled. -->
+  <Style Selector="TextBlock.fieldLabel">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+    <Setter Property="Margin" Value="1,0,0,5" />
+  </Style>
+
+  <!-- ===== Small labels ===== -->
+  <!-- On a preview picture: status, type, "Live". -->
+  <Style Selector="Border.pill">
+    <Setter Property="Background" Value="{DynamicResource RmOnImageBrush}" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="7,3" />
+  </Style>
+  <Style Selector="Border.pill TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource RmOnImageTextBrush}" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+  <!-- Connection type as a lettered plate, in the type's color. -->
+  <Style Selector="Border.typeChip">
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="Padding" Value="7,2,7,3" />
+  </Style>
+  <Style Selector="Border.typeChip TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="0.4" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+  <Style Selector="Border.tag">
+    <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="Padding" Value="7,2,7,3" />
+  </Style>
+  <Style Selector="Border.tag TextBlock">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+  </Style>
+  <Style Selector="Border.count">
+    <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="7,1,7,2" />
+    <Setter Property="MinWidth" Value="22" />
+  </Style>
+  <Style Selector="Border.count TextBlock">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+  </Style>
+  <!-- A key of a shortcut ("Strg", "K"). -->
+  <Style Selector="Border.keycap">
+    <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeStrongBrush}" />
+    <Setter Property="BorderThickness" Value="1,1,1,2" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="5,0,5,1" />
+    <Setter Property="MinWidth" Value="20" />
+  </Style>
+  <Style Selector="Border.keycap TextBlock">
+    <Setter Property="FontSize" Value="10.5" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+  </Style>
+  <Style Selector="Ellipse.lamp">
+    <Setter Property="Width" Value="8" />
+    <Setter Property="Height" Value="8" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- ===== Surfaces ===== -->
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource RmCardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RmRadiusCard}" />
+  </Style>
+  <!-- A remark inside a form or dialog: what a setting means, a warning, an error. -->
+  <Style Selector="Border.note">
+    <Setter Property="Background" Value="{DynamicResource RmInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RmRadiusControl}" />
+    <Setter Property="Padding" Value="12,9" />
+  </Style>
+  <Style Selector="Border.note.warning">
+    <Setter Property="Background" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBrush}" />
+  </Style>
+  <Style Selector="Border.note.error">
+    <Setter Property="Background" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+  </Style>
+  <!-- The connect / logon card of a session window. -->
+  <Style Selector="Border.dialogCard">
+    <Setter Property="Background" Value="{DynamicResource RmCardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeStrongBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="28,26" />
+    <Setter Property="BoxShadow" Value="{DynamicResource RmRaisedShadow}" />
+  </Style>
+  <!-- The bar at the top of a session window. -->
+  <Style Selector="Border.sessionBar">
+    <Setter Property="Background" Value="{DynamicResource RmPanelBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="12,5,8,5" />
+  </Style>
+
+  <!-- ===== Buttons ===== -->
+  <!-- Quiet button for bars and panels (the old name "toolbar" still works). -->
+  <Style Selector="Button.toolbar, Button.ghost, Button.icon, Button.link, Button.star, Button.column">
+    <Setter Property="Theme" Value="{StaticResource RmGhostButton}" />
+  </Style>
+  <Style Selector="ToggleButton.toolbar, ToggleButton.ghost, ToggleButton.icon">
+    <Setter Property="Theme" Value="{StaticResource RmGhostToggle}" />
+  </Style>
+  <Style Selector="Button.icon, ToggleButton.icon">
+    <Setter Property="Width" Value="34" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="Button.link">
+    <Setter Property="Padding" Value="6,2" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource RmAccentTextBrush}" />
+  </Style>
+  <Style Selector="Button.star">
+    <Setter Property="Padding" Value="4" />
+  </Style>
+  <Style Selector="Button.accent">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Button.tileConnect">
+    <Setter Property="Theme" Value="{StaticResource RmRoundAccentButton}" />
+  </Style>
+
+  <!-- Two or three exclusive choices in one frame: tiles / list, tile size. -->
+  <Style Selector="Border.segmented">
+    <Setter Property="Background" Value="{DynamicResource RmInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="2" />
+  </Style>
+  <Style Selector="ToggleButton.segment">
+    <Setter Property="Theme" Value="{StaticResource RmSegmentToggle}" />
+  </Style>
+  <!-- Filter chip: a type, "only online". -->
+  <Style Selector="ToggleButton.chip">
+    <Setter Property="Theme" Value="{StaticResource RmChipToggle}" />
+  </Style>
+
+  <!-- ===== Overview lists ===== -->
+  <Style Selector="ListBox.tiles, ListBox.rows, ListBox.nav, ListBox.launcher">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="ListBox.tiles">
+    <Setter Property="ItemContainerTheme" Value="{StaticResource RmBareItem}" />
+  </Style>
+  <Style Selector="ListBox.rows, ListBox.nav, ListBox.launcher">
+    <Setter Property="ItemContainerTheme" Value="{StaticResource RmRowItem}" />
+  </Style>
+
+  <Style Selector="ListBox.tiles ListBoxItem">
+    <Setter Property="Margin" Value="0,0,14,14" />
+    <Setter Property="CornerRadius" Value="11" />
+  </Style>
+  <Style Selector="ListBox.tiles ListBoxItem.header">
+    <Setter Property="Margin" Value="0,2,14,8" />
+  </Style>
+  <Style Selector="ListBox.rows ListBoxItem">
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="Margin" Value="0,1" />
+  </Style>
+  <Style Selector="ListBox.rows ListBoxItem.header">
+    <Setter Property="Margin" Value="0,10,0,2" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="ListBox.rows ListBoxItem.header:pointerover, ListBox.rows ListBoxItem.header:selected">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <!-- The tile: its frame answers to hover and selection of the list item around it. -->
+  <Style Selector="Border.tile">
+    <Setter Property="Background" Value="{DynamicResource RmCardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RmRadiusCard}" />
+    <Setter Property="BoxShadow" Value="{DynamicResource RmCardShadow}" />
+    <Setter Property="ClipToBounds" Value="True" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="ListBoxItem:pointerover Border.tile">
+    <Setter Property="Background" Value="{DynamicResource RmCardHoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeStrongBrush}" />
+  </Style>
+  <Style Selector="ListBoxItem:selected Border.tile">
+    <Setter Property="BorderBrush" Value="{DynamicResource RmAccentBrush}" />
+    <Setter Property="Background" Value="{DynamicResource RmCardHoverBrush}" />
+    <Setter Property="BoxShadow" Value="{DynamicResource RmSelectionRing}" />
+  </Style>
+  <Style Selector="Grid.tilePreview">
+    <Setter Property="Height" Value="136" />
+  </Style>
+  <!-- Large: more of the picture. Widths come from SectionWrapPanel (MainWindow.Appearance.cs). -->
+  <Style Selector="ListBox.large Grid.tilePreview">
+    <Setter Property="Height" Value="186" />
+  </Style>
+  <!-- Small: no picture, only what identifies the connection. -->
+  <Style Selector="ListBox.small Grid.tilePreview, ListBox.small :is(Control).tileDetail">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector=":is(Control).tileCompact">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="ListBox.small :is(Control).tileCompact">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+
+  <!-- Shown on hover only: connect on a tile, the empty favorite star. -->
+  <Style Selector="ListBoxItem :is(Control).onHover">
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="ListBoxItem:pointerover :is(Control).onHover">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+  <Style Selector="ListBoxItem ui|FASymbolIcon.starOutline">
+    <Setter Property="Opacity" Value="0" />
+  </Style>
+  <Style Selector="ListBoxItem:pointerover ui|FASymbolIcon.starOutline">
+    <Setter Property="Opacity" Value="0.6" />
+  </Style>
+  <Style Selector="Border.previewShade">
+    <Setter Property="Background">
+      <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#73000000" />
+        <GradientStop Offset="0.5" Color="#00000000" />
+        <GradientStop Offset="1" Color="#40000000" />
+      </LinearGradientBrush>
+    </Setter>
+  </Style>
+
+  <!-- Group section header in tiles and list. -->
+  <Style Selector="Border.groupHeader">
+    <Setter Property="Height" Value="36" />
+    <Setter Property="CornerRadius" Value="{StaticResource RmRadiusControl}" />
+  </Style>
+  <Style Selector="ListBoxItem:pointerover Border.groupHeader">
+    <Setter Property="Background" Value="{DynamicResource RmHoverBrush}" />
+  </Style>
+
+  <!-- List view: sortable column headers. -->
+  <Style Selector="Button.column">
+    <Setter Property="Padding" Value="0,0,8,0" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextTertiaryBrush}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.column.sorted">
+    <Setter Property="Foreground" Value="{DynamicResource RmTextBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <!-- Narrow list: below 900 px the group and tag columns give way, below 640 px also "zuletzt". -->
+  <Style Selector="Grid.compact :is(Control).wide">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Grid.narrow :is(Control).medium">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <!-- Narrow header: the primary buttons drop their text and keep icon and tooltip; the tile size moves to "Mehr". -->
+  <Style Selector="Grid.narrow StackPanel#Toolbar TextBlock.label">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Grid.narrow :is(Control).wideOnly">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+
+  <!-- Drag and drop markers. -->
+  <Style Selector="ListBoxItem.dropInto">
+    <Setter Property="BorderBrush" Value="{DynamicResource RmAccentBrush}" />
+    <Setter Property="BorderThickness" Value="2" />
+  </Style>
+  <Style Selector="ListBox.tiles ListBoxItem.dropBefore">
+    <Setter Property="BorderBrush" Value="{DynamicResource RmAccentBrush}" />
+    <Setter Property="BorderThickness" Value="3,0,0,0" />
+  </Style>
+  <Style Selector="ListBox.tiles ListBoxItem.dropAfter">
+    <Setter Property="BorderBrush" Value="{DynamicResource RmAccentBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,3,0" />
+  </Style>
+  <Style Selector="ListBox.rows ListBoxItem.dropBefore">
+    <Setter Property="BorderBrush" Value="{DynamicResource RmAccentBrush}" />
+    <Setter Property="BorderThickness" Value="0,2,0,0" />
+  </Style>
+  <Style Selector="ListBox.rows ListBoxItem.dropAfter">
+    <Setter Property="BorderBrush" Value="{DynamicResource RmAccentBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,2" />
+  </Style>
+
+  <!-- ===== Sidebar ===== -->
+  <!-- Opened over the content on a narrow window. -->
+  <Style Selector="Border#Sidebar.floating">
+    <Setter Property="Background" Value="{DynamicResource RmBaseBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeStrongBrush}" />
+    <Setter Property="BorderThickness" Value="0,1,1,0" />
+    <Setter Property="CornerRadius" Value="0,10,0,0" />
+    <Setter Property="BoxShadow" Value="{DynamicResource RmRaisedShadow}" />
+  </Style>
+  <Style Selector="ListBox.nav ListBoxItem">
+    <Setter Property="Margin" Value="8,1" />
+    <Setter Property="MinHeight" Value="34" />
+  </Style>
+  <Style Selector="ListBox.nav ListBoxItem.navHeader">
+    <Setter Property="MinHeight" Value="30" />
+    <Setter Property="Margin" Value="8,12,8,0" />
+  </Style>
+  <Style Selector="ListBox.nav ListBoxItem.navHeader:pointerover, ListBox.nav ListBoxItem.navHeader:selected">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="ListBox.nav ListBoxItem:selected TextBlock.navLabel">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="ListBox.nav ListBoxItem:selected ui|FASymbolIcon.navIcon">
+    <Setter Property="Foreground" Value="{DynamicResource RmAccentTextBrush}" />
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+
+  <Style Selector="ListBox.nav.compact TextBlock.navLabel, ListBox.nav.compact TextBlock.navCount, ListBox.nav.compact Button.navChevron">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="ListBox.nav.compact ListBoxItem">
+    <Setter Property="Margin" Value="7,1" />
+  </Style>
+  <Style Selector="Button.compactSidebar TextBlock.navLabel">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+
+  <!-- ===== Launcher ===== -->
+  <Style Selector="ListBox.launcher ListBoxItem">
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="Margin" Value="0,1" />
+  </Style>
+
+  <!-- ===== Dialog content: forms keep one rhythm ===== -->
+  <Style Selector="Expander">
+    <Setter Property="CornerRadius" Value="{StaticResource RmRadiusControl}" />
+  </Style>
+
+  <!-- ===== Forms (connection editor, group editor, import; redesign part "forms") ===== -->
+  <!-- A form section starts with its heading (TextBlock.section) and a hairline that runs to the right edge. -->
+  <Style Selector="Grid.sectionHead">
+    <Setter Property="Margin" Value="0,24,0,12" />
+  </Style>
+  <Style Selector="Grid.sectionHead.first">
+    <Setter Property="Margin" Value="0,0,0,12" />
+  </Style>
+  <Style Selector="Border.rule">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Background" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="12,2,0,0" />
+  </Style>
+  <!-- "Passwort gespeichert" in an editor: a lit key while it stays, a dark one once it is marked for removal. -->
+  <Style Selector="Grid.storedPassword ui|FASymbolIcon">
+    <Setter Property="Foreground" Value="{DynamicResource RmOnlineBrush}" />
+  </Style>
+  <Style Selector="Grid.storedPassword.removing ui|FASymbolIcon">
+    <Setter Property="Foreground" Value="{DynamicResource RmTextTertiaryBrush}" />
+  </Style>
+  <Style Selector="Grid.storedPassword.removing TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource RmTextSecondaryBrush}" />
+  </Style>
+  <!-- Fields that are one unit, set into the surface: a password and where it comes from, a command line. -->
+  <Style Selector="Border.well">
+    <Setter Property="Background" Value="{DynamicResource RmInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmStrokeBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RmRadiusCard}" />
+    <Setter Property="Padding" Value="12" />
+  </Style>
+  <!-- ===== Part "dialogs": small dialogs and windows ===== -->
+  <!-- Every in-window dialog: the title in the display lettering, like the page titles. -->
+  <Style Selector="ui|FAContentDialog /template/ ContentControl#Title">
+    <Setter Property="FontFamily" Value="{StaticResource RmDisplayFont}" />
+    <Setter Property="LetterSpacing" Value="0.2" />
+  </Style>
+  <!-- The verb of a destructive question ("Löschen"): marked as dangerous, never the default button (Views/DialogKit.cs). -->
+  <Style Selector="Button.danger">
+    <Setter Property="Theme" Value="{StaticResource RmGhostButton}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource RmOfflineBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource RmOfflineBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RmOfflineSoftBrush}" />
+  </Style>
+  <!-- A lamp that reports the state of a setting: working, broken, or off (DialogKit.SetLamp). -->
+  <Style Selector="Ellipse.lamp.ok">
+    <Setter Property="Fill" Value="{DynamicResource RmOnlineBrush}" />
+  </Style>
+  <Style Selector="Ellipse.lamp.fault">
+    <Setter Property="Fill" Value="{DynamicResource RmOfflineBrush}" />
+  </Style>
+  <Style Selector="Ellipse.lamp.idle">
+    <Setter Property="Fill" Value="{DynamicResource RmUnknownBrush}" />
+  </Style>
+  <!-- A label and its value in a row of a dialog: "Server", "Schlüsseltyp". -->
+  <Style Selector="TextBlock.factLabel">
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="Foreground" Value="{DynamicResource RmTextTertiaryBrush}" />
+  </Style>
+</Styles>

@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:RemoteManager.App.Controls"
+             x:Class="RemoteManager.App.Connections.ConnectionHeader">
+  <!-- Head of a connect or logon card: the connection's lamp-panel picture, its name, host, and type. -->
+  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+    <Border x:Name="GlyphFrame" Width="58" Height="58" CornerRadius="12" ClipToBounds="True"
+            BorderBrush="{DynamicResource RmStrokeBrush}" BorderThickness="1">
+      <ctl:HostGlyph x:Name="Glyph" Pitch="9" Margin="3" />
+    </Border>
+    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+      <TextBlock x:Name="NameLabel" Classes="heading" TextTrimming="CharacterEllipsis" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Border x:Name="TypeChip" Classes="typeChip" VerticalAlignment="Center">
+          <TextBlock x:Name="TypeChipText" />
+        </Border>
+        <TextBlock x:Name="HostLabel" Classes="mono muted" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="230" />
+      </StackPanel>
+    </StackPanel>
+  </Grid>
+</UserControl>
